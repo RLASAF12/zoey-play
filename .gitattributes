@@ -1,0 +1,5 @@
+# This repository is GENERATED OUTPUT. Every file must be stored and served as the
+# exact bytes tools/build-pwa.js wrote, so that what is played is the file that was
+# tested. Without this, core.autocrlf=true on a Windows machine rewrote index.html
+# on commit and the pushed blob came out 12,373 bytes short of the real bundle.
+* -text
