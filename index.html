@@ -49,10 +49,23 @@
      explaining what would go wrong if it were made translucent. Everything below asks these
      four instead of env(), and tools/safe-area-check.js sets them to a real device's insets and
      looks at what happens. On a device with no insets all four are 0px and nothing changes. */
-  --sa-t: var(--sa-t);
-  --sa-r: var(--sa-r);
-  --sa-b: var(--sa-b);
-  --sa-l: var(--sa-l);
+  /* FIXED 2026-11-01. These four read `var(--sa-t)` and so on - each one referring to ITSELF. A
+     custom property that references itself is invalid at computed-value time, which makes it the
+     guaranteed-invalid value: EMPTY. So `max(8px, var(--sa-t))` was never a length, every one of
+     the 38 declarations built on these four was dropped, and the properties fell back to `auto`.
+     The visible symptom was the parent's exit button: `position: fixed` with `top: auto; left:
+     auto` sits at its STATIC position, which in this RTL document is the bottom right corner -
+     the opposite end of the screen from where it is meant to be, and under whatever the game had
+     drawn there. Harel asking to "make the X bigger" is very probably this: a button that is hard
+     to find because it is not where it is supposed to be.
+     It survived a day because tools/visual-sweep.js --insets, the check written to prove this very
+     system, SETS these four itself before measuring - so it overrode the broken definition and
+     tested a state the app never reaches. A check that supplies the value it is checking cannot
+     see that the default is missing. */
+  --sa-t: env(safe-area-inset-top, 0px);
+  --sa-r: env(safe-area-inset-right, 0px);
+  --sa-b: env(safe-area-inset-bottom, 0px);
+  --sa-l: env(safe-area-inset-left, 0px);
   --font: "Varela Round", "Arial Rounded MT Bold", Arial, sans-serif;
   --page-bg: #9fd8a0;
   --sky-top: #86d3ef; --sky-bottom: #fff1c2; --sun: #ffe08a; --cloud: #ffffff;
@@ -110,6 +123,21 @@ button:focus-visible { outline: 5px solid var(--focus); outline-offset: 4px; bor
 .pk-name { display: block; }
 .pk-marker { display: block; width: clamp(32px, 8vh, 58px); aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 35% 30%, var(--cl) 0 14%, var(--c) 46%, var(--cd) 100%); border: 3px solid rgba(255, 255, 255, 0.92); box-shadow: 0 4px 0 var(--cd), 0 7px 9px rgba(0, 0, 0, 0.25); }
 .pk-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: center; }
+/* ---- the parent's corner (2026-11-01) ----
+   The gear sits opposite the exit button, which is top-LEFT, so the two never share a thumb. It is
+   the parent's, not hers, so it stays small and quiet - but at least 44px under a finger, by the
+   same rule as the exit. */
+.settingsBtn { position: absolute; z-index: 25; top: max(8px, var(--sa-t)); right: max(8px, var(--sa-r)); width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 14px; background: var(--panel); color: var(--ink); opacity: 0.72; cursor: pointer; }
+.settingsBtn svg { width: 26px; height: 26px; }
+.settingsBtn:hover, .settingsBtn[aria-expanded="true"] { opacity: 1; }
+[data-touch="on"] .settingsBtn { width: 54px; height: 54px; }
+[data-touch="on"] .settingsBtn svg { width: 32px; height: 32px; }
+/* The panel covers the screen so a touch anywhere outside the card closes it: on a tablet there is
+   no Esc, and a panel that can only be dismissed by its own small button is a trap. */
+.settingsPanel { position: absolute; inset: 0; z-index: 26; display: none; justify-content: flex-end; align-items: flex-start; padding: calc(max(8px, var(--sa-t)) + 58px) max(8px, var(--sa-r)) 8px 8px; background: var(--overlay); }
+.settingsPanel.on { display: flex; }
+.settingsCard { background: var(--panel-line); border-radius: 22px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; align-items: center; max-width: min(420px, 92vw); max-height: calc(100% - 8px); overflow-y: auto; overscroll-behavior: contain; box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25); }
+.settingsClose { min-height: 44px; padding: 8px 22px; border: 0; border-radius: 999px; background: var(--panel); color: var(--ink); font: inherit; font-size: 17px; cursor: pointer; }
 .pk-lvlrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; }
 .pk-lvlLabel { background: var(--panel); border-radius: 999px; padding: 4px 14px; font-size: clamp(13px, 2.8vw, 17px); }
 .pk-lvlrow .num-lvl { min-height: 48px; padding: 3px 10px; }
@@ -442,7 +470,7 @@ button:focus-visible { outline: 5px solid var(--focus); outline-offset: 4px; bor
 .aCard.big.locked .spSail { animation: none; }
 
 /* ---------- exit + overlay ---------- */
-.exitBtn { position: fixed; z-index: 30; display: none; top: max(8px, var(--sa-t)); left: max(8px, var(--sa-l)); min-height: 34px; padding: 4px 10px; border: 0; border-radius: 10px; background: var(--exit-bg); color: var(--exit-ink); font-size: 13px; cursor: pointer; }
+.exitBtn { position: fixed; z-index: 30; display: none; top: max(8px, var(--sa-t)); left: max(8px, var(--sa-l)); min-height: 44px; padding: 7px 14px; border: 0; border-radius: 10px; background: var(--exit-bg); color: var(--exit-ink); font-size: 13px; cursor: pointer; }
 .exitBtn.on { display: block; }
 /* On a tablet there is no Esc, so this corner button is the only way out and a 34px target is
    below what a finger can reliably hit. It stays muted and out of the way - it is the parent's
@@ -450,15 +478,30 @@ button:focus-visible { outline: 5px solid var(--focus); outline-offset: 4px; bor
    This asks the MODE and not the device (it used to be @media (pointer: coarse)): the mode starts
    out as the device's answer anyway, and asking the mode means the switch can be tried on a laptop
    and means one question has one answer everywhere. */
-[data-touch="on"] .exitBtn { min-height: 44px; min-width: 64px; padding: 8px 14px; font-size: 15px; border-radius: 12px; }
+/* 44px was the minimum a finger can hit, which is not the same as a size a parent can find on a
+   bright screen while a child is playing. On a tablet this is the ONLY way out, so it is sized to
+   be found rather than merely to be hittable. */
+[data-touch="on"] .exitBtn { min-height: 60px; min-width: 104px; padding: 10px 20px; font-size: 21px; border-radius: 16px; }
 [data-touch="on"] .toggle { min-height: 44px; }   /* the voice switch, two pixels short of a finger */
 .overlay { position: fixed; inset: 0; z-index: 40; display: none; align-items: center; justify-content: center; background: var(--overlay); padding: 16px; }
 .overlay.on { display: flex; }
 .overlayCard { background: var(--panel-line); border-radius: 28px; padding: 24px 32px; text-align: center; display: flex; flex-direction: column; gap: 14px; align-items: center; }
 .overlayCard h2 { margin: 0; font-weight: 400; font-size: clamp(26px, 6vw, 44px); }
 .overlayCard .row { display: flex; gap: 12px; align-items: center; }
-.overlayCard .yes { font-size: clamp(22px, 5vw, 34px); padding: 0.3em 1.4em; border: 0; border-radius: 999px; background: var(--accent); color: var(--on-accent); box-shadow: 0 6px 0 var(--accent-dark); cursor: pointer; }
-.overlayCard .no { border: 0; background: transparent; font-size: 16px; text-decoration: underline; cursor: pointer; }
+/* GREEN, not the app's orange accent. Harel asked for "a big green yes" and reasonably believed it
+   already was one; it was var(--accent), which is coral. Against a red "no" the pair has to be the
+   pair every child already knows, and orange beside red is two warm colours a three-year-old is
+   being asked to tell apart under her own thumb. */
+.overlayCard .yes { font-size: clamp(22px, 5vw, 34px); padding: 0.3em 1.4em; border: 0; border-radius: 999px; background: var(--green); color: #fff; box-shadow: 0 6px 0 var(--green-dark); cursor: pointer; }
+/* It used to be a transparent 16px underlined sentence beside a huge green button, and Harel
+   reported what that produces in a three-year-old's hands: she catches it by accident, the card
+   vanishes and she is back at the picker without having meant anything by it. A choice offered to
+   a child who cannot read must be two buttons of the same weight, told apart by colour alone -
+   green for carrying on, red for stopping - so a mis-hit is at worst the other answer and never an
+   invisible one. It keeps its own words for the parent, but it is a button now, not a footnote. */
+.overlayCard .no { font-size: clamp(22px, 5vw, 34px); padding: 0.3em 1.1em; border: 0; border-radius: 999px; background: var(--red); color: #fff; box-shadow: 0 6px 0 var(--red-dark); cursor: pointer; text-decoration: none; }
+.overlayCard .row { flex-wrap: wrap; justify-content: center; gap: 18px; }
+.overlayCard .yes, .overlayCard .no { min-height: 56px; min-width: 132px; }
 #fx { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; }
 .num-picker { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 .num-lvl { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; min-width: 76px; min-height: 64px; border: 3px solid transparent; background: var(--panel); border-radius: 16px; padding: 6px 10px; font-size: clamp(13px, 2.8vw, 17px); cursor: pointer; }
@@ -1319,15 +1362,12 @@ button:focus-visible { outline: 5px solid var(--focus); outline-offset: 4px; bor
 
 /* ---------- color (ZoeyColor, .col-) ---------- */
 /* "Colour the Dinosaur" - every selector starts with .col-
-   The colour tokens (--col-blue ... --col-green-l) are set inline on .col-stage by game.js. */
+   TWENTY-SEVEN COLOURS, so none of them is written down here. Each one's own --c / --cd / --cl are
+   set on the element by game.js (paintVars), and a painted area carries its colour as an inline
+   fill. The alternative was fifty-four more hex numbers in this file and a [data-c="..."] rule per
+   colour, which is a rule to forget every time a colour is added. */
 .col-stage { position: fixed; inset: 0; z-index: 5; overflow: hidden; display: flex; flex-direction: column; align-items: center;
   --col-btn: min(13vh, 17vw); -webkit-user-select: none; user-select: none; }
-.col-stage [data-c="blue"]   { --c: var(--col-blue);   --cd: var(--col-blue-d);   --cl: var(--col-blue-l); }
-.col-stage [data-c="yellow"] { --c: var(--col-yellow); --cd: var(--col-yellow-d); --cl: var(--col-yellow-l); }
-.col-stage [data-c="red"]    { --c: var(--col-red);    --cd: var(--col-red-d);    --cl: var(--col-red-l); }
-.col-stage [data-c="green"]  { --c: var(--col-green);  --cd: var(--col-green-d);  --cl: var(--col-green-l); }
-.col-stage [data-c="orange"] { --c: var(--col-orange); --cd: var(--col-orange-d); --cl: var(--col-orange-l); }
-.col-stage [data-c="purple"] { --c: var(--col-purple); --cd: var(--col-purple-d); --cl: var(--col-purple-l); }
 .col-stage.col-paused * { animation-play-state: paused !important; }
 
 .col-scene { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
@@ -1343,12 +1383,6 @@ button:focus-visible { outline: 5px solid var(--focus); outline-offset: 4px; bor
 .col-svg { width: 100%; height: 100%; display: block; overflow: visible; }
 .col-shadow { fill: rgba(0, 0, 0, 0.1); }
 .col-svg [data-part] { fill: #fff; stroke: #4a3b32; stroke-width: 4; stroke-linejoin: round; transform-box: fill-box; transform-origin: 50% 50%; }
-.col-svg [data-c="blue"]   { fill: var(--col-blue); }
-.col-svg [data-c="yellow"] { fill: var(--col-yellow); }
-.col-svg [data-c="red"]    { fill: var(--col-red); }
-.col-svg [data-c="green"]  { fill: var(--col-green); }
-.col-svg [data-c="orange"] { fill: var(--col-orange); }
-.col-svg [data-c="purple"] { fill: var(--col-purple); }
 
 /* ----- a generated page -----
    The lines are a shape, not a stroke: tools/split-coloring.js traces the ink itself and hands it
@@ -1399,11 +1433,30 @@ button:focus-visible { outline: 5px solid var(--focus); outline-offset: 4px; bor
 .col-fresh .col-deco { stroke: #4a3b32; stroke-width: 5; }
 .col-fresh .col-face { display: none; }
 
+/* ----- the whole palette, for a finger (touch mode only; game.js does not build it otherwise) -----
+   Fourteen to a row by arithmetic rather than by luck: the width is fourteen swatches plus their
+   gaps, so the twenty-seven always land as 14 and 13 instead of wrapping differently on every
+   screen. The swatch floor is 44px because that is this app's finger rule, and a swatch under it
+   is a colour she aims at and misses. */
+.col-grid { position: relative; z-index: 4; flex: none; display: flex; flex-wrap: wrap; justify-content: center;
+  gap: 6px; --col-sw: clamp(44px, 5.2vh, 58px); width: min(94vw, calc(14 * (var(--col-sw) + 6px))); margin: 0 auto 1vh; }
+.col-sw { box-sizing: border-box; width: var(--col-sw); height: var(--col-sw); border-radius: 30%;
+  border: 3px solid rgba(255, 255, 255, 0.9); cursor: pointer; -webkit-tap-highlight-color: transparent;
+  background: radial-gradient(circle at 34% 28%, var(--cl) 0 16%, var(--c) 52%, var(--cd) 100%);
+  box-shadow: 0 3px 0 var(--cd), 0 5px 7px rgba(0, 0, 0, 0.25); transition: transform 0.15s; }
+/* the one she is painting with. A ring, not a tint: a swatch that merely looked brighter is a
+   swatch she cannot tell from the one beside it. */
+.col-sw.col-on { border-color: #fff; transform: scale(1.14); z-index: 1;
+  box-shadow: 0 0 0 4px #fff, 0 0 0 7px rgba(0, 0, 0, 0.22), 0 6px 10px rgba(0, 0, 0, 0.3); }
+.col-sw.col-swDown { animation: colSwDown 0.26s ease-out; }
+@keyframes colSwDown { 0% { transform: scale(1); } 45% { transform: scale(0.84); } 100% { transform: scale(1.14); } }
+
 /* ----- the four buttons, in keypad order (dir=ltr: three colours, then the arrow) ----- */
 .col-row { position: relative; z-index: 4; flex: none; display: flex; gap: min(4vw, 4vh); justify-content: center; padding: 0 2vw 2.5vh; }
 .col-btn { width: var(--col-btn); aspect-ratio: 1; border-radius: 50%; border: calc(var(--col-btn) * 0.05) solid rgba(255, 255, 255, 0.95);
   background: radial-gradient(circle at 35% 30%, var(--cl) 0 14%, var(--c) 48%, var(--cd) 100%);
   box-shadow: 0 calc(var(--col-btn) * 0.1) 0 var(--cd), 0 calc(var(--col-btn) * 0.18) calc(var(--col-btn) * 0.14) rgba(0, 0, 0, 0.3); }
+.col-btn.col-cur { border-color: #fff; box-shadow: 0 calc(var(--col-btn) * 0.1) 0 var(--cd), 0 0 0 calc(var(--col-btn) * 0.045) #fff, 0 calc(var(--col-btn) * 0.18) calc(var(--col-btn) * 0.14) rgba(0, 0, 0, 0.3); }
 .col-btn.col-down { animation: colBtnDown 0.19s ease-out; }
 .col-btn.col-wave { animation: colBtnWave 0.45s ease-in-out; }
 /* the arrow: the one button that is not a colour, so it is deliberately not one - slate, with the
@@ -1429,7 +1482,9 @@ button:focus-visible { outline: 5px solid var(--focus); outline-offset: 4px; bor
 
 @media (prefers-reduced-motion: reduce) {
   .col-svg .col-next, .col-pop, .col-alive, .col-alive .col-g-tail, .col-alive .col-g-head, .col-alive .col-g-crest, .col-bounce, .col-nudge, .col-enter,
-  .col-awake-on .col-awake, .col-btn.col-down, .col-btn.col-wave, .col-btn.col-flip, .col-fresh.col-show, .col-art .col-next { animation: none; }
+  .col-awake-on .col-awake, .col-btn.col-down, .col-btn.col-wave, .col-btn.col-flip, .col-fresh.col-show, .col-art .col-next,
+  .col-sw.col-swDown { animation: none; }
+  .col-sw { transition: none; }
   .col-svg .col-next { stroke-dasharray: 12 9; }
 }
 
@@ -2441,6 +2496,17 @@ button:focus-visible { outline: 5px solid var(--focus); outline-offset: 4px; bor
 /* .pk-slot holds the three game cards and slides; the green button never moves, because it
    always does the same thing. Row is dir="ltr" so position 0 really is the blue button. */
 .pk-slot { flex: 1 1 auto; min-width: 0; display: flex; gap: clamp(10px, 3vw, 32px); justify-content: center; align-items: stretch; }
+/* Nine of them: three rows of three. The cards shrink rather than the board scrolling, because a
+   picker she has to scroll is the thing this was meant to remove. */
+.pk-slot.pk-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(6px, 1.4vw, 14px); }
+.pk-slot.pk-grid .pk-card { max-width: none; border-width: 3px; border-radius: 20px; padding: clamp(4px, 0.9vh, 9px) clamp(4px, 0.9vw, 9px) clamp(5px, 1.1vh, 10px); gap: 2px; font-size: clamp(11px, 1.7vw, 17px); box-shadow: 0 5px 0 var(--cd), 0 8px 14px rgba(0, 0, 0, 0.16); }
+.pk-slot.pk-grid .pk-marker { width: clamp(20px, 4vh, 30px); }
+/* Three rows have to share the height one row used to have all of, so the picture inside each card
+   is sized against the board and not against the screen: 14vh three times over is more than there
+   is. The card keeps its proportions; it is the same card, smaller. */
+.pk-slot.pk-grid .pk-pic { height: clamp(42px, 8.2vh, 104px); }
+/* a card no button opens: the panel's own colour, which is not any of the four */
+.c-plain { --c: var(--panel-line); --cd: rgba(0, 0, 0, 0.18); --cl: rgba(0, 0, 0, 0.10); }
 .pk-slot.pk-slide { animation: pkSlide 0.34s cubic-bezier(0.22, 0.9, 0.3, 1); }
 @keyframes pkSlide { from { transform: translateX(14%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
@@ -2657,6 +2723,234 @@ button:focus-visible { outline: 5px solid var(--focus); outline-offset: 4px; bor
   .cnt-one.cnt-lit .cnt-num { transition: none; }
 }
 /* <<< count:css */
+
+/* >>> math:css - games/math/game.css, folded in verbatim by tools/fold-math.js; edit the module and re-run the tool, never this block */
+/* ---------- math (ZoeyMath, .mth-) ---------- */
+/* The shell hides a game that is not the active one, and the rule that does it is a list of
+   root ids up at "the ten game containers". This game's line is here instead, inside its own
+   region, so that folding it in or taking it out is one tool and one block - the alternative
+   is a sixth anchor in the middle of a selector, which is a worse thing to own. */
+#mth-root:not([data-on]) { display: none; }
+/* "חשבון עד עשר" - every selector starts with .mth-
+   The stage is a column: the progress strip, the board she looks at, and the four stones she
+   presses. Everything that must be reachable by a finger is in the stones row, which is the
+   dir="ltr" row of four the whole app follows, so the shared tap layer resolves it with no
+   binding of this game's own. */
+.mth-stage { position: fixed; inset: 0; z-index: 5; overflow: hidden; display: flex; flex-direction: column;
+  -webkit-user-select: none; user-select: none; }
+.mth-stage.mth-paused * { animation-play-state: paused !important; }
+.mth-scene { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.mth-scene svg { width: 100%; height: 100%; display: block; }
+
+/* ----- how far up the hill she is: a pip per level passed, a star per right answer in this one.
+   No words, because she cannot read one; and no number, because the number would be the only
+   thing on screen she could get wrong. ----- */
+/* Both groups at the START edge, which in this RTL page is the RIGHT - and that is the point:
+   the parent's exit button sits in the TOP LEFT corner of every game in this app, and a strip
+   spread across the width put the first star underneath it. */
+.mth-top { position: relative; z-index: 3; flex: none; display: flex; align-items: center; justify-content: flex-start; gap: 2.5vw;
+  padding: calc(1vh + var(--sa-t, 0px)) calc(3vw + var(--sa-r, 0px)) 0 calc(3vw + var(--sa-l, 0px)); pointer-events: none; }
+.mth-lvl, .mth-stars { display: flex; gap: 0.8vh; align-items: center; }
+.mth-pip { width: 1.5vh; height: 1.5vh; min-width: 9px; min-height: 9px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.45); box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.08); }
+.mth-pip.mth-pipOn { background: #ff9a3c; box-shadow: 0 0 0 2px #fff, 0 2px 4px rgba(0, 0, 0, 0.2); }
+.mth-star { width: 3.2vh; height: 3.2vh; min-width: 20px; min-height: 20px; display: block; }
+.mth-star svg { width: 100%; height: 100%; display: block; }
+.mth-star svg path { fill: rgba(255, 255, 255, 0.5); stroke: rgba(0, 0, 0, 0.1); stroke-width: 4; }
+.mth-star.mth-starOn svg path { fill: #ffd400; stroke: #a88200; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.25)); }
+
+/* ----- the board: the spinosaurus on the left, the fish standing on the sand beside him -----
+   Bottom-aligned on purpose. The fish are the thing being counted and they must sit ON the ground
+   with him, not float in the sky: a shoal hanging over the sea reads as decoration, and whatever
+   reads as decoration does not get counted. */
+.mth-board { position: relative; z-index: 2; flex: 1 1 0; min-height: 0; display: flex; align-items: flex-end; justify-content: center;
+  container-type: inline-size;
+  padding: 1vh 2vw 13vh calc(3vw + clamp(80px, 24vh, 240px)); }
+.mth-spino { position: absolute; left: calc(1.5vw + var(--sa-l, 0px)); bottom: 2vh; width: clamp(80px, 24vh, 240px); z-index: 2; pointer-events: none; }
+.mth-spino svg { width: 100%; height: auto; display: block; overflow: visible; }
+.mth-spino.mth-chomp { animation: mthChomp 0.7s ease-in-out; }
+@media (max-aspect-ratio: 5/4) { .mth-spino { width: clamp(70px, 16vh, 150px); } .mth-board { padding-left: calc(3vw + clamp(70px, 16vh, 150px)); padding-bottom: 8vh; } }
+
+/* She stands in the margin the stone row leaves, not in the board: ten fish need the whole width
+   of it, and a second character in that row costs two of them. */
+.mth-zoey { position: absolute; right: calc(1vw + var(--sa-r, 0px)); bottom: calc(1vh + var(--sa-b, 0px)); width: clamp(55px, 12vh, 115px); z-index: 5; pointer-events: none; }
+.mth-zoey svg { width: 100%; height: auto; display: block; overflow: visible; }
+@media (max-aspect-ratio: 5/4) { .mth-zoey { display: none; } }
+
+/* ----- the fish. Two groups and a plus, or one group with some of them eaten ----- */
+/* dir=ltr inside an RTL page, so the group that is already there is on the LEFT and the one that
+   swims in arrives on the right - which is the side its animation brings it from. Mirrored, the
+   newcomers crossed over the fish already on the sand to land behind them. */
+.mth-field { display: flex; direction: ltr; align-items: flex-end; justify-content: center; gap: min(2.5vw, 3.5vh); width: 100%; }
+/* The fish are sized off the BOARD and not off the window, because the worst case is fixed and
+   known: a sum of ten is two groups of five, ten fish in one line. Sized in vh alone they overflow
+   that line on a wide short screen and the second group lands under the first. */
+.mth-group { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: center; gap: min(0.8vw, 1.2vh);
+  --mth-fish: min(11vh, 8.4cqw); width: calc(5 * var(--mth-fish) + 4 * min(0.8vw, 1.2vh)); }
+/* five to a row once there are more than five, which is the same picture the dots on the stones
+   draw - "five, and two more" - so the field and the answer say the same thing */
+.mth-group:not(.mth-wrap) { width: auto; flex-wrap: nowrap; }
+.mth-fish { width: var(--mth-fish); flex: none; display: block; transform-origin: 50% 50%; }
+.mth-fish svg { width: 100%; height: auto; display: block; overflow: visible; }
+.mth-body { stroke: #2b6c86; stroke-width: 3.5; }
+.mth-fin { fill: #ff9a3c; stroke: #c76a16; stroke-width: 3.5; stroke-linejoin: round; }
+.mth-eye { fill: #fff; stroke: #2b6c86; stroke-width: 2.5; }
+.mth-pupil { fill: #22303a; }
+.mth-smile { stroke: #2b6c86; stroke-width: 3; stroke-linecap: round; }
+.mth-gill { fill: #2b6c86; }
+.mth-op { font-size: clamp(26px, 7vh, 76px); font-weight: 800; color: #fff; -webkit-text-stroke: 0.5vh #4a3b32;
+  paint-order: stroke; line-height: 1; flex: none; }
+
+/* the ones that have not arrived yet are not there at all until they swim in */
+.mth-late .mth-fish { opacity: 0; transform: translateX(28vw) scale(0.7); }
+.mth-late.mth-in .mth-fish { animation: mthSwimIn 0.7s cubic-bezier(0.25, 1.1, 0.4, 1) both; animation-delay: var(--d, 0s); }
+/* and the ones he eats go to him */
+.mth-fish.mth-gone { animation: mthEaten 0.55s ease-in both; }
+
+/* ----- the four stones ----- */
+/* Capped, and centred. Across a 1180px tablet four stones at flex:1 come out 290px wide and 180px
+   tall - bigger than the question they answer, and they swallow the characters standing behind
+   them. The cap also leaves the margin Zoey stands in. */
+.mth-row { position: relative; z-index: 4; flex: none; display: flex; gap: 1.5%; direction: ltr;
+  width: min(92vw, 112vh); margin: 0 auto;
+  padding: 0 calc(1.5vw + var(--sa-l, 0px)) calc(2vh + var(--sa-b, 0px)) calc(1.5vw + var(--sa-r, 0px)); }
+.mth-stone { flex: 1; min-width: 0; container-type: inline-size; display: flex; flex-direction: column; align-items: center;
+  background: none; border: 0; padding: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.mth-stoneBody { position: relative; width: 100%; aspect-ratio: 1 / 0.62; border-radius: 46% 46% 40% 40% / 52% 52% 48% 48%;
+  background: radial-gradient(ellipse at 35% 25%, var(--cl) 0 8%, var(--c) 42%, var(--cd) 140%);
+  border: 2cqw solid rgba(255, 255, 255, 0.92); box-shadow: 0 3cqw 0 var(--cd), 0 6cqw 7cqw rgba(0, 0, 0, 0.25);
+  display: flex; align-items: center; justify-content: center; gap: 4cqw; transform-origin: 50% 100%; }
+.mth-dg { font-size: 26cqw; font-weight: 800; color: #fff; -webkit-text-stroke: 1.6cqw rgba(0, 0, 0, 0.25); paint-order: stroke; line-height: 1; }
+.mth-dots { width: 22cqw; }
+.mth-dots.mth-wideDots { width: 28cqw; }
+.mth-dots svg { width: 100%; height: auto; display: block; }
+.mth-dot { fill: #fff; opacity: 0.92; }
+.mth-stone:focus-visible { outline: 5px solid var(--focus); outline-offset: 4px; border-radius: 14px; }
+.mth-stone.mth-down .mth-stoneBody { transform: translateY(1.5cqw) scale(0.95); }
+.mth-stone.mth-lit .mth-stoneBody { box-shadow: 0 3cqw 0 var(--cd), 0 0 0 3cqw #fff, 0 0 12cqw 5cqw var(--cl); }
+.mth-stone.mth-wobble .mth-stoneBody { animation: mthWobble 0.6s ease-in-out; }
+.mth-stone.mth-hint .mth-stoneBody { animation: mthHint 1s ease-in-out infinite alternate; }
+.mth-stone.mth-right .mth-stoneBody { animation: mthRight 0.7s ease-out; }
+.mth-stone.mth-wave .mth-stoneBody { animation: mthWave 0.42s ease-in-out; }
+/* a finger needs a target on a tablet, and the stones are the only control in this game */
+@media (pointer: coarse) { .mth-stone { min-height: 48px; } }
+
+.mth-stage.mth-levelup::after { content: ''; position: absolute; inset: 0; z-index: 6; pointer-events: none;
+  background: radial-gradient(circle at 50% 45%, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0) 62%);
+  animation: mthFlash 1.6s ease-out forwards; }
+
+@keyframes mthSwimIn { from { opacity: 0; transform: translateX(28vw) scale(0.7); } to { opacity: 1; transform: none; } }
+@keyframes mthEaten { 0% { opacity: 1; transform: none; } 55% { opacity: 1; transform: translateX(-14vw) scale(0.7) rotate(-14deg); } 100% { opacity: 0; transform: translateX(-26vw) scale(0.25) rotate(-28deg); } }
+@keyframes mthChomp { 0%, 100% { transform: none; } 25% { transform: translateX(3%) scale(1.07, 0.94); } 60% { transform: translateX(-1%) scale(0.96, 1.05); } }
+@keyframes mthWobble { 0%, 100% { transform: none; } 20% { transform: rotate(-7deg); } 50% { transform: rotate(7deg); } 80% { transform: rotate(-4deg); } }
+@keyframes mthHint { from { transform: scale(1); filter: brightness(1); } to { transform: scale(1.06); filter: brightness(1.35); } }
+@keyframes mthRight { 0% { transform: scale(1); } 35% { transform: scale(1.16); } 100% { transform: scale(1); } }
+@keyframes mthWave { 0%, 100% { transform: none; } 50% { transform: translateY(-12%) scale(1.07); } }
+@keyframes mthFlash { from { opacity: 1; } to { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .mth-late.mth-in .mth-fish, .mth-fish.mth-gone, .mth-spino.mth-chomp, .mth-stone.mth-wobble .mth-stoneBody,
+  .mth-stone.mth-hint .mth-stoneBody, .mth-stone.mth-right .mth-stoneBody, .mth-stone.mth-wave .mth-stoneBody,
+  .mth-stage.mth-levelup::after { animation: none; }
+  /* the two that END invisible must be parked at their finished state instead, or the fish that
+     swam in never appear and the ones he ate never leave */
+  .mth-late.mth-in .mth-fish { opacity: 1; transform: none; }
+  .mth-fish.mth-gone { opacity: 0; }
+}
+/* <<< math:css */
+
+/* >>> write:css - games/write/game.css, folded in verbatim by tools/fold-write.js; edit the module and re-run the tool, never this block */
+/* ---------- math (ZoeyWrite, .wr-) ---------- */
+/* The shell hides a game that is not the active one, and the rule that does it is a list of
+   root ids up at "the ten game containers". This game's line is here instead, inside its own
+   region, so that folding it in or taking it out is one tool and one block - the alternative
+   is a sixth anchor in the middle of a selector, which is a worse thing to own. */
+#wr-root:not([data-on]) { display: none; }
+/* "כותבים מספרים" - every selector starts with .wr-
+   Two views in one stage: the map of twenty stones, and the card she draws on. */
+.wr-stage { position: fixed; inset: 0; z-index: 5; overflow: hidden; -webkit-user-select: none; user-select: none; }
+.wr-stage.wr-paused * { animation-play-state: paused !important; }
+.wr-scene { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.wr-scene svg { width: 100%; height: 100%; display: block; }
+.wr-map, .wr-play { position: absolute; inset: 0; z-index: 2; display: none; }
+.wr-stage[data-view="map"] .wr-map { display: flex; align-items: center; justify-content: center; }
+.wr-stage[data-view="play"] .wr-play { display: flex; align-items: center; justify-content: center; gap: min(3vw, 4vh); }
+/* She is DRAWING on this, so the browser must not read a drag as a scroll or a pan. Without it the
+   first stroke she makes down the page scrolls the page instead of drawing a line. */
+.wr-play { touch-action: none; }
+
+/* ----- the map: twenty stones, each wearing the shape it teaches ----- */
+.wr-mapGrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: min(1.6vw, 2vh);
+  width: min(92vw, 150vh); padding: calc(1vh + var(--sa-t, 0px)) calc(2vw + var(--sa-r, 0px)) calc(1vh + var(--sa-b, 0px)) calc(2vw + var(--sa-l, 0px)); }
+.wr-stone { position: relative; display: flex; flex-direction: column; align-items: center; gap: 0.4vh;
+  min-height: 48px; padding: min(1vh, 10px) 0 min(0.8vh, 8px); border: 0; cursor: pointer;
+  border-radius: min(2.2vh, 22px); background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 0.6vh 0 rgba(0, 0, 0, 0.12), 0 1.2vh 2vh rgba(0, 0, 0, 0.16);
+  -webkit-tap-highlight-color: transparent; transition: transform 0.15s; }
+.wr-stone:active { transform: translateY(4%) scale(0.96); }
+.wr-stone:focus-visible { outline: 5px solid var(--focus); outline-offset: 3px; }
+.wr-thumb { width: min(9vh, 11vw); height: min(9vh, 11vw); display: block; }
+.wr-thumbP path { fill: none; stroke: #2a62ff; stroke-width: 11; stroke-linecap: round; stroke-linejoin: round; }
+.wr-thumbG { font-family: inherit; font-size: 86px; font-weight: 700; fill: #2a62ff; text-anchor: middle; dominant-baseline: central; }
+.wr-stars, .wr-passes { display: flex; gap: 0.5vh; }
+.wr-st { width: min(1.5vh, 14px); height: min(1.5vh, 14px); border-radius: 50%; background: rgba(0, 0, 0, 0.14); }
+.wr-st.wr-stOn { background: #ffd400; box-shadow: 0 0 0 2px #fff, 0 1px 3px rgba(0, 0, 0, 0.3); }
+
+/* ----- the card she draws on: square, so one svg user unit is one percent of it -----
+   That is not a detail. The rider is an ordinary HTML element placed in % over the card, and a
+   square card is what makes `left: 42%` and the svg's x=42 the same place without arithmetic. */
+.wr-card { position: relative; width: min(74vh, 74vw); aspect-ratio: 1; border-radius: 4vh;
+  background: rgba(255, 255, 255, 0.95); border: 0.8vh solid #fff;
+  box-shadow: 0 1vh 0 rgba(0, 0, 0, 0.12), 0 2vh 4vh rgba(0, 0, 0, 0.18); }
+.wr-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; overflow: visible; }
+.wr-ghost { font-family: inherit; font-size: 92px; font-weight: 700; fill: rgba(42, 98, 255, 0.1); text-anchor: middle; dominant-baseline: central; }
+
+/* the lane she follows, and what she has actually drawn on top of it */
+.wr-track { fill: none; stroke: rgba(42, 98, 255, 0.22); stroke-width: 11; stroke-linecap: round; stroke-linejoin: round; }
+.wr-done { fill: none; stroke: #2a62ff; stroke-width: 9.5; stroke-linecap: round; stroke-linejoin: round; }
+/* THE PROMPT FADES, which is the one piece of the research that is spelled in CSS: pass 0 is a
+   solid lane to stay inside, pass 1 a dotted ghost of it, pass 2 nothing at all but the green dot
+   and the arrow. The DONE stroke is never faded - what she has drawn is always fully there. */
+.wr-card[data-pass="1"] .wr-track { stroke: rgba(42, 98, 255, 0.3); stroke-width: 4; stroke-dasharray: 3 7; }
+.wr-card[data-pass="2"] .wr-track { stroke: rgba(42, 98, 255, 0.07); stroke-width: 3; }
+.wr-done.wr-flash { animation: wrFlash 0.42s ease-out; }
+
+.wr-dot { fill: #1fb34a; stroke: #fff; stroke-width: 1.4; animation: wrDot 1.4s ease-in-out infinite; }
+.wr-arrow { fill: #1fb34a; stroke: #fff; stroke-width: 0.8; stroke-linejoin: round; }
+.wr-card.wr-showMe .wr-track { animation: wrShow 1.3s ease-in-out 2; }
+.wr-card.wr-won { animation: wrWon 0.6s ease-out; }
+.wr-card.wr-won .wr-ghost { fill: rgba(31, 179, 74, 0.3); }
+
+/* whoever rides her fingertip: Spino on a numeral, Bibi on a line */
+.wr-rider { position: absolute; left: 50%; top: 12%; width: 22%; transform: translate(-50%, -78%);
+  pointer-events: none; z-index: 3; transition: left 0.06s linear, top 0.06s linear; }
+.wr-rider svg { width: 100%; height: auto; display: block; overflow: visible; }
+
+/* ----- the corner column: back to the map, and the three stars of this stage ----- */
+.wr-side { display: flex; flex-direction: column; align-items: center; gap: 2vh; }
+.wr-back { width: min(9vh, 70px); height: min(9vh, 70px); min-width: 48px; min-height: 48px; border-radius: 50%;
+  border: 0.5vh solid #fff; background: #6b7a90; color: #fff; cursor: pointer; padding: 12%;
+  box-shadow: 0 0.6vh 0 #3d4857, 0 1.2vh 1.6vh rgba(0, 0, 0, 0.3); -webkit-tap-highlight-color: transparent; }
+.wr-back svg { width: 100%; height: 100%; display: block; }
+.wr-back:active { transform: translateY(5%) scale(0.95); }
+/* in RTL the back chevron must point the way back, which is to the right */
+.wr-back svg { transform: scaleX(-1); }
+
+@keyframes wrDot { 0%, 100% { r: 3.4; opacity: 1; } 50% { r: 4.8; opacity: 0.78; } }
+@keyframes wrFlash { 0% { filter: brightness(2.2); } 100% { filter: none; } }
+@keyframes wrShow { 0%, 100% { stroke-opacity: 1; } 50% { stroke-opacity: 0.25; } }
+@keyframes wrWon { 0%, 100% { transform: none; } 35% { transform: scale(1.035); } }
+
+@media (max-aspect-ratio: 5/4) {
+  .wr-card { width: min(62vh, 88vw); }
+  .wr-mapGrid { grid-template-columns: repeat(4, 1fr); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wr-dot, .wr-done.wr-flash, .wr-card.wr-showMe .wr-track, .wr-card.wr-won { animation: none; }
+  .wr-rider, .wr-stone { transition: none; }
+}
+/* <<< write:css */
 </style>
 
 <div id="zg" dir="rtl" lang="he">
@@ -2683,13 +2977,32 @@ button:focus-visible { outline: 5px solid var(--focus); outline-offset: 4px; bor
           <span class="pk-marker" aria-hidden="true"></span>
         </button>
       </div>
-      <div class="pk-row">
-        <button type="button" id="btnAlbumOpen" class="btnAlbum">האלבום של זואי</button>
-        <button type="button" id="toggleVoice" class="toggle" role="switch" aria-checked="true"><span class="knob"></span><span>קול מדבר</span></button>
-        <button type="button" id="toggleTouch" class="toggle" role="switch" aria-checked="true"><span class="knob"></span><span>מסך מגע</span></button>
+    </div>
+
+    <!-- The parent's own corner. Everything that used to stack under the cards lives here: four
+         rows of text between her and the bottom of the screen, none of which she can read. It is
+         deliberately at the TOP, away from where her hands rest, and it is a dialog so a stray
+         touch outside it closes it rather than changing a setting. -->
+    <button type="button" id="btnSettings" class="settingsBtn" aria-haspopup="dialog" aria-expanded="false" aria-label="הגדרות">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" fill="none" stroke="currentColor" stroke-width="2"/>
+        <path d="M19.4 13a7.7 7.7 0 0 0 0-2l2-1.5-2-3.4-2.3 1a7.7 7.7 0 0 0-1.8-1L14.9 3h-3.8l-.4 2.5a7.7 7.7 0 0 0-1.8 1l-2.3-1-2 3.4L6.6 11a7.7 7.7 0 0 0 0 2l-2 1.5 2 3.4 2.3-1a7.7 7.7 0 0 0 1.8 1l.4 2.6h3.8l.4-2.6a7.7 7.7 0 0 0 1.8-1l2.3 1 2-3.4z"
+              fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <div id="settingsPanel" class="settingsPanel" role="dialog" aria-label="הגדרות" aria-modal="false">
+      <div class="settingsCard">
+        <div class="pk-row">
+          <button type="button" id="btnAlbumOpen" class="btnAlbum">האלבום של זואי</button>
+        </div>
+        <div class="pk-row">
+          <button type="button" id="toggleVoice" class="toggle" role="switch" aria-checked="true"><span class="knob"></span><span>קול מדבר</span></button>
+          <button type="button" id="toggleTouch" class="toggle" role="switch" aria-checked="true"><span class="knob"></span><span>מסך מגע</span></button>
+        </div>
+        <div class="pk-lvlrow"><span class="pk-lvlLabel">שלב בספירה:</span><div class="num-picker" id="numPicker" role="group" aria-label="בחירת שלב בספירה"></div></div>
+        <p class="parent" id="parentLine">להורים: Esc או כפתור היציאה בפינה מחזירים לכאן</p>
+        <button type="button" id="btnSettingsClose" class="settingsClose">סגירה</button>
       </div>
-      <div class="pk-lvlrow"><span class="pk-lvlLabel">שלב בספירה:</span><div class="num-picker" id="numPicker" role="group" aria-label="בחירת שלב בספירה"></div></div>
-      <p class="parent" id="parentLine">להורים: Esc או כפתור היציאה בפינה מחזירים לכאן</p>
     </div>
   </section>
 
@@ -2775,6 +3088,12 @@ button:focus-visible { outline: 5px solid var(--focus); outline-offset: 4px; bor
   <!-- >>> count:root - tools/fold-count.js -->
   <div id="cnt-root" dir="rtl" lang="he"></div>
   <!-- <<< count:root -->
+  <!-- >>> math:root - tools/fold-math.js -->
+  <div id="mth-root" dir="rtl" lang="he"></div>
+  <!-- <<< math:root -->
+  <!-- >>> write:root - tools/fold-write.js -->
+  <div id="wr-root" dir="rtl" lang="he"></div>
+  <!-- <<< write:root -->
 
   <button type="button" id="btnExit" class="exitBtn">יציאה</button>
 
@@ -2783,7 +3102,7 @@ button:focus-visible { outline: 5px solid var(--focus); outline-offset: 4px; bor
       <h2>להמשיך לשחק?</h2>
       <div class="row">
         <button type="button" id="btnResume" class="yes">כן</button>
-        <button type="button" id="btnResumeNo" class="no">לא, חזרה להתחלה</button>
+        <button type="button" id="btnResumeNo" class="no">לא</button>
       </div>
     </div>
   </div>
@@ -3595,6 +3914,31 @@ const VOICE_CLIPS = {
   cnt_tot_8: "voice/count/cnt_tot_8.mp3",
   cnt_tot_9: "voice/count/cnt_tot_9.mp3",
   /* <<< count:clips */
+  /* >>> chars:clips - assets/voice/chars/*.mp3, folded in by tools/fold-more-voice.js; never edit this block, re-run the tool */
+  bib_found: "voice/chars/bib_found.mp3",
+  bib_oops: "voice/chars/bib_oops.mp3",
+  bib_peek: "voice/chars/bib_peek.mp3",
+  bib_shh: "voice/chars/bib_shh.mp3",
+  spc_brr: "voice/chars/spc_brr.mp3",
+  spc_clean: "voice/chars/spc_clean.mp3",
+  spc_cold: "voice/chars/spc_cold.mp3",
+  spc_friend: "voice/chars/spc_friend.mp3",
+  spc_giggle: "voice/chars/spc_giggle.mp3",
+  spc_grew: "voice/chars/spc_grew.mp3",
+  spc_hi: "voice/chars/spc_hi.mp3",
+  spc_hiccup: "voice/chars/spc_hiccup.mp3",
+  spc_hum: "voice/chars/spc_hum.mp3",
+  spc_love: "voice/chars/spc_love.mp3",
+  spc_more: "voice/chars/spc_more.mp3",
+  spc_myturn: "voice/chars/spc_myturn.mp3",
+  spc_night: "voice/chars/spc_night.mp3",
+  spc_roar: "voice/chars/spc_roar.mp3",
+  spc_sneeze: "voice/chars/spc_sneeze.mp3",
+  spc_thanks: "voice/chars/spc_thanks.mp3",
+  spc_wheee: "voice/chars/spc_wheee.mp3",
+  spc_yawn: "voice/chars/spc_yawn.mp3",
+  spc_yum: "voice/chars/spc_yum.mp3",
+  /* <<< chars:clips */
   pk_more: "voice/games/pk_more.mp3",
   where: "voice/hub/where.mp3",
   wow: "voice/hub/wow.mp3",
@@ -3938,6 +4282,11 @@ const SCENES = {
   cnt: 'shore',    /* counting together: an empty beach, because the only countable things
                       on screen must be the ones she is counting - the meadow's butterflies
                       and the dusk's stars both invite her to count the scenery instead */
+  mth: 'shore',    /* arithmetic: the same beach, and for exactly the same reason. It is the one
+                      place in this world with nothing on it worth counting by mistake, and that
+                      matters more here than the rule that neighbours in the picker differ */
+  wr: 'meadow',    /* writing: a plain sky and a plain field. The card she draws on covers most of
+                      the screen anyway, and whatever is left must not compete with it */
   jmp: 'shore',    /* running, with sky for the star */
   bnd: 'dusk',     /* a concert at sunset */
   say: 'jungle',
@@ -4048,6 +4397,9 @@ function ensureAudio() {
 }
 function tone(f0, t, d, o) {
   if (!ac) return;
+  /* iOS suspends the context again after an interruption and a suspended context swallows every
+     note without a word. Asking for it back costs nothing when it is already running. */
+  if (ac.state === 'suspended') { try { ac.resume(); } catch (e) { /* ignore */ } }
   try {
     o = o || {};
     const osc = ac.createOscillator(), g = ac.createGain(), t0 = ac.currentTime + t, peak = o.g || 0.15;
@@ -4238,7 +4590,15 @@ function unlockClipAudio() {
 }
 /* capture, once, on whichever comes first - the keypad or a finger */
 try {
-  const once = () => { unlockClipAudio(); };
+  /* ensureAudio() is the other half, missing until 2026-11-01: the orchestra answered a finger and
+     made no sound. Its notes are all WebAudio, and the context needs resuming inside a REAL gesture
+     exactly as the <audio> element needs blessing in one. The games do call ensureAudio(), but from
+     their key handlers - and on a tablet every one of those runs inside the SYNTHETIC KeyboardEvent
+     the tap layer dispatches, which is not a gesture. resume() never took, and tone() wrote into a
+     clock that was not running: no error, nothing. Unnoticed because a mouse click on a laptop IS a
+     gesture, and because every other game has a recorded voice, which plays - so only the game whose
+     whole sound is WebAudio was audibly broken. */
+  const once = () => { unlockClipAudio(); ensureAudio(); };
   window.addEventListener('pointerdown', once, { capture: true, once: true });
   window.addEventListener('keydown', once, { capture: true, once: true });
 } catch (e) { /* ignore */ }
@@ -4483,6 +4843,12 @@ window.addEventListener('pointerdown', function (e) {
   if (e.button > 0) return;
   const rootEl = tapRootEl();
   if (!rootEl || !rootEl.contains(e.target)) return;
+  /* A GAME THAT IS DRAWN ON, not pressed. Everywhere else in this app a finger IS the keypress,
+     which is the whole point of this layer; "כותבים מספרים" is the one game where the finger is
+     the point - you cannot draw a 3 with four buttons - so its root says so by name and this layer
+     leaves it completely alone, in either mode. Declared rather than inferred, because a layer
+     that guessed which games want raw touches would guess wrong the day somebody adds one. */
+  if (rootEl.hasAttribute('data-pointer')) return;
   /* Keypad mode: inside the active game the screen is a picture, not a control, so a touch on it
      is swallowed whole. Declining quietly would not be enough - half the games grew a pointerdown
      of their own while being developed without the keypad, and those would still fire. The parent's
@@ -5388,7 +5754,33 @@ window.__zn = { play: function (lv) { level = lv || 1; stars = 0; setMode('play'
   const span = () => W + 2 * S;
   const prog = (t) => (t - star.t0) / 1000 * star.vf;                 /* 0 .. 1 across the screen */
   const starX = (t) => W + S - prog(t) * span();
-  const starY = (t) => starBaseY + 0.04 * D * Math.sin(t / 420);
+  /* SIX WAYS IN, not one (Harel, 2026-11-01: "the directions the stars come from, and not all of
+     them on the same path"). What may NOT change is where it can be caught: the dinosaur runs in
+     place and jumps straight up, so the catchable window is a fixed point in the sky and a star
+     that misses it is a star she cannot have. So the shape is a DEVIATION from the old flight,
+     multiplied by an envelope that falls to zero exactly where the star crosses her reach. Away
+     from that point the paths are wide apart; at it they are the same star on the same line she
+     has already learnt to jump for. Nothing about the timing or the speed changes. */
+  const PATHS = [
+    (p) => 0,                                        /* straight across, as it always was */
+    (p) => 1.25 * (1 - p) * (1 - p),                 /* in high from the corner, swooping down */
+    (p) => -0.95 * (1 - p),                          /* in low, climbing to meet her */
+    (p) => 0.80 * Math.sin(p * Math.PI * 3),         /* a long wave */
+    (p) => -1.05 * Math.sin(p * Math.PI),            /* a dip under the line and back up */
+    (p) => 1.40 * Math.sin(p * Math.PI * 2)          /* over, then under */
+  ];
+  /* where along the crossing the star passes her reach, and how quickly the paths converge on it */
+  const catchProg = () => (W + S - reachX()) / span();
+  const envelope = (p) => { const d = Math.abs(p - catchProg()); return d >= 0.26 ? 1 : (d / 0.26) * (d / 0.26); };
+  /* a bag, not a dice: all six are seen before any is seen twice (the same rule the spinosaurus's
+     moods and every spoken line in the app follow) */
+  let pathBag = [], pathIx = 0;
+  function nextPath() {
+    if (!pathBag.length) { pathBag = PATHS.map((_, i) => i); }
+    return pathBag.splice(Math.floor(Math.random() * pathBag.length), 1)[0];
+  }
+  const starY = (t) => starBaseY + 0.04 * D * Math.sin(t / 420)
+    + PATHS[pathIx](Math.max(0, Math.min(1, prog(t)))) * envelope(Math.max(0, Math.min(1, prog(t)))) * D;
   function jh(t) { const u = (t - jump.t0) / J; return (u <= 0 || u >= 1) ? 0 : Hj * 4 * u * (1 - u); }
   const reachX = () => xd + 0.22 * D;
   const reachY = (t) => footY - 0.60 * D - jh(t);
@@ -5397,6 +5789,7 @@ window.__zn = { play: function (lv) { level = lv || 1; stars = 0; setMode('play'
 
   function launch(now) {
     star = { state: 'fly', t0: now, vf: Math.max(SPEED_MIN, speedNow()), nextAt: 0, assisted: false };
+    pathIx = nextPath();                             /* a different way in each time */
     lastCheck = now; autoPlanned = false;
     if (starEl._anim) { try { starEl._anim.cancel(); } catch (e) { /* ignore */ } starEl._anim = null; }
     starEl.style.visibility = 'visible'; starEl.classList.remove('jmp-glow');
@@ -5622,7 +6015,12 @@ window.__zn = { play: function (lv) { level = lv || 1; stars = 0; setMode('play'
   }
   function keyup(e) { if (KEYMAP[e.code]) e.preventDefault(); }
 
-  window.ZoeyJump = { start: start, stop: stop, pause: pause, resume: resume, keydown: keydown, keyup: keyup };
+  /* _ is for tools/star-paths-check.js and nothing else: the six ways in are only safe if every one
+     of them still crosses the window she can reach, and that has to be measured against the game's
+     own numbers rather than a copy of them in a test. */
+  window.ZoeyJump = { start: start, stop: stop, pause: pause, resume: resume, keydown: keydown, keyup: keyup,
+    _: { PATHS: PATHS, envelope: envelope, catchProg: catchProg, dims: () => ({ W: W, H: H, S: S, D: D, footY: footY, Hj: Hj, starBaseY: starBaseY, reachX: reachX(), span: span() }),
+         setPath: (i) => { pathIx = i; } } };
 })();
 </script>
 
@@ -6282,6 +6680,12 @@ PH.shf_watch = 'תִּסְתַּכְּלִי טוֹב!';
 PH.shf_where = 'אֵיפֹה הַבֵּיצָה?';
 PH.shf_empty = 'לֹא כָּאן... בּוֹאִי נִרְאֶה שׁוּב!';
 PH.shf_hatch = 'הַבֵּיצָה נִפְתַּחַת!';
+/* Bibi's own voice (2026-11-01): Cartoon Avi Levi at speaking_speed 1.25, not Hila. Every shf_ line
+   above is the narrator talking ABOUT him; these three are him. Each is chained behind her line,
+   never spoken alongside it, so the two voices cannot land together. */
+PH.bib_shh = 'שְׁשׁ!';
+PH.bib_found = 'מָצָאת!';
+PH.bib_oops = 'אוּפְּס!';
 
 window.ZoeyShuffle = (function () {
   const PADS = [
@@ -6503,7 +6907,8 @@ window.ZoeyShuffle = (function () {
       if (first) later(startShuffle, 400);
       else speak('shf_watch', false, guard(() => later(startShuffle, 300)));
     });
-    if (first) speak('shf_hide', false, hidden);
+    /* queued behind her own line, not over it: "שש!" lands as the bushes begin to move */
+    if (first) speak('shf_hide', false, () => { speak('bib_shh', true); hidden(); });
     /* Bibi's egg pops in above the chosen bush, the bush lifts, the egg drops in, the bush lowers over it */
     const hover = 'translateY(-130%)';
     egg.style.zIndex = 4;
@@ -6574,6 +6979,7 @@ window.ZoeyShuffle = (function () {
     setPhase('win');
     S.rounds++;
     unitEls[u].classList.remove('hint');
+    speak('bib_found', true);                       /* his, before the cover lifts and the hatching line begins */
     const dino = pickDino(), egg = eggEls[u];
     root.dataset.dino = dino.id;
     cellEls[slot].classList.add('win');
@@ -6621,7 +7027,10 @@ window.ZoeyShuffle = (function () {
     /* her bush lifts to show it is empty; the phrase plays; then everything goes back and the shuffle replays slowly */
     liftCover(u, () => {
       const lookedLongEnough = join(2, () => lowerCover(u, () => { el.classList.remove('empty'); replay(); }));
-      speak('shf_empty', false, lookedLongEnough);
+      /* he reacts to the empty bush and THEN she is told what it means - his line is the shorter one and
+         goes first, so the pause before "לא כאן..." is his, not dead air. lookedLongEnough is still called
+         exactly once from the voice and once from the timer, as the join expects. */
+      speak('bib_oops', false, () => speak('shf_empty', true, lookedLongEnough));
       later(lookedLongEnough, 900);
     });
   }
@@ -7714,65 +8123,106 @@ window.ZOEY_COLOR_PAGES = [{"view":[-0.5,4,260,252],"ink":"M77.3 14.4L71.3 16.4L
 'use strict';
 /* =====================================================================
    "צביעת הדינוזאור" - Colour the Dinosaur  (slug color, global ZoeyColor, CSS prefix col-)
-   Free colouring. An empty outline; each press fills the NEXT area in that button's colour. There is
+   Free colouring. An empty outline; each press fills the next area in that button's colour. There is
    NO right answer, NO wrong press, NO target picture and NO score. When every area is filled the dino
    wakes up (bounces and cheers) and the page turns to a fresh outline, so she is never left looking at
    a finished picture with nothing to do.
 
    THREE COLOURS AND AN ARROW. The row is blue, yellow, red and then a fourth button that is not a
-   colour at all: it turns the palette over to green, orange and purple, and pressing it again turns it
-   back. Six colours instead of four, and six colour words instead of four, on the same four buttons -
-   and the arrow is the same promise green already makes on the picker screen, where it means "more".
-   The arrow button wears the three colours it is about to bring, because she cannot read.
+   colour at all: it turns the palette over to the next three and wraps after the last. The arrow
+   wears the three colours it is about to bring, because she cannot read.
+
+   TWENTY-SEVEN COLOURS (Harel, 2026-11-02: "at least 20 more colours"). Nine palettes of three,
+   grouped the way a child meets them - the keypad's own three first, then the other three primaries,
+   then pinks and browns, the neutrals, the metals, the darks and three rows of pastels. On the keypad
+   the arrow is the only way between them, which is nine presses to come full circle; on a tablet
+   every one of the twenty-seven is a swatch she can touch, and touching one also turns the big three
+   over to that colour's own palette, so the buttons and the grid never disagree.
+
+   SHE CHOOSES WHERE, ON A TABLET. A press fills the NEXT area, as it always has - that is the whole
+   of the keypad game, and with four buttons there is no way to point. A FINGER on the picture fills
+   the area it landed on, in the colour she last chose. The two are the same act with the same
+   feedback; the finger just gets to say where. In keypad mode the tap layer swallows touches inside a
+   game by design, so the grid is not even built - a dead control she can see is worse than no control.
+
+   AND THE AREAS ARE GROUPED, so one press is never a speck. The splitter hands over every white
+   island the lines enclose, biggest first, and on a rich page that is up to forty-nine of them: Zoey's
+   own page is 48 areas of which the smallest thirty are each under 1.5% of the picture. Forty-eight
+   presses to finish one dinosaur, and the last thirty of them invisible, is exactly the "many small
+   presses" Harel asked to be rid of. clustersOf() keeps the big areas as they are and gives every
+   speck to the big area it belongs to, so a page is five to twelve presses - a leg, a wing, the hair -
+   which is also what she means when she points at a leg.
 
    RECORDING SCRIPT - the PH keys this game adds (key : text, full nikud)
      col_start  : בּוֹאִי נִצְבַּע דִּינוֹזָאוּר!
      col_prompt : בַּחֲרִי צֶבַע!
-     col_blue   : כָּחֹל!
-     col_yellow : צָהֹב!
-     col_red    : אָדֹם!
-     col_green  : יָרֹק!
-     col_orange : כָּתֹם!
-     col_purple : סָגֹל!
      col_more   : עוֹד צְבָעִים!
      col_done   : הַדִּינוֹזָאוּר חַי! כׇּל הַכָּבוֹד זוֹאִי!
-   The colour words are the bare colour names (masculine, like the noun צֶבַע), spoken on every press so
-   the sound, the screen colour and the physical button become one thing.
+   and one per colour, spoken on every press so the sound, the screen colour and the physical button
+   become one thing. The six at the top are recorded; the twenty-one below them are not yet, and a
+   colour with no clip is SILENT rather than spoken by the male fallback voice - see sayColor().
+     col_blue   : כָּחֹל!          col_yellow : צָהֹב!          col_red    : אָדֹם!
+     col_green  : יָרֹק!           col_orange : כָּתֹם!          col_purple : סָגֹל!
+     col_pink   : וָרֹד!           col_sky    : תְּכֵלֶת!         col_brown  : חוּם!
+     col_white  : לָבָן!           col_grey   : אָפֹר!           col_black  : שָׁחֹר!
+     col_turq   : טוּרְקִיז!        col_gold   : זָהָב!           col_silver : כֶּסֶף!
+     col_navy   : כָּחֹל כֵּהֶה!      col_forest : יָרֹק כֵּהֶה!       col_maroon : אָדֹם כֵּהֶה!
+     col_rose   : וָרֹד בָּהִיר!     col_lilac  : סָגֹל בָּהִיר!      col_peach  : כָּתֹם בָּהִיר!
+     col_lemon  : צָהֹב בָּהִיר!     col_tan    : חוּם בָּהִיר!       col_ash    : אָפֹר בָּהִיר!
+     col_mint   : יָרֹק בָּהִיר!     col_azure  : כָּחֹל בָּהִיר!      col_plum   : סָגֹל כֵּהֶה!
    ===================================================================== */
 window.ZoeyColor = (function () {
   const KEYMAP = { KeyS: 0, KeyG: 1, KeyK: 2, Quote: 3 };      /* blue, yellow, red, green: left -> right */
-  /* Two palettes of three. The first is the buttons' own colours, which is the pairing she learns
-     first; the second is what the arrow brings, and there the swatch on screen is the only truth,
-     which is why every press says its colour out loud. */
-  const PALETTES = [['blue', 'yellow', 'red'], ['green', 'orange', 'purple']];
-  const NOTE = [330, 392, 494, 587];
-  const PAL = {
-    blue:   { c: '#2a62ff', d: '#1233b8', l: '#9ab6ff' },
-    yellow: { c: '#ffd400', d: '#a88200', l: '#fff08a' },
-    red:    { c: '#e8242b', d: '#9c1018', l: '#ff9d9a' },
-    green:  { c: '#1fb34a', d: '#0d7430', l: '#92e8a8' },
-    orange: { c: '#ff7a18', d: '#b34800', l: '#ffc38a' },
-    purple: { c: '#8b3fd6', d: '#5a1f96', l: '#d5aaf5' }
+  /* Nine palettes of three. The first is the buttons' own colours, which is the pairing she learns
+     first; everything after it is what the arrow brings, and there the swatch on screen is the only
+     truth, which is why every press says its colour out loud.
+     Only the base colour is written down - the rim and the highlight of a button are shade() of it,
+     because fifty-four more hex numbers by hand is fifty-four chances to put one of them wrong. */
+  const HUE = {
+    blue: '#2a62ff', yellow: '#ffd400', red: '#e8242b',
+    green: '#1fb34a', orange: '#ff7a18', purple: '#8b3fd6',
+    pink: '#ff6fae', sky: '#5bc8f5', brown: '#8b5a2b',
+    white: '#ffffff', grey: '#9aa3ab', black: '#2a2320',
+    turq: '#16c4b0', gold: '#e8b23c', silver: '#cdd6e0',
+    navy: '#173a8f', forest: '#0d6b2e', maroon: '#99141c',
+    rose: '#ffc2d8', lilac: '#c9a5f2', peach: '#ffc48f',
+    lemon: '#fff287', tan: '#c99a63', ash: '#cfd6dc',
+    mint: '#8fe3a8', azure: '#9fc0ff', plum: '#5a1f96'
   };
+  const SLUGS = Object.keys(HUE);
+  const PAL = {};
+  SLUGS.forEach((k) => { PAL[k] = { c: HUE[k], d: shade(HUE[k], 0.62), l: shade(HUE[k], 1.5) }; });
+  const PALETTES = [];
+  for (let i = 0; i < SLUGS.length; i += 3) PALETTES.push(SLUGS.slice(i, i + 3));
+  const NOTE = [330, 392, 494, 587];
   const PARTS = ['body', 'head', 'tail', 'legs', 'crest'];     /* the drawn templates' painting order */
   const USE_ART_PAGES = true;                                  /* false puts the whole game back on the drawn outlines below */
+  /* How the specks are grouped. SEED is the share of the page below which an area is not worth a
+     press of its own; the count is then clamped so that even a page of eight areas has something to
+     choose between and a page of forty-nine is not forty-nine presses. */
+  const SEED = 0.022, MINC = 5, MAXC = 12;
 
   PH.col_start = 'בּוֹאִי נִצְבַּע דִּינוֹזָאוּר!';
   PH.col_prompt = 'בַּחֲרִי צֶבַע!';
-  PH.col_blue = 'כָּחֹל!';
-  PH.col_yellow = 'צָהֹב!';
-  PH.col_red = 'אָדֹם!';
-  PH.col_green = 'יָרֹק!';
-  PH.col_orange = 'כָּתֹם!';
-  PH.col_purple = 'סָגֹל!';
   PH.col_more = 'עוֹד צְבָעִים!';
   PH.col_done = 'הַדִּינוֹזָאוּר חַי! כׇּל הַכָּבוֹד ' + ZOEY.spokenName + '!';
+  const SPOKEN = {
+    blue: 'כָּחֹל', yellow: 'צָהֹב', red: 'אָדֹם',
+    green: 'יָרֹק', orange: 'כָּתֹם', purple: 'סָגֹל',
+    pink: 'וָרֹד', sky: 'תְּכֵלֶת', brown: 'חוּם',
+    white: 'לָבָן', grey: 'אָפֹר', black: 'שָׁחֹר',
+    turq: 'טוּרְקִיז', gold: 'זָהָב', silver: 'כֶּסֶף',
+    navy: 'כָּחֹל כֵּהֶה', forest: 'יָרֹק כֵּהֶה', maroon: 'אָדֹם כֵּהֶה',
+    rose: 'וָרֹד בָּהִיר', lilac: 'סָגֹל בָּהִיר', peach: 'כָּתֹם בָּהִיר',
+    lemon: 'צָהֹב בָּהִיר', tan: 'חוּם בָּהִיר', ash: 'אָפֹר בָּהִיר',
+    mint: 'יָרֹק בָּהִיר', azure: 'כָּחֹל בָּהִיר', plum: 'סָגֹל כֵּהֶה'
+  };
+  SLUGS.forEach((k) => { PH['col_' + k] = SPOKEN[k] + '!'; });
 
   /* ---------- the pages ----------
      The real ones are generated line art, cut into areas by tools/split-coloring.js and arriving as
      window.ZOEY_COLOR_PAGES: a viewBox, the lines as one evenodd path, and one closed shape per area
-     the lines enclose, biggest first. Nothing about them is authored here - a new dinosaur is five
-     credits and a re-run of the splitter.
+     the lines enclose, biggest first, each with its own pixel area, centroid and box.
      The hand-drawn outlines below are what the game had before the art existed, and they stay as the
      fallback for exactly the reason the art rig keeps drawZoeySvg: if the art is missing, the game
      still works. Set USE_ART_PAGES to false to see them. */
@@ -7856,28 +8306,71 @@ window.ZoeyColor = (function () {
     const art = USE_ART_PAGES && window.ZOEY_COLOR_PAGES;
     return (art && art.length) ? art : DRAWN;
   }
-  /* The painting order. For a generated page it is the areas themselves, biggest first, which the
-     splitter already sorted; for a drawn one it is the five named parts. */
+
+  /* ---------- the grouping: one press is a limb, never a speck ----------
+     The big areas stay exactly as the splitter drew them; every area too small to be worth a press
+     joins one of them. Which one, in this order:
+       1. the SMALLEST big area whose box contains its centre. A highlight inside a leg is inside the
+          leg's box and also inside the body's, and the leg is the answer - so the smallest box wins.
+       2. otherwise the nearest big area by centre, which is all that is left for a sliver that lies
+          beside the figure rather than inside any part of it.
+     Cached on the page object, because it is the same answer every time and the page is reshown on
+     every round. */
+  function clustersOf(t) {
+    if (!t.areas) return null;
+    if (t._cl) return t._cl;
+    const n = t.areas.length;
+    let total = 0;
+    t.areas.forEach((a) => { total += a.area; });
+    let k = 0;
+    while (k < n && t.areas[k].area / total >= SEED) k++;
+    k = Math.max(Math.min(MINC, n), Math.min(MAXC, k));
+    const cl = [];
+    for (let i = 0; i < k; i++) cl.push([i]);
+    const inBox = (b, c) => c[0] >= b[0] && c[0] <= b[0] + b[2] && c[1] >= b[1] && c[1] <= b[1] + b[3];
+    for (let i = k; i < n; i++) {
+      const a = t.areas[i];
+      let best = -1, bestBox = Infinity, bestD = Infinity;
+      for (let s = 0; s < k; s++) {
+        const b = t.areas[s];
+        if (inBox(b.box, a.c)) { if (b.area < bestBox) { bestBox = b.area; best = s; } continue; }
+        if (bestBox < Infinity) continue;                      /* a box already won: distance cannot beat it */
+        const dx = b.c[0] - a.c[0], dy = b.c[1] - a.c[1], d = dx * dx + dy * dy;
+        if (d < bestD) { bestD = d; best = s; }
+      }
+      cl[best < 0 ? 0 : best].push(i);
+    }
+    t._cl = cl;
+    return cl;
+  }
+  /* One step per press: a cluster of the generated page, or one named part of a drawn one. */
   function stepsOf(t) {
-    if (!t.areas) return PARTS.slice();
-    return t.areas.map((a, i) => 'a' + i);
+    const cl = clustersOf(t);
+    if (!cl) return PARTS.map((p) => ({ sel: p, done: false }));
+    return cl.map((ids, i) => ({ sel: 'c' + i, ids: ids, done: false }));
   }
   function outlineSVG(t) {
     if (!t.areas) {
       return '<svg class="col-svg" viewBox="-6 -16 252 206" aria-hidden="true" focusable="false">' +
         '<ellipse class="col-shadow" cx="100" cy="184" rx="96" ry="6"/>' + t.svg + '</svg>';
     }
+    const cl = clustersOf(t), of = [];
+    cl.forEach((ids, i) => ids.forEach((a) => { of[a] = i; }));
     return '<svg class="col-svg col-art" viewBox="' + t.view.join(' ') + '" aria-hidden="true" focusable="false">' +
-      t.areas.map((a, i) => '<path class="col-area" data-part="a' + i + '" fill-rule="evenodd" d="' + a.d + '"/>').join('') +
+      t.areas.map((a, i) => '<path class="col-area" data-part="c' + of[i] + '" fill-rule="evenodd" d="' + a.d + '"/>').join('') +
       '<path class="col-ink" fill-rule="evenodd" d="' + t.ink + '"/></svg>';
   }
 
   /* ---------- state ---------- */
   let alive = false, paused = false;
   let round = 0, state = 'idle';             /* idle | paint | alive | done | swap */
-  let tpl = 0, pal = 0, filled = 0, steps = [], ignored = 0, lastPress = 0, speechSeq = 0;
+  let tpl = 0, pal = 0, cur = SLUGS[0], steps = [], ignored = 0, lastPress = 0, speechSeq = 0;
+  let touch = false;
   let timers = [], deferred = [], nudgeT = null, autoT = null;
   let els = null;
+
+  const left = () => steps.reduce((n, s) => n + (s.done ? 0 : 1), 0);
+  const nextStep = () => { for (let i = 0; i < steps.length; i++) if (!steps[i].done) return i; return -1; };
 
   /* ---------- timers: one array, round-scoped, pausable, all cleared by stop() ---------- */
   function arm(t) { t.due = performance.now() + t.left; t.h = setTimeout(t.run, t.left); }
@@ -7903,6 +8396,14 @@ window.ZoeyColor = (function () {
       then();
     } : undefined);
   }
+  /* A COLOUR WITH NO CLIP SAYS NOTHING, and that is on purpose. Six of the twenty-seven are
+     recorded in Hila's voice; the other twenty-one are written, pointed and waiting for a recording
+     session. speak() falls through to speechSynthesis when a key has no clip, which on this machine
+     means the male Asaf voice - and "female voice only" is a hard rule of this project, not a
+     preference. So a colour speaks only once its own clip exists. The day the twenty-one land this
+     function is a plain say() again and nothing else changes; the press already has its own note,
+     its paint swish and its burst, so the name is the one thing missing, not the feedback. */
+  function sayColor(k) { if (VOICE_CLIPS['col_' + k]) say('col_' + k, false); }
   function blip(el, cls, ms) {
     if (!el) return;
     el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
@@ -7920,14 +8421,25 @@ window.ZoeyColor = (function () {
       '<path d="M58 66 L76 78 L58 90" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" opacity="0.55"/>' +
       '</svg>';
   }
+  /* The whole palette, one swatch each, and only where a finger can use it. It is deliberately NOT
+     built in keypad mode: there the tap layer swallows every touch inside the game, so a grid of
+     twenty-seven colours would be a control she can see and cannot work. */
+  function gridHTML() {
+    return SLUGS.map((k) => '<span class="col-sw" data-k="' + k + '" style="--c:' + PAL[k].c +
+      ';--cd:' + PAL[k].d + ';--cl:' + PAL[k].l + '"></span>').join('');
+  }
   function build(root) {
-    const vars = Object.keys(PAL).map(k => '--col-' + k + ':' + PAL[k].c + ';--col-' + k + '-d:' + PAL[k].d + ';--col-' + k + '-l:' + PAL[k].l).join(';');
+    touch = !!(document.documentElement.getAttribute('data-touch') === 'on');
     root.innerHTML =
-      '<div class="col-stage" style="' + vars + '">' +
+      '<div class="col-stage">' +
         '<div class="col-scene" aria-hidden="true">' + sceneSVG('col') + '</div>' +
         '<div class="col-zoey">' + drawZoey() + '</div>' +
         '<div class="col-paper"><div class="col-dino"></div></div>' +
         '<div class="col-fresh" aria-hidden="true"></div>' +
+        /* dir="ltr" like the row of four below it, so the palette runs in the keypad's own
+           direction and blue is on the left in both. Twenty-seven children, so the shared tap
+           layer - which claims a dir="ltr" parent of EXACTLY four - leaves it alone. */
+        (touch ? '<div class="col-grid" dir="ltr" aria-hidden="true">' + gridHTML() + '</div>' : '') +
         '<div class="col-row" dir="ltr">' +
           '<div class="col-btn"></div><div class="col-btn"></div><div class="col-btn"></div>' +
           '<div class="col-btn col-more"></div>' +
@@ -7935,15 +8447,31 @@ window.ZoeyColor = (function () {
       '</div>';
     const q = (s) => root.querySelector(s);
     return { stage: q('.col-stage'), zoey: q('.col-zoey'), dino: q('.col-dino'), fresh: q('.col-fresh'),
+      grid: q('.col-grid'),
+      sws: Array.prototype.slice.call(root.querySelectorAll('.col-sw')),
       btns: Array.prototype.slice.call(root.querySelectorAll('.col-btn')) };
   }
+  function paintVars(el, k) {
+    el.style.setProperty('--c', PAL[k].c);
+    el.style.setProperty('--cd', PAL[k].d);
+    el.style.setProperty('--cl', PAL[k].l);
+  }
   function showPalette() {
-    PALETTES[pal].forEach((c, i) => els.btns[i].setAttribute('data-c', c));
+    PALETTES[pal].forEach((c, i) => { els.btns[i].setAttribute('data-k', c); paintVars(els.btns[i], c); });
     els.btns[3].innerHTML = moreSVG();
+    markCur();
+  }
+  /* Which colour the next finger will use. The ring is the only thing on screen that says so, which
+     is why it is a ring and not a tint: a swatch that merely looked brighter would be a swatch she
+     cannot tell from the one beside it. */
+  function markCur() {
+    if (!els) return;
+    els.sws.forEach((s) => s.classList.toggle('col-on', s.getAttribute('data-k') === cur));
+    els.btns.slice(0, 3).forEach((b) => b.classList.toggle('col-cur', b.getAttribute('data-k') === cur));
   }
   function showOutline(enter) {
     const t = pages()[tpl];
-    filled = 0; ignored = 0; steps = stepsOf(t);
+    ignored = 0; steps = stepsOf(t);
     els.dino.className = 'col-dino' + (enter ? ' col-enter' : '');
     els.dino.innerHTML = outlineSVG(t);
     els.fresh.className = 'col-fresh';
@@ -7952,13 +8480,14 @@ window.ZoeyColor = (function () {
   }
   function targets(i) {
     const svg = els.dino.querySelector('.col-svg');
-    return svg ? svg.querySelectorAll('[data-part="' + steps[i] + '"]') : [];
+    return (svg && steps[i]) ? svg.querySelectorAll('[data-part="' + steps[i].sel + '"]') : [];
   }
   function markNext() {
     const svg = els.dino.querySelector('.col-svg');
     if (!svg) return;
     Array.prototype.forEach.call(svg.querySelectorAll('.col-next'), e => e.classList.remove('col-next'));
-    if (filled < steps.length) Array.prototype.forEach.call(targets(filled), e => e.classList.add('col-next'));
+    const i = nextStep();
+    if (i >= 0) Array.prototype.forEach.call(targets(i), e => e.classList.add('col-next'));
   }
   function showFresh() {
     const list = pages();
@@ -7972,20 +8501,23 @@ window.ZoeyColor = (function () {
     blip(els.btns[idx], 'col-down', 190);
   }
 
-  function paint(idx) {
-    const items = targets(filled), c = PALETTES[pal][idx];
-    Array.prototype.forEach.call(items, e => { e.setAttribute('data-c', c); e.classList.remove('col-next'); blip(e, 'col-pop', 520); });
-    tone(NOTE[idx] * 0.7, 0.03, 0.16, { f1: NOTE[idx] * 1.6, g: 0.07 });          /* a little "swish" of paint */
+  /* Fill one step. `si` is which - the next one for a press, the one she touched for a finger - and
+     the return says whether that was the last one left. */
+  function paint(si, k) {
+    const items = targets(si);
+    Array.prototype.forEach.call(items, e => { e.style.fill = PAL[k].c; e.classList.remove('col-next'); blip(e, 'col-pop', 520); });
+    const n = SLUGS.indexOf(k);
+    tone(260 + n * 9, 0.03, 0.16, { f1: 600 + n * 14, g: 0.07 });                 /* a little "swish" of paint */
     if (items[0]) {
       const r = items[0].getBoundingClientRect();
-      burst(r.left + r.width / 2, r.top + r.height / 2, [PAL[c].c, PAL[c].l, '#ffffff'], reduce ? 6 : 14);
+      burst(r.left + r.width / 2, r.top + r.height / 2, [PAL[k].c, PAL[k].l, '#ffffff'], reduce ? 6 : 14);
     }
-    filled++;
+    if (steps[si]) steps[si].done = true;
     markNext();
-    return filled >= steps.length;
+    return left() === 0;
   }
 
-  /* The arrow: the three swatches turn over to the other three. It paints nothing, so there is no
+  /* The arrow: the three swatches turn over to the next three. It paints nothing, so there is no
      chance of a wrong press here either - the worst that happens is she sees three new colours. */
   function turnPalette() {
     pal = (pal + 1) % PALETTES.length;
@@ -8001,17 +8533,57 @@ window.ZoeyColor = (function () {
     cancel(nudgeT);
     ignored = 0;
     if (idx === 3) { turnPalette(); armNudge(); return; }
+    cur = PALETTES[pal][idx];
+    markCur();
     if (state === 'paint') {
-      const done = paint(idx);
-      if (done) complete(idx); else { say('col_' + PALETTES[pal][idx], false); armNudge(); }
+      const si = nextStep();
+      if (si < 0) return;
+      const done = paint(si, cur);
+      if (done) complete(cur); else { sayColor(cur); armNudge(); }
     } else if (state === 'alive') {
       blip(els.dino, 'col-bounce', 500);                           /* the celebration is still going: just join in */
     } else if (state === 'done') {
-      newPage(true, idx);                                          /* a press on a finished dino turns to a fresh outline */
+      newPage(true, cur);                                          /* a press on a finished dino turns to a fresh outline */
     }
   }
 
-  function complete(idx) {
+  /* ---------- a finger on the picture, and a finger on a swatch ----------
+     Reached only in touch mode, and only because the shared tap layer leaves alone anything that is
+     not one of four slots: neither a swatch nor an area is inside a dir="ltr" row of four, so the
+     layer declines without preventing the event and this handler runs. In keypad mode that same
+     layer swallows the touch before it gets here, and the grid is not built at all. */
+  function tapAt(target) {
+    if (!alive || paused || !els) return false;
+    const sw = target.closest && target.closest('.col-sw');
+    if (sw) {
+      const k = sw.getAttribute('data-k');
+      cur = k;
+      /* the big three follow her choice, so the buttons and the grid can never disagree about what
+         blue means */
+      pal = Math.floor(SLUGS.indexOf(k) / 3);
+      showPalette();
+      blip(sw, 'col-swDown', 260);
+      tone(520 + SLUGS.indexOf(k) * 7, 0, 0.18, { type: 'triangle', g: 0.12 });
+      sayColor(k);
+      cancel(nudgeT); ignored = 0; armNudge();
+      return true;
+    }
+    const area = target.closest && target.closest('.col-area');
+    if (!area) return false;
+    cancel(nudgeT); ignored = 0;
+    if (state === 'done') { newPage(true, cur); return true; }
+    if (state !== 'paint') { blip(els.dino, 'col-bounce', 500); return true; }
+    const sel = area.getAttribute('data-part');
+    let si = -1;
+    for (let i = 0; i < steps.length; i++) if (steps[i].sel === sel) { si = i; break; }
+    if (si < 0) return false;
+    const was = steps[si].done;
+    const done = paint(si, cur);
+    if (done && !was) complete(cur); else { sayColor(cur); armNudge(); }
+    return true;
+  }
+
+  function complete(k) {
     state = 'alive';
     const svg = els.dino.querySelector('.col-svg');
     svg.classList.add('col-awake-on');
@@ -8021,7 +8593,8 @@ window.ZoeyColor = (function () {
     later(500, () => tone(1319, 0, 0.5, { g: 0.08 }));
     const r = els.dino.getBoundingClientRect();
     burst(r.left + r.width / 2, r.top + r.height * 0.4, [PAL.blue.c, PAL.yellow.c, PAL.red.c, PAL.green.c, PAL.orange.c, PAL.purple.c, '#ffffff'], reduce ? 16 : 42);
-    say('col_' + PALETTES[pal][idx], false, () => say('col_done', true));
+    if (VOICE_CLIPS['col_' + k]) say('col_' + k, false, () => say('col_done', true));
+    else say('col_done', false);
     later(2800, () => {                                            /* celebration over: offer the next page */
       if (state !== 'alive') return;
       state = 'done';
@@ -8030,7 +8603,7 @@ window.ZoeyColor = (function () {
     });
   }
 
-  function newPage(pressed, idx) {
+  function newPage(pressed, k) {
     cancel(autoT); cancel(nudgeT);
     round++; clearTimers(false);                                   /* a new page is a new round: old callbacks die here */
     tpl = (tpl + 1) % pages().length;
@@ -8038,8 +8611,8 @@ window.ZoeyColor = (function () {
     showOutline(true);
     tone(440, 0, 0.18, { f1: 700, g: 0.08 });
     if (pressed) {
-      const done = paint(idx);                                     /* her press also colours the first area of the new page */
-      if (done) complete(idx); else say('col_' + PALETTES[pal][idx], false);
+      const done = paint(nextStep(), k);                           /* her press also colours the first area of the new page */
+      if (done) complete(k); else sayColor(k);
     }
     armNudge();
   }
@@ -8050,9 +8623,9 @@ window.ZoeyColor = (function () {
     nudgeT = later(9000, () => {
       if (state !== 'paint') return;
       /* nothing is "right" here: just invite her to press, with a left-to-right wave across the four
-         buttons. Three waves with no answer and the page turns itself - a rich page can hold twenty
-         areas, and there is no button that means "another dinosaur", so this is the way out. */
-      PALETTES[pal].concat(['more']).forEach((c, i) => later(i * 170, () => { tone(NOTE[i], 0, 0.22, { type: 'sine', g: 0.07 }); blip(els.btns[i], 'col-wave', 450); }));
+         buttons. Three waves with no answer and the page turns itself - there is no button that
+         means "another dinosaur", so this is the way out. */
+      [0, 1, 2, 3].forEach((n, i) => later(i * 170, () => { tone(NOTE[i], 0, 0.22, { type: 'sine', g: 0.07 }); blip(els.btns[i], 'col-wave', 450); }));
       blip(els.dino, 'col-nudge', 900);
       zoeyDo('look', 1900);
       say('col_prompt', false);
@@ -8062,6 +8635,10 @@ window.ZoeyColor = (function () {
   }
 
   /* ---------- module API ---------- */
+  function onPointer(e) {
+    if (e.button > 0) return;
+    if (tapAt(e.target)) { e.preventDefault(); }
+  }
   function start() {
     const root = document.getElementById('col-root');
     if (!root) return;
@@ -8069,9 +8646,10 @@ window.ZoeyColor = (function () {
     root.hidden = false;
     els = build(root);
     alive = true; paused = false; lastPress = 0; deferred = []; round++;
-    tpl = 0; pal = 0; state = 'paint';
+    tpl = 0; pal = 0; cur = SLUGS[0]; state = 'paint';
     showPalette();
     showOutline(true);
+    els.stage.addEventListener('pointerdown', onPointer);
     say('col_start', false);
     later(900, () => [0, 1, 2, 3].forEach((n, i) => later(i * 170, () => blip(els.btns[i], 'col-wave', 450))));
     armNudge();
@@ -8081,6 +8659,7 @@ window.ZoeyColor = (function () {
     alive = false; paused = false; state = 'idle'; round++;
     clearTimers(true); deferred = []; nudgeT = null; autoT = null; speechSeq++;
     if (was) { try { stopSpeech(); } catch (e) { /* ignore */ } try { stopMusic(); } catch (e) { /* ignore */ } try { clearFx(); } catch (e) { /* ignore */ } }
+    if (els && els.stage) els.stage.removeEventListener('pointerdown', onPointer);
     const root = document.getElementById('col-root');
     if (root) root.innerHTML = '';
     els = null;
@@ -8118,7 +8697,9 @@ window.ZoeyColor = (function () {
   }
   function keyup(e) { if (alive && KEYMAP[e.code] !== undefined) e.preventDefault(); }
 
-  return { start: start, stop: stop, pause: pause, resume: resume, keydown: keydown, keyup: keyup };
+  return { start: start, stop: stop, pause: pause, resume: resume, keydown: keydown, keyup: keyup,
+    _: { SLUGS: SLUGS, PALETTES: PALETTES, PAL: PAL, clustersOf: clustersOf, stepsOf: stepsOf, pages: pages,
+      steps: () => steps, cur: () => cur } };
 })();
 </script>
 
@@ -9612,6 +10193,934 @@ window.ZoeyDomino = (function () {
 </script>
 
 
+
+
+<!-- >>> write:js - folded in by tools/fold-write.js; edit games/write/game.js and re-run the tool, never this block -->
+<script>
+/* ===== כותבים מספרים - games/write/game.js, folded in verbatim ===== */
+'use strict';
+/* =====================================================================
+   "כותבים מספרים" - Writing numbers  (slug write, global ZoeyWrite, CSS prefix wr-)
+
+   Harel, 2026-11-02: *"add 20 more games that teach Zoey how to write numbers. Forget the keypad
+   concept for a moment - games for the iPad only, games that can teach Zoey how numbers are written
+   and how lines are drawn. Read about how this is done for children around 3-4, and then build it,
+   preferably with dinosaurs and Bibi in it."*
+
+   The reading is written up in docs/WRITING-NUMBERS.md with its sources. Four of its findings are
+   built into this file rather than decorated onto it, and they are the only reasons it looks the
+   way it does:
+
+   1. NUMERALS ARE NOT FIRST; STROKES ARE. Every OT source gives the same order - vertical line,
+      horizontal, circle, cross, square, diagonals, X, triangle - and the readiness rule for
+      numerals is "can she draw straight lines, circles and curves", because a numeral is made of
+      those and nothing else. Zoey is three. So TEN of these twenty are lines, which is also the
+      half of Harel's own sentence that is easy to miss: "and how lines are drawn".
+
+   2. THE DIGITS ARE TAUGHT IN SHAPE GROUPS, not counting order: the straight ones (1 4 7), then
+      the round ones (0 6 9 8), then the mixed (2 3 5) - because what she learns about one digit
+      transfers to the others in its group. That is why the map is not 0 1 2 3.
+
+   3. NOTHING CORRECTS HER MID-STROKE. A kindergarten study of a tablet tracing app found it
+      "systematically provided feedback as soon as an error was made, which may have disrupted the
+      encoding process", citing an earlier one on "handwriting movements being interrupted by the
+      augmented feedback". So the line simply FILLS IN WHERE SHE HAS BEEN: wander off and it stops
+      filling, come back and it carries on. No buzz, no red, no snapping her finger to the line.
+      The project's own "no fail states" rule, arrived at from a second direction.
+
+   4. THE PROMPT FADES. Three passes over each stage: a solid lane to trace inside, then a dotted
+      ghost, then nothing but the green dot and the arrow. One star a pass. That is what turns
+      twenty activities into sixty without inventing anything.
+
+   AND IT IS TOUCH-ONLY, which is a first here. You cannot draw a 3 with four buttons, so the card
+   is in the picker only in touch mode, and the root carries `data-pointer` - a new word to the
+   shared tap layer, which then leaves this root entirely alone instead of turning a touch into a
+   keypress. Everywhere else in this app a finger IS the keypress; this is the one game where the
+   finger is the whole point, and the seam says so by name rather than by accident. A mouse behaves
+   exactly like a finger, so a laptop with touch mode on can play it.
+
+   RECORDING SCRIPT - the PH keys this game adds (key : text, full nikud)
+     wr_start : בּוֹאִי נִלְמַד לִכְתֹּב!
+     wr_pick  : בַּחֲרִי מָה לְצַיֵּר!
+     wr_dot   : שִׂימִי אֶצְבַּע עַל הַנְּקֻדָּה הַיְרֻקָּה!
+     wr_fade  : עַכְשָׁו לְבַד!
+     and one cue per stage, which is the teaching itself and not decoration - the teacher resources
+     are consistent that what carries the movement is a spoken cue telling her where to start, which
+     way to go and what shape to make:
+     wr_c_vline : קַו אֶחָד לְמַטָּה!            wr_c_hline : קַו אֶחָד הַצִּדָּה!
+     wr_c_circle: מִסָּבִיב, כְּמוֹ בֵּיצָה!        wr_c_cross : לְמַטָּה, וְאָז הַצִּדָּה!
+     wr_c_square: אַרְבַּע פִּנּוֹת!              wr_c_diagA : מִלְּמַעְלָה לְמַטָּה!
+     wr_c_diagB : מִלְּמַעְלָה לְמַטָּה!           wr_c_ex    : שְׁנֵי קַוִּים!
+     wr_c_zig   : לְמַעְלָה, לְמַטָּה, לְמַעְלָה!     wr_c_tri   : שָׁלוֹשׁ פִּנּוֹת!
+     wr_c_d1    : קַו אֶחָד לְמַטָּה!             wr_c_d4    : שְׁנֵי קַוִּים!
+     wr_c_d7    : הַצִּדָּה וְאָז לְמַטָּה!          wr_c_d0    : מִסָּבִיב, כְּמוֹ בֵּיצָה!
+     wr_c_d6    : לְמַטָּה וְאָז עִגּוּל!           wr_c_d9    : עִגּוּל וְאָז לְמַטָּה!
+     wr_c_d8    : עִגּוּל, וְעוֹד עִגּוּל!          wr_c_d2    : מִסָּבִיב וְאָז הַצִּדָּה!
+     wr_c_d3    : שְׁנֵי גַּבְנוּנִים!              wr_c_d5    : לְמַטָּה, מִסָּבִיב, וְהַכּוֹבַע!
+   The numbers themselves reuse count_1 ... count_10, which are recorded, and the praise reuses the
+   twenty cheers. None of the 24 above is recorded yet (Kolbo was unreachable on the day this was
+   built), so each one is SILENT rather than spoken by the male fallback - see say().
+   ===================================================================== */
+window.ZoeyWrite = (function () {
+  const SAVE = 'zoey-write';
+  const PASSES = 3;                       /* solid lane -> dotted ghost -> the green dot alone */
+  const SAMPLES = 160;                    /* points per stroke; the resolution of "she has been here" */
+  const TOL = 13;                         /* how far off the line a three-year-old may be, in the 0..100 box */
+  const JUMP = 22;                        /* how far along she may leap in one move: fast tracing yes, teleporting no */
+  /* How near the end counts as the end. A three-year-old who lifts her finger a hair early has
+     finished the line, and a game that says otherwise is a game that cannot be finished - the
+     check caught this on its first run, with her stopping at 159 of 160. */
+  const END = 5;
+
+  /* ---------- the twenty ----------
+     Every path is in a 0..100 box, y downwards, and EVERY ONE OF THEM STARTS AT THE TOP where the
+     numeral does, because "most numbers start at the top" is the one rule all the teaching material
+     agrees on. `s` is the list of strokes in the order they are made. */
+  const STAGES = [
+    /* --- part one: the lines, in the order a hand learns them --- */
+    { id: 'vline', kind: 'line', name: 'קו למטה', s: ['M50 12 L50 88'] },
+    { id: 'hline', kind: 'line', name: 'קו הצידה', s: ['M12 50 L88 50'] },
+    { id: 'circle', kind: 'line', name: 'עיגול', s: ['M50 12 A38 38 0 1 0 50 88 A38 38 0 1 0 50 12'] },
+    { id: 'cross', kind: 'line', name: 'פלוס', s: ['M50 12 L50 88', 'M12 50 L88 50'] },
+    { id: 'square', kind: 'line', name: 'ריבוע', s: ['M18 18 L82 18 L82 82 L18 82 Z'] },
+    { id: 'diagA', kind: 'line', name: 'מגלשה', s: ['M18 16 L82 84'] },
+    { id: 'diagB', kind: 'line', name: 'מגלשה', s: ['M82 16 L18 84'] },
+    { id: 'ex', kind: 'line', name: 'איקס', s: ['M18 16 L82 84', 'M82 16 L18 84'] },
+    { id: 'zig', kind: 'line', name: 'זיגזג', s: ['M12 24 L32 76 L50 24 L68 76 L88 24'] },
+    { id: 'tri', kind: 'line', name: 'משולש', s: ['M50 14 L86 82 L14 82 Z'] },
+    /* --- part two: the digits, grouped by shape and not by counting --- */
+    { id: 'd1', kind: 'digit', g: '1', s: ['M50 13 L50 87'] },
+    { id: 'd4', kind: 'digit', g: '4', s: ['M64 13 L20 62 L82 62', 'M64 13 L64 87'] },
+    { id: 'd7', kind: 'digit', g: '7', s: ['M20 16 L80 16 L44 86'] },
+    { id: 'd0', kind: 'digit', g: '0', s: ['M50 12 A30 38 0 1 0 50 88 A30 38 0 1 0 50 12'] },
+    { id: 'd6', kind: 'digit', g: '6', s: ['M70 14 C48 18 28 40 28 60 C28 77 40 88 52 88 C66 88 76 78 76 65 C76 52 65 44 52 44 C41 44 32 50 28 58'] },
+    { id: 'd9', kind: 'digit', g: '9', s: ['M72 32 C72 19 62 11 50 11 C38 11 28 20 28 32 C28 44 38 53 50 53 C62 53 72 44 72 32 L72 87'] },
+    { id: 'd8', kind: 'digit', g: '8', s: ['M50 12 C34 12 29 25 42 35 L58 49 C71 59 67 88 50 88 C33 88 29 59 42 49 L58 35 C71 25 66 12 50 12'] },
+    { id: 'd2', kind: 'digit', g: '2', s: ['M24 30 C24 18 36 11 50 11 C65 11 76 20 76 33 C76 50 46 62 22 87 L80 87'] },
+    { id: 'd3', kind: 'digit', g: '3', s: ['M24 24 C29 15 39 11 50 11 C64 11 73 19 73 30 C73 40 63 48 50 48 C63 48 76 55 76 67 C76 81 63 89 48 89 C36 89 27 84 23 76'] },
+    { id: 'd5', kind: 'digit', g: '5', s: ['M36 14 L29 47 C41 39 56 39 65 47 C76 57 74 77 59 86 C47 93 32 89 24 79', 'M36 14 L74 14'] }
+  ];
+  const CUE = {
+    vline: 'קַו אֶחָד לְמַטָּה!', hline: 'קַו אֶחָד הַצִּדָּה!', circle: 'מִסָּבִיב, כְּמוֹ בֵּיצָה!',
+    cross: 'לְמַטָּה, וְאָז הַצִּדָּה!', square: 'אַרְבַּע פִּנּוֹת!', diagA: 'מִלְּמַעְלָה לְמַטָּה!',
+    diagB: 'מִלְּמַעְלָה לְמַטָּה!', ex: 'שְׁנֵי קַוִּים!', zig: 'לְמַעְלָה, לְמַטָּה, לְמַעְלָה!', tri: 'שָׁלוֹשׁ פִּנּוֹת!',
+    d1: 'קַו אֶחָד לְמַטָּה!', d4: 'שְׁנֵי קַוִּים!', d7: 'הַצִּדָּה וְאָז לְמַטָּה!', d0: 'מִסָּבִיב, כְּמוֹ בֵּיצָה!',
+    d6: 'לְמַטָּה וְאָז עִגּוּל!', d9: 'עִגּוּל וְאָז לְמַטָּה!', d8: 'עִגּוּל, וְעוֹד עִגּוּל!',
+    d2: 'מִסָּבִיב וְאָז הַצִּדָּה!', d3: 'שְׁנֵי גַּבְנוּנִים!', d5: 'לְמַטָּה, מִסָּבִיב, וְהַכּוֹבַע!'
+  };
+  PH.wr_start = 'בּוֹאִי נִלְמַד לִכְתֹּב!';
+  PH.wr_pick = 'בַּחֲרִי מָה לְצַיֵּר!';
+  PH.wr_dot = 'שִׂימִי אֶצְבַּע עַל הַנְּקֻדָּה הַיְרֻקָּה!';
+  PH.wr_fade = 'עַכְשָׁו לְבַד!';
+  Object.keys(CUE).forEach((k) => { PH['wr_c_' + k] = CUE[k]; });
+
+  /* ---------- state ---------- */
+  let alive = false, paused = false;
+  let round = 0, view = 'map';            /* map | play */
+  let stage = 0, pass = 0, stroke = 0, at = 0, drawing = false, done = false;
+  let strokes = [];                       /* {d, el, doneEl, len, pts} per stroke of this stage */
+  let stars = {};
+  let timers = [], deferred = [], hintT = null, speechSeq = 0;
+  let els = null;
+
+  /* ---------- the save: a star count per stage, and it only ever goes up ---------- */
+  function readStars() {
+    try {
+      const o = JSON.parse(window.localStorage.getItem(SAVE) || 'null');
+      const out = {};
+      if (o && typeof o === 'object') {
+        STAGES.forEach((s) => { const n = +o[s.id]; if (n >= 1) out[s.id] = Math.min(PASSES, Math.floor(n)); });
+      }
+      return out;
+    } catch (e) { return {}; }
+  }
+  function noteStar(id, n) {
+    stars[id] = Math.max(stars[id] || 0, Math.min(PASSES, n));
+    try { window.localStorage.setItem(SAVE, JSON.stringify(Object.assign(readStars(), stars))); } catch (e) { /* ignore */ }
+  }
+
+  /* ---------- timers: round-scoped, pausable, all cleared by stop() ---------- */
+  function arm(t) { t.due = performance.now() + t.left; t.h = setTimeout(t.run, t.left); }
+  function later(ms, fn, keep) {
+    const t = { left: ms, due: 0, h: 0, rd: round, keep: !!keep };
+    t.run = function () {
+      timers = timers.filter(x => x !== t);
+      if (!alive || (!t.keep && t.rd !== round)) return;
+      fn();
+    };
+    timers.push(t); if (!paused) arm(t);
+    return t;
+  }
+  function cancel(t) { if (!t) return; clearTimeout(t.h); timers = timers.filter(x => x !== t); }
+  function clearTimers(all) {
+    timers = timers.filter(t => { if (all || !t.keep) { clearTimeout(t.h); return false; } return true; });
+  }
+  /* None of this game's own 24 lines is recorded yet, and speak() falls through to speechSynthesis
+     for a key with no clip - which on Windows is the male Asaf voice. "Female voice only" is a rule
+     here, not a preference, so a line of its own speaks only once its clip exists. What it borrows -
+     count_1..count_10 and the cheers - is recorded and speaks today. */
+  function say(key, queue, then) {
+    const s = ++speechSeq, rd = round;
+    const fin = then ? function () {
+      if (!alive || rd !== round || s !== speechSeq) return;
+      if (paused) { deferred.push([rd, then]); return; }
+      then();
+    } : undefined;
+    if (!VOICE_CLIPS[key]) { if (fin) later(120, fin, true); return; }
+    speak(key, queue, fin);
+  }
+  function blip(el, cls, ms) {
+    if (!el) return;
+    el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+    later(ms, () => el.classList.remove(cls), true);
+  }
+
+  /* ---------- the map: twenty stepping stones, each wearing the shape it teaches ---------- */
+  function thumb(st) {
+    const d = st.s.map((p) => '<path d="' + p + '"/>').join('');
+    return '<svg class="wr-thumb" viewBox="-6 -6 112 112" aria-hidden="true" focusable="false">' +
+      (st.kind === 'digit' ? '<text class="wr-thumbG" x="50" y="50">' + st.g + '</text>' : '<g class="wr-thumbP">' + d + '</g>') +
+      '</svg>';
+  }
+  function starRow(n) {
+    let h = '';
+    for (let i = 0; i < PASSES; i++) h += '<span class="wr-st' + (i < n ? ' wr-stOn' : '') + '"></span>';
+    return h;
+  }
+  function mapHTML() {
+    return '<div class="wr-mapGrid">' + STAGES.map((st, i) =>
+      '<button type="button" class="wr-stone" data-s="' + i + '" aria-label="' + (st.name || st.g) + '">' +
+        thumb(st) + '<span class="wr-stars">' + starRow(stars[st.id] || 0) + '</span>' +
+      '</button>').join('') + '</div>';
+  }
+
+  /* ---------- building the stage she tapped ---------- */
+  function playHTML(st) {
+    const ghost = st.kind === 'digit' ? '<text class="wr-ghost" x="50" y="50">' + st.g + '</text>' : '';
+    const tracks = st.s.map((d, i) => '<path class="wr-track" data-i="' + i + '" d="' + d + '"/>').join('');
+    const dones = st.s.map((d, i) => '<path class="wr-done" data-i="' + i + '" d="' + d + '"/>').join('');
+    return '<div class="wr-card" data-pass="0">' +
+        '<svg class="wr-svg" viewBox="0 0 100 100" aria-hidden="true" focusable="false">' +
+          ghost + tracks + dones +
+          '<circle class="wr-dot" r="3.4"/><path class="wr-arrow" d=""/>' +
+        '</svg>' +
+        /* Spino rides her finger along a numeral and Bibi along a line - the same seam the shuffle
+         game uses for him, so if the art rig is ever off he still appears. */
+      '<div class="wr-rider">' + (st.kind === 'digit' ? dinoById('spino').draw() :
+        ((window.ArtRigSvg && ArtRigSvg.has('bibi')) ? ArtRigSvg.bibi() : dinoById('compsy').draw())) + '</div>' +
+      '</div>' +
+      '<div class="wr-side">' +
+        '<button type="button" class="wr-back" aria-label="חזרה">' +
+          '<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><path d="M62 20 L32 50 L62 80" fill="none" stroke="currentColor" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+        '</button>' +
+        '<div class="wr-passes">' + starRow(0) + '</div>' +
+      '</div>';
+  }
+  function build(root) {
+    root.innerHTML =
+      '<div class="wr-stage">' +
+        '<div class="wr-scene" aria-hidden="true">' + sceneSVG('wr') + '</div>' +
+        '<div class="wr-map"></div>' +
+        '<div class="wr-play"></div>' +
+      '</div>';
+    const q = (s) => root.querySelector(s);
+    return { stage: q('.wr-stage'), map: q('.wr-map'), play: q('.wr-play') };
+  }
+
+  /* ---------- sampling: "she has been here" is measured on points, not on geometry ----------
+     Each stroke is sampled into SAMPLES points with the browser's own getPointAtLength, so a curve
+     and a straight line are the same thing to everything below. Progress is an index: the furthest
+     point she has reached in order. */
+  function prepare() {
+    const svg = els.play.querySelector('.wr-svg');
+    strokes = Array.prototype.map.call(svg.querySelectorAll('.wr-track'), (el, i) => {
+      const len = el.getTotalLength();
+      const pts = [];
+      for (let k = 0; k <= SAMPLES; k++) {
+        const p = el.getPointAtLength(len * k / SAMPLES);
+        pts.push([p.x, p.y]);
+      }
+      const doneEl = svg.querySelector('.wr-done[data-i="' + i + '"]');
+      doneEl.style.strokeDasharray = len;
+      doneEl.style.strokeDashoffset = len;
+      return { el: el, doneEl: doneEl, len: len, pts: pts };
+    });
+  }
+  function paintProgress() {
+    strokes.forEach((s, i) => {
+      const frac = i < stroke ? 1 : (i === stroke ? at / SAMPLES : 0);
+      s.doneEl.style.strokeDashoffset = s.len * (1 - frac);
+    });
+  }
+  /* Where to put her finger, and which way to set off. It is hidden WHILE she is drawing - once
+     her finger is down it has nothing left to say, and left showing at the start of a stroke she
+     has already half made it says the wrong thing. When she lifts, it reappears exactly where she
+     stopped, so picking a half-drawn stroke back up is as obvious as starting one. */
+  function placeDot() {
+    const svg = els.play && els.play.querySelector('.wr-svg');
+    if (!svg) return;
+    const dot = svg.querySelector('.wr-dot'), arrow = svg.querySelector('.wr-arrow');
+    const s = strokes[stroke];
+    if (!s || done || drawing) { dot.style.display = 'none'; arrow.style.display = 'none'; return; }
+    dot.style.display = ''; arrow.style.display = '';
+    const i0 = Math.min(at, SAMPLES - 1), a = s.pts[i0], b = s.pts[Math.min(SAMPLES, i0 + 10)];
+    dot.setAttribute('cx', a[0]); dot.setAttribute('cy', a[1]);
+    const dx = b[0] - a[0], dy = b[1] - a[1], m = Math.hypot(dx, dy) || 1;
+    const ux = dx / m, uy = dy / m, px = -uy, py = ux;
+    /* the arrow sits just AHEAD of the dot and is small on purpose: it says which way, and anything
+       bigger covers the very piece of line it is pointing along */
+    const tipx = a[0] + ux * 10.5, tipy = a[1] + uy * 10.5;
+    arrow.setAttribute('d', 'M' + (tipx) + ' ' + (tipy) +
+      ' L' + (tipx - ux * 5 + px * 3.4) + ' ' + (tipy - uy * 5 + py * 3.4) +
+      ' L' + (tipx - ux * 5 - px * 3.4) + ' ' + (tipy - uy * 5 - py * 3.4) + ' Z');
+    moveRider(a[0], a[1]);
+  }
+  function moveRider(x, y) {
+    const r = els.play.querySelector('.wr-rider');
+    if (r) { r.style.left = x + '%'; r.style.top = y + '%'; }
+  }
+
+  /* ---------- her finger ----------
+     NOTHING HERE JUDGES HER WHILE SHE MOVES. The only thing a point can do is advance the fill, and
+     the only thing being off the line does is fail to advance it. That is the kindergarten study's
+     finding made structural rather than remembered: there is no branch in this function that could
+     interrupt her. */
+  function svgPoint(e) {
+    const svg = els.play.querySelector('.wr-svg');
+    const r = svg.getBoundingClientRect();
+    if (!r.width || !r.height) return null;
+    return [(e.clientX - r.left) / r.width * 100, (e.clientY - r.top) / r.height * 100];
+  }
+  function feed(p) {
+    const s = strokes[stroke];
+    if (!s || done) return;
+    let best = -1, bestD = TOL * TOL;
+    const hi = Math.min(SAMPLES, at + JUMP);
+    for (let k = at; k <= hi; k++) {
+      const dx = s.pts[k][0] - p[0], dy = s.pts[k][1] - p[1], d = dx * dx + dy * dy;
+      if (d <= bestD) { bestD = d; best = k; }
+    }
+    if (best > at) {
+      at = best;
+      if (at >= SAMPLES - END) at = SAMPLES;
+      paintProgress();
+      moveRider(s.pts[at][0], s.pts[at][1]);
+      if (at % 18 === 0) tone(300 + at * 2.2, 0, 0.07, { type: 'triangle', g: 0.05 });
+      if (at >= SAMPLES) finishStroke();
+    }
+  }
+  function finishStroke() {
+    const s = strokes[stroke];
+    blip(s.doneEl, 'wr-flash', 420);
+    tone(660, 0, 0.18, { type: 'triangle', g: 0.1 });
+    stroke++; at = 0;
+    if (stroke >= strokes.length) { finishStage(); return; }
+    placeDot();
+    armHint();
+  }
+  function finishStage() {
+    done = true;
+    cancel(hintT);
+    const st = STAGES[stage];
+    els.play.querySelector('.wr-card').classList.add('wr-won');
+    noteStar(st.id, pass + 1);
+    els.play.querySelector('.wr-passes').innerHTML = starRow(stars[st.id] || 0);
+    [523, 659, 784, 1047].forEach((f, i) => later(i * 100, () => tone(f, 0, 0.32, { g: 0.1 })));
+    const r = els.play.querySelector('.wr-card').getBoundingClientRect();
+    burst(r.left + r.width / 2, r.top + r.height / 2, ['#ffd400', '#2a62ff', '#e8242b', '#1fb34a', '#ffffff'], reduce ? 14 : 36);
+    /* the number she has just written is said out loud, and those clips exist */
+    const num = st.kind === 'digit' && +st.g >= 1 && +st.g <= 10 ? 'count_' + st.g : null;
+    if (num) say(num, false, () => say(cheerKey(), true));
+    else say(cheerKey(), false);
+    later(2000, () => {
+      if (!alive || view !== 'play') return;
+      if (pass + 1 < PASSES) { pass++; openStage(stage, pass); say('wr_fade', false); }
+      else toMap();
+    });
+  }
+
+  function onDown(e) {
+    if (!alive || paused || view !== 'play') return;
+    if (e.button > 0) return;
+    const back = e.target.closest && e.target.closest('.wr-back');
+    if (back) { toMap(); return; }
+    const p = svgPoint(e);
+    if (!p) return;
+    drawing = true;
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+    cancel(hintT);
+    placeDot();
+    feed(p);
+    e.preventDefault();
+  }
+  function onMove(e) {
+    if (!drawing || !alive || paused || view !== 'play') return;
+    const p = svgPoint(e);
+    if (p) feed(p);
+    e.preventDefault();
+  }
+  function onUp() {
+    if (!drawing) return;
+    drawing = false;
+    if (!done) { placeDot(); armHint(); }
+  }
+  /* The one place anything is said about how it is going, and it happens only after she has STOPPED.
+     "Feedback that is not constant or interruptive" is the whole finding; a hint that arrives while
+     her finger is moving would be the very thing the study warned about. */
+  function armHint() {
+    cancel(hintT);
+    hintT = later(6000, () => {
+      if (view !== 'play' || done || drawing) return;
+      const card = els.play.querySelector('.wr-card');
+      blip(card, 'wr-showMe', 2600);
+      say(at === 0 && stroke === 0 ? 'wr_dot' : 'wr_c_' + STAGES[stage].id, false);
+      armHint();
+    });
+  }
+
+  /* ---------- the two views ---------- */
+  function openStage(i, p) {
+    stage = i; pass = p || 0; stroke = 0; at = 0; done = false; drawing = false;
+    view = 'play';
+    round++; clearTimers(false);
+    els.stage.setAttribute('data-view', 'play');
+    els.play.innerHTML = playHTML(STAGES[i]);
+    els.play.querySelector('.wr-card').setAttribute('data-pass', String(pass));
+    els.play.querySelector('.wr-passes').innerHTML = starRow(stars[STAGES[i].id] || 0);
+    prepare();
+    paintProgress();
+    placeDot();
+    say('wr_c_' + STAGES[i].id, false);
+    armHint();
+  }
+  function toMap() {
+    view = 'map';
+    round++; clearTimers(false); cancel(hintT);
+    drawing = false;
+    els.stage.setAttribute('data-view', 'map');
+    els.map.innerHTML = mapHTML();
+    els.play.innerHTML = '';
+    say('wr_pick', false);
+  }
+  function onMapDown(e) {
+    if (!alive || paused || view !== 'map') return;
+    const b = e.target.closest && e.target.closest('.wr-stone');
+    if (!b) return;
+    e.preventDefault();
+    tone(523, 0, 0.16, { f1: 784, g: 0.1 });
+    const i = +b.getAttribute('data-s');
+    /* she starts at the pass she has not earned yet, so a stage she has done twice opens on the
+       hard one - and a stage she has finished opens on the first pass again, because there is no
+       state in this app that means "nothing left for you here" */
+    const got = stars[STAGES[i].id] || 0;
+    openStage(i, got >= PASSES ? 0 : got);
+  }
+
+  /* ---------- module API ---------- */
+  function start() {
+    const root = document.getElementById('wr-root');
+    if (!root) return;
+    if (alive) stop();
+    root.hidden = false;
+    /* the shared tap layer reads this and leaves the whole root alone: in here a touch is a touch */
+    root.setAttribute('data-pointer', '');
+    els = build(root);
+    alive = true; paused = false; deferred = []; round++;
+    stars = readStars();
+    els.map.addEventListener('pointerdown', onMapDown);
+    els.play.addEventListener('pointerdown', onDown);
+    els.play.addEventListener('pointermove', onMove);
+    els.play.addEventListener('pointerup', onUp);
+    els.play.addEventListener('pointercancel', onUp);
+    toMap();
+    say('wr_start', false);
+  }
+  function stop() {
+    const was = alive;
+    alive = false; paused = false; view = 'map'; drawing = false; round++;
+    clearTimers(true); deferred = []; hintT = null; speechSeq++;
+    if (was) { try { stopSpeech(); } catch (e) { /* ignore */ } try { stopMusic(); } catch (e) { /* ignore */ } try { clearFx(); } catch (e) { /* ignore */ } }
+    const root = document.getElementById('wr-root');
+    if (root) { root.innerHTML = ''; root.removeAttribute('data-pointer'); }
+    els = null; strokes = [];
+  }
+  function pause() {
+    if (!alive || paused) return false;
+    paused = true; drawing = false;
+    const now = performance.now();
+    timers.forEach(t => { clearTimeout(t.h); t.left = Math.max(0, t.due - now); });
+    try { stopSpeech(); } catch (e) { /* ignore */ }
+    if (els) els.stage.classList.add('wr-paused');
+    return true;
+  }
+  function resume() {
+    if (!alive || !paused) return;
+    paused = false;
+    if (els) els.stage.classList.remove('wr-paused');
+    timers.forEach(arm);
+    const d = deferred; deferred = [];
+    d.forEach(p => { if (alive && p[0] === round) p[1](); });
+  }
+  /* There is no keypad here, on purpose (Harel: "forget the keypad concept"). Esc still belongs to
+     the hub, and green goes back to the map rather than doing nothing, so a keypad in the room is
+     not a dead end for a parent. */
+  function keydown(e) {
+    if (!alive) return;
+    if (e.code === 'Escape') return;
+    if (e.code === 'Quote' && view === 'play') { e.preventDefault(); if (!e.repeat) toMap(); }
+  }
+  function keyup() { /* nothing: this game has no key targets */ }
+
+  return { start: start, stop: stop, pause: pause, resume: resume, keydown: keydown, keyup: keyup,
+    _: { STAGES: STAGES, PASSES: PASSES, SAMPLES: SAMPLES, TOL: TOL, SAVE: SAVE,
+      view: () => view, stage: () => stage, pass: () => pass, stroke: () => stroke, at: () => at,
+      done: () => done, stars: () => stars, strokes: () => strokes,
+      open: openStage, toMap: toMap, readStars: readStars } };
+})();
+</script>
+<!-- <<< write:js -->
+<!-- >>> math:js - folded in by tools/fold-math.js; edit games/math/game.js and re-run the tool, never this block -->
+<script>
+/* ===== חשבון עד עשר - games/math/game.js, folded in verbatim ===== */
+'use strict';
+/* =====================================================================
+   "חשבון עד עשר" - Arithmetic to ten  (slug math, global ZoeyMath, CSS prefix mth-)
+
+   WHAT IT IS FOR. Harel, 2026-11-02: *"let us add the arithmetic games with a focus up to ten.
+   There is no need to dwell with Zoey on counting to three, it bores the child, and the difficulty
+   always has to rise from stage to stage, otherwise she gets bored quickly."*
+
+   The app already had the two rungs below this one. "סופרים ביחד" teaches one-to-one correspondence
+   (one word, one thing) and "זואי סופרת" asks "how many" - and inside that second game there is a
+   little arithmetic already, but deliberately capped: its sums stop at six, because two islands of
+   big dinosaurs sharing one field cannot show nine of anything at a size she can count. This game
+   is that cap removed, by changing what is being counted: ten FISH fit on a shore at a size a
+   three-year-old can take in, where ten dinosaurs never did.
+
+   HOW IT PLAYS. Fish on the sand, and the spinosaurus watching them. Either more fish swim in, and
+   the question is how many there are together; or he eats some, and the question is how many are
+   left. She answers on four stones, each wearing a numeral AND the same picture of dots the other
+   counting game uses - a full row of five with the rest underneath - so nothing here needs reading.
+
+   THE DIFFICULTY CLIMBS, AND IT IS REMEMBERED. Seven levels (LADDER): plus one to five, plus one to
+   ten, small sums, sums to ten, minus one, taking away, and then both mixed. Four right answers at
+   the first try and she moves up. The level she reached is kept in localStorage and NEVER goes
+   back down - the same max(stored, reached) rule the spinosaurus's growth uses - so "plus one to
+   five" is something she passes through once in her life and not something she meets every time
+   she opens the game. That is the whole of what Harel asked for, written as a rule rather than as
+   a hope.
+
+   Within a level it climbs too, in the one place that actually decides whether she has to count:
+   the three WRONG stones. Early in a level they are drawn from anywhere in range, so one glance
+   sorts them; by the third question they are the numbers NEAREST the answer, and the only way to
+   tell four from five is to count. Same lesson as topN() in the counting game.
+
+   NO FAIL STATE, as everywhere else. A wrong stone wobbles, a kind word is said, and after two
+   tries the right one glows. Nothing is lost, there is no score to go down and no way to be out.
+
+   RECORDING SCRIPT - the PH keys this game adds (key : text, full nikud)
+     mth_start : בּוֹאִי נְחַשֵּׁב בְּיַחַד!
+     mth_came  : הִגִּיעוּ עוֹד דָּגִים!
+     mth_ate   : סְפִּינוֹ אָכַל!
+     mth_left  : כַּמָּה נִשְׁאֲרוּ?
+     mth_press : לַחֲצִי עַל הַמִּסְפָּר!
+     mth_up    : אַתְּ אַלּוּפָה! עוֹלוֹת שָׁלָב!
+   Six lines, and that is all, because the game is built out of what is already recorded: the
+   numbers count_1 ... count_10 (feminine - that is how numbers are recited in Hebrew), the
+   addition question q_together ("כַּמָּה בְּיַחַד?"), the twenty cheers and the thirteen kind words.
+   Until those six are recorded they are SILENT rather than spoken by the male fallback voice -
+   see say() below; "female voice only" is a rule of this project, not a preference.
+   ===================================================================== */
+window.ZoeyMath = (function () {
+  const KEYMAP = { KeyS: 0, KeyG: 1, KeyK: 2, Quote: 3 };      /* blue, yellow, red, green: left -> right */
+  const NOTE = [392, 440, 494, 587];
+  const SAVE = 'zoey-math';
+  const TO_NEXT = 4;                                           /* right-first-time answers that move her up a level */
+
+  /* The ladder. `op` is '+' or '-', and the two numbers are drawn inside the band each level sets.
+     Every level is reachable by playing; none of them is ever repeated once passed. */
+  const LADDER = [
+    { id: 1, op: '+', b: [1, 1], sum: [2, 5] },     /* one more fish, small numbers */
+    { id: 2, op: '+', b: [1, 1], sum: [5, 10] },    /* one more fish, all the way to ten */
+    { id: 3, op: '+', b: [2, 4], sum: [3, 6] },     /* two real groups, small */
+    { id: 4, op: '+', b: [2, 5], sum: [7, 10] },    /* two real groups, to ten */
+    { id: 5, op: '-', b: [1, 1], n: [3, 10] },      /* he eats one */
+    { id: 6, op: '-', b: [2, 4], n: [4, 10] },      /* he eats a few */
+    { id: 7, op: '*', b: [1, 5], sum: [3, 10] }     /* both, mixed - the top of the ladder */
+  ];
+
+  PH.mth_start = 'בּוֹאִי נְחַשֵּׁב בְּיַחַד!';
+  PH.mth_came = 'הִגִּיעוּ עוֹד דָּגִים!';
+  PH.mth_ate = 'סְפִּינוֹ אָכַל!';
+  PH.mth_left = 'כַּמָּה נִשְׁאֲרוּ?';
+  PH.mth_press = 'לַחֲצִי עַל הַמִּסְפָּר!';
+  PH.mth_up = 'אַתְּ אַלּוּפָה! עוֹלוֹת שָׁלָב!';
+
+  /* ---------- the fish, and the dots on a stone ---------- */
+  function fishSVG(i) {
+    const skin = ['#5bc8f5', '#8fd0e8', '#7ad3c0', '#9fc0ff'][i % 4];
+    return '<svg viewBox="0 0 100 70" aria-hidden="true" focusable="false">' +
+      '<path class="mth-fin" d="M72 35 L97 16 L93 35 L97 54 Z"/>' +
+      '<ellipse class="mth-body" cx="44" cy="35" rx="40" ry="24" fill="' + skin + '"/>' +
+      '<path class="mth-fin" d="M40 13 L52 2 L58 14 Z"/>' +
+      '<circle class="mth-eye" cx="20" cy="28" r="6"/><circle class="mth-pupil" cx="18.5" cy="28.5" r="3"/>' +
+      '<path class="mth-smile" d="M10 40 q8 7 17 3" fill="none"/>' +
+      '<ellipse class="mth-gill" cx="56" cy="38" rx="9" ry="12" opacity="0.25"/>' +
+      '</svg>';
+  }
+  /* One to five keep the dice faces she reads at a glance; six to ten are a full row of five with
+     the rest underneath - "five, and two more" - exactly as the other counting game draws them, so
+     the two games say the same thing with the same picture. */
+  function dotsSVG(n) {
+    const P = { tl: [16, 16], tr: [44, 16], c: [30, 30], bl: [16, 44], br: [44, 44] };
+    const map = { 1: ['c'], 2: ['tl', 'br'], 3: ['tl', 'c', 'br'], 4: ['tl', 'tr', 'bl', 'br'], 5: ['tl', 'tr', 'c', 'bl', 'br'] };
+    if (n <= 5) return '<svg viewBox="0 0 60 60" aria-hidden="true" focusable="false">' +
+      (map[n] || []).map(k => '<circle class="mth-dot" cx="' + P[k][0] + '" cy="' + P[k][1] + '" r="7.5"/>').join('') + '</svg>';
+    let d = '';
+    for (let i = 0; i < 5; i++) d += '<circle class="mth-dot" cx="' + (8 + i * 11) + '" cy="11" r="5"/>';
+    for (let i = 0; i < n - 5; i++) d += '<circle class="mth-dot" cx="' + (8 + i * 11) + '" cy="27" r="5"/>';
+    return '<svg viewBox="0 0 60 38" aria-hidden="true" focusable="false">' + d + '</svg>';
+  }
+  const starSVG = '<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">' +
+    '<path d="M50 6 L61 38 L95 38 L67 58 L78 92 L50 71 L22 92 L33 58 L5 38 L39 38 Z"/></svg>';
+
+  /* ---------- the level she reached, which never goes back down ---------- */
+  function readLevel() {
+    try {
+      const raw = window.localStorage.getItem(SAVE);
+      const o = raw ? JSON.parse(raw) : null;
+      const n = o && +o.lvl;
+      return (n >= 1 && n <= LADDER.length) ? Math.floor(n) : 1;
+    } catch (e) { return 1; }
+  }
+  function writeLevel(n) {
+    /* max(stored, reached), like the spinosaurus's stages: a second tab, a crash or a reload can
+       only ever add. Nothing in this game is allowed to move her down a level. */
+    try {
+      const was = readLevel();
+      window.localStorage.setItem(SAVE, JSON.stringify({ lvl: Math.max(was, n) }));
+    } catch (e) { /* ignore */ }
+  }
+
+  /* ---------- state ---------- */
+  let alive = false, paused = false;
+  let round = 0, state = 'idle';             /* idle | show | ask | right | up */
+  let lvl = 1, stars = 0, q = null, wrongs = 0, lastAns = 0, lastPress = 0, speechSeq = 0;
+  let timers = [], deferred = [], nudgeT = null;
+  let els = null;
+
+  /* ---------- timers: one array, round-scoped, pausable, all cleared by stop() ---------- */
+  function arm(t) { t.due = performance.now() + t.left; t.h = setTimeout(t.run, t.left); }
+  function later(ms, fn, keep) {
+    const t = { left: ms, due: 0, h: 0, rd: round, keep: !!keep };
+    t.run = function () {
+      timers = timers.filter(x => x !== t);
+      if (!alive || (!t.keep && t.rd !== round)) return;
+      fn();
+    };
+    timers.push(t); if (!paused) arm(t);
+    return t;
+  }
+  function cancel(t) { if (!t) return; clearTimeout(t.h); timers = timers.filter(x => x !== t); }
+  function clearTimers(all) {
+    timers = timers.filter(t => { if (all || !t.keep) { clearTimeout(t.h); return false; } return true; });
+  }
+  /* The six lines this game adds are written and pointed but not recorded yet, and speak() falls
+     through to speechSynthesis for a key with no clip - which on Windows is the male Asaf voice.
+     So a line of this game's own speaks only once its clip exists; everything it borrows (the
+     numbers, the question, the cheers, the kind words) is recorded and speaks today. When the six
+     land, this guard is one line shorter and nothing else changes. */
+  function say(key, queue, then) {
+    const s = ++speechSeq, rd = round;
+    const fin = then ? function () {
+      if (!alive || rd !== round || s !== speechSeq) return;
+      if (paused) { deferred.push([rd, then]); return; }
+      then();
+    } : undefined;
+    if (!VOICE_CLIPS[key]) { if (fin) later(120, fin, true); return; }
+    speak(key, queue, fin);
+  }
+  function blip(el, cls, ms) {
+    if (!el) return;
+    el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+    later(ms, () => el.classList.remove(cls), true);
+  }
+
+  /* ---------- the questions ---------- */
+  const between = (a, b) => a + rand(b - a + 1);
+  /* the shared core has rand() and no shuffle(), so this one is the module's own */
+  function shuffle(a) { const o = a.slice(); for (let i = o.length - 1; i > 0; i--) { const j = rand(i + 1), t = o[i]; o[i] = o[j]; o[j] = t; } return o; }
+  function rawQ() {
+    const L = LADDER[lvl - 1];
+    const op = L.op === '*' ? (rand(2) ? '+' : '-') : L.op;
+    if (op === '+') {
+      const lo = L.sum ? L.sum[0] : 3, hi = L.sum ? L.sum[1] : 10;
+      for (let t = 0; t < 40; t++) {
+        const sum = between(lo, hi), b = between(L.b[0], L.b[1]);
+        if (b < sum && sum - b >= 1) return { op: '+', a: sum - b, b: b, answer: sum };
+      }
+      return { op: '+', a: 2, b: 1, answer: 3 };
+    }
+    const nlo = L.n ? L.n[0] : 3, nhi = L.n ? L.n[1] : 10;
+    for (let t = 0; t < 40; t++) {
+      const n = between(nlo, nhi), b = between(L.b[0], L.b[1]);
+      if (b < n) return { op: '-', a: n, b: b, answer: n - b };
+    }
+    return { op: '-', a: 3, b: 1, answer: 2 };
+  }
+  /* The three wrong stones. EARLY in a level they come from a wide band, so a glance sorts them;
+     from the third question on they are the numbers nearest the answer, and only counting tells
+     four from five. That is where the difficulty inside a level actually lives. */
+  function options(answer) {
+    const near = [];
+    for (let n = 1; n <= 10; n++) if (n !== answer) near.push(n);
+    near.sort((a, b) => Math.abs(a - answer) - Math.abs(b - answer));
+    const band = stars >= 2 ? 4 : 7;
+    const pool = shuffle(near.slice(0, band));
+    return shuffle([answer].concat(pool.slice(0, 3)));
+  }
+  function makeQ() {
+    let o, t = 0;
+    do { o = rawQ(); t++; } while (o.answer === lastAns && t < 8);
+    lastAns = o.answer;
+    o.options = options(o.answer);
+    o.correct = o.options.indexOf(o.answer);
+    return o;
+  }
+
+  /* ---------- DOM ---------- */
+  function build(root) {
+    root.innerHTML =
+      '<div class="mth-stage">' +
+        '<div class="mth-scene" aria-hidden="true">' + sceneSVG('mth') + '</div>' +
+        '<div class="mth-top" aria-hidden="true">' +
+          '<div class="mth-lvl"></div><div class="mth-stars"></div>' +
+        '</div>' +
+        '<div class="mth-board">' +
+          '<div class="mth-spino">' + dinoById('spino').draw() + '</div>' +
+          '<div class="mth-field"></div>' +
+        '</div>' +
+        '<div class="mth-zoey">' + drawZoey() + '</div>' +
+        '<div class="mth-row" dir="ltr">' +
+          '<button type="button" class="mth-stone c-blue" data-i="0" aria-label="כחול"></button>' +
+          '<button type="button" class="mth-stone c-yellow" data-i="1" aria-label="צהוב"></button>' +
+          '<button type="button" class="mth-stone c-red" data-i="2" aria-label="אדום"></button>' +
+          '<button type="button" class="mth-stone c-green" data-i="3" aria-label="ירוק"></button>' +
+        '</div>' +
+      '</div>';
+    const s = (x) => root.querySelector(x);
+    return { stage: s('.mth-stage'), board: s('.mth-board'), field: s('.mth-field'), spino: s('.mth-spino'),
+      zoey: s('.mth-zoey'), lvlEl: s('.mth-lvl'), starsEl: s('.mth-stars'),
+      stones: Array.prototype.slice.call(root.querySelectorAll('.mth-stone')) };
+  }
+  /* How far up the hill she is, and how close the next step is. No words: one pip per level passed,
+     one star per right answer in this one. */
+  function showProgress() {
+    let h = '';
+    for (let i = 0; i < LADDER.length; i++) h += '<span class="mth-pip' + (i < lvl ? ' mth-pipOn' : '') + '"></span>';
+    els.lvlEl.innerHTML = h;
+    let st = '';
+    for (let i = 0; i < TO_NEXT; i++) st += '<span class="mth-star' + (i < stars ? ' mth-starOn' : '') + '">' + starSVG + '</span>';
+    els.starsEl.innerHTML = st;
+  }
+  const groupHTML = (n, from, cls) => '<div class="mth-group' + (n > 5 ? ' mth-wrap' : '') + (cls ? ' ' + cls : '') + '">' +
+    Array.apply(null, { length: n }).map((_, i) =>
+      '<span class="mth-fish" data-k="' + (from + i) + '" style="--d:' + ((i * 0.07).toFixed(2)) + 's">' + fishSVG(from + i) + '</span>').join('') + '</div>';
+
+  function buildField() {
+    if (q.op === '+') {
+      els.field.innerHTML = groupHTML(q.a, 0, '') + '<span class="mth-op" aria-hidden="true">+</span>' + groupHTML(q.b, q.a, 'mth-late');
+    } else {
+      els.field.innerHTML = groupHTML(q.a, 0, '');
+    }
+  }
+  function renderStones() {
+    els.stones.forEach((s, i) => {
+      const n = q.options[i];
+      s.innerHTML = '<span class="mth-stoneBody"><span class="mth-dg">' + n + '</span>' +
+        '<span class="mth-dots' + (n > 5 ? ' mth-wideDots' : '') + '">' + dotsSVG(n) + '</span></span>';
+      s.classList.remove('mth-hint', 'mth-wobble', 'mth-right', 'mth-lit');
+      s.dataset.n = n;
+    });
+  }
+
+  /* ---------- one question, start to finish ---------- */
+  function newQuestion() {
+    round++; clearTimers(false); cancel(nudgeT);
+    q = makeQ(); wrongs = 0; state = 'show';
+    buildField();
+    renderStones();
+    showProgress();
+    later(700, reveal);
+  }
+  /* The operation itself, which is the whole point: she must SEE the fish arrive or be eaten.
+     A sum printed on a card is an equation; fish swimming in is addition. */
+  function reveal() {
+    if (state !== 'show') return;
+    state = 'reveal';
+    if (q.op === '+') {
+      const g = els.field.querySelector('.mth-late');
+      if (g) g.classList.add('mth-in');
+      [392, 494, 587].forEach((f, i) => tone(f, i * 0.07, 0.22, { type: 'triangle', g: 0.08 }));
+      say('mth_came', false);
+    } else {
+      const fish = Array.prototype.slice.call(els.field.querySelectorAll('.mth-fish'));
+      fish.slice(fish.length - q.b).forEach((e, i) => later(i * 160, () => {
+        e.classList.add('mth-gone');
+        tone(180, 0, 0.1, { type: 'square', g: 0.1 });
+        tone(120, 0.06, 0.14, { type: 'square', g: 0.08 });
+      }, true));
+      blip(els.spino, 'mth-chomp', 700);
+      say('mth_ate', false);
+    }
+    later(q.op === '+' ? 1100 : 400 + q.b * 170, ask);
+  }
+  function ask() {
+    if (state !== 'reveal' && state !== 'show') return;
+    state = 'ask';
+    say(q.op === '+' ? 'q_together' : 'mth_left', false);
+    armNudge();
+  }
+
+  function answer(i) {
+    const s = els.stones[i];
+    if (!s) return;
+    if (+s.dataset.n === q.answer) {
+      state = 'right';
+      cancel(nudgeT);
+      s.classList.add('mth-right', 'mth-lit');
+      const r = s.getBoundingClientRect();
+      burst(r.left + r.width / 2, r.top, ['#ffd400', '#2a62ff', '#e8242b', '#1fb34a', '#ffffff'], reduce ? 12 : 30);
+      [523, 659, 784, 1047].forEach((f, k) => later(k * 95, () => tone(f, 0, 0.3, { g: 0.09 })));
+      zoeyDo('cheer', 2000);
+      if (!wrongs) { stars++; showProgress(); }
+      /* Two things can move her on: the cheer finishing, and a safety timer for the case where
+         the voice is off entirely and no onEnd ever fires. Exactly one of them may win, or she
+         gets two questions in one breath - so they share a latch. */
+      let moved = false;
+      const go = () => {
+        if (moved || state !== 'right') return;
+        moved = true;
+        if (stars >= TO_NEXT && lvl < LADDER.length) levelUp(); else newQuestion();
+      };
+      say('count_' + q.answer, false, () => say(cheerKey(), true, () => later(500, go)));
+      later(4200, go);
+      return;
+    }
+    /* a wrong stone: a wobble, a kind word, and after two tries the right one glows. Nothing is
+       lost and nothing is counted against her. */
+    wrongs++;
+    blip(s, 'mth-wobble', 620);
+    tone(300, 0, 0.16, { type: 'sine', g: 0.07 });
+    tone(240, 0.1, 0.22, { type: 'sine', g: 0.06 });
+    say(nudgeKey(), false);
+    if (wrongs >= 2) els.stones[q.correct].classList.add('mth-hint');
+    armNudge();
+  }
+
+  function levelUp() {
+    state = 'up';
+    cancel(nudgeT);
+    lvl++; stars = 0;
+    writeLevel(lvl);
+    showProgress();
+    blip(els.stage, 'mth-levelup', 1600);
+    zoeyDo('cheer', 2400);
+    const r = els.board.getBoundingClientRect();
+    burst(r.left + r.width / 2, r.top + r.height * 0.4, ['#ffd400', '#ff7a18', '#2a62ff', '#1fb34a', '#ffffff'], reduce ? 18 : 48);
+    [523, 659, 784, 988, 1175].forEach((f, i) => later(i * 120, () => tone(f, 0, 0.4, { g: 0.1 })));
+    say('mth_up', false);
+    later(2200, newQuestion);
+  }
+
+  function zoeyDo(cls, ms) { blip(els.zoey, cls, ms); }
+  function armNudge() {
+    cancel(nudgeT);
+    nudgeT = later(9000, () => {
+      if (state !== 'ask') return;
+      els.stones.forEach((s, i) => later(i * 150, () => blip(s, 'mth-wave', 420), true));
+      els.stones[q.correct].classList.add('mth-hint');
+      zoeyDo('look', 1800);
+      say('mth_press', false);
+      armNudge();
+    });
+  }
+
+  function press(idx) {
+    tone(NOTE[idx], 0, 0.2, { type: 'triangle', g: 0.14 });
+    blip(els.stones[idx], 'mth-down', 190);                                        /* its own class: 'lit' is what the right answer keeps */
+    /* She is ahead of the story. Once the fish have arrived or been eaten, a press only hurries the
+       pause before the question - but during 'show' NOTHING has happened yet, and asking there
+       would put the question up over a field that has not changed, with the second group still
+       invisible. So that window (0.7 s) answers with its note and nothing else. */
+    if (state === 'show') return;
+    if (state === 'reveal') { cancel(nudgeT); ask(); return; }
+    if (state !== 'ask') return;
+    answer(idx);
+  }
+
+  /* ---------- module API ---------- */
+  function start() {
+    const root = document.getElementById('mth-root');
+    if (!root) return;
+    if (alive) stop();
+    root.hidden = false;
+    els = build(root);
+    alive = true; paused = false; lastPress = 0; deferred = []; round++;
+    lvl = readLevel(); stars = 0; lastAns = 0; state = 'idle';
+    showProgress();
+    say('mth_start', false);
+    later(600, newQuestion);
+  }
+  function stop() {
+    const was = alive;
+    alive = false; paused = false; state = 'idle'; round++;
+    clearTimers(true); deferred = []; nudgeT = null; speechSeq++;
+    if (was) { try { stopSpeech(); } catch (e) { /* ignore */ } try { stopMusic(); } catch (e) { /* ignore */ } try { clearFx(); } catch (e) { /* ignore */ } }
+    const root = document.getElementById('mth-root');
+    if (root) root.innerHTML = '';
+    els = null;
+  }
+  function pause() {
+    if (!alive || paused) return false;
+    paused = true;
+    const now = performance.now();
+    timers.forEach(t => { clearTimeout(t.h); t.left = Math.max(0, t.due - now); });
+    try { stopSpeech(); } catch (e) { /* ignore */ }
+    if (els) els.stage.classList.add('mth-paused');
+    return true;
+  }
+  function resume() {
+    if (!alive || !paused) return;
+    paused = false;
+    if (els) els.stage.classList.remove('mth-paused');
+    timers.forEach(arm);
+    const d = deferred; deferred = [];
+    d.forEach(p => { if (alive && p[0] === round) p[1](); });
+  }
+  function keydown(e) {
+    if (!alive) return;
+    if (e.code === 'Escape') return;                 /* the hub owns Esc; never prevented here */
+    const idx = KEYMAP[e.code];
+    if (idx === undefined || e.ctrlKey || e.metaKey || e.altKey) return;
+    e.preventDefault();
+    if (e.repeat) return;
+    const now = performance.now();
+    if (now - lastPress < 150) return;               /* throttle */
+    lastPress = now;
+    ensureAudio();                                   /* this listener runs before the harness's own "first press" hook */
+    if (paused || !els) return;
+    press(idx);
+  }
+  function keyup(e) { if (alive && KEYMAP[e.code] !== undefined) e.preventDefault(); }
+
+  return { start: start, stop: stop, pause: pause, resume: resume, keydown: keydown, keyup: keyup,
+    _: { LADDER: LADDER, TO_NEXT: TO_NEXT, SAVE: SAVE, makeQ: makeQ, options: options,
+      q: () => q, lvl: () => lvl, stars: () => stars, state: () => state,
+      setLvl: (n) => { lvl = n; stars = 0; }, setStars: (n) => { stars = n; }, readLevel: readLevel } };
+})();
+</script>
+<!-- <<< math:js -->
 <!-- >>> count:js - folded in by tools/fold-count.js; edit games/count/game.js and re-run the tool, never this block -->
 <script>
 /* ===== סופרים ביחד - games/count/game.js, folded in verbatim ===== */
@@ -9656,8 +11165,17 @@ window.ZoeyDomino = (function () {
 window.ZoeyCount = (function () {
   const KEYMAP = { KeyS: 0, KeyG: 1, KeyK: 2, Quote: 3 };      /* blue, yellow, red, green: left -> right */
   const NOTE = [392, 440, 494, 587];
-  /* she climbs from three to ten and then starts again, so the easy end comes round often */
-  const FIRST = 3, LAST = 10;
+  /* She climbs from three to ten. Where she STARTS, though, is not three any more.
+
+     Harel, 2026-11-02: *"there is no need to dwell with Zoey on counting to three, it bores the
+     child, and the difficulty always has to rise from stage to stage."* He is right, and the game
+     was built to forget: every time it opened it began at three again, however far she had got the
+     day before, and at one new dinosaur a round the first four rounds were ones she had already
+     outgrown. So the highest total she has ever counted is kept (SAVE), it only ever goes UP - the
+     same max(stored, reached) rule the spinosaurus's growth uses - and two things follow from it:
+     she opens the game at that number, and when she passes ten the loop comes back to LAST - 3 and
+     not to FIRST. Three is something she passes through once, not every afternoon. */
+  const FIRST = 3, LAST = 10, SAVE = 'zoey-count';
 
   PH.cnt_start = 'בּוֹאִי נִסְפֹּר בְּיַחַד!';
   PH.cnt_press = 'לַחֲצִי כְּדֵי לִסְפֹּר!';
@@ -9671,6 +11189,16 @@ window.ZoeyCount = (function () {
   let alive = false, paused = false;
   let round = 0, state = 'idle';             /* idle | count | recount | done */
   let total = FIRST, counted = 0, lastPress = 0, speechSeq = 0;
+  function readBest() {
+    try {
+      const o = JSON.parse(window.localStorage.getItem(SAVE) || 'null');
+      const n = o && +o.best;
+      return (n >= FIRST && n <= LAST) ? Math.floor(n) : 0;
+    } catch (e) { return 0; }
+  }
+  function noteBest(n) {
+    try { window.localStorage.setItem(SAVE, JSON.stringify({ best: Math.max(readBest(), Math.min(LAST, n)) })); } catch (e) { /* ignore */ }
+  }
   let timers = [], deferred = [], nudgeT = null;
   let els = null;
 
@@ -9823,7 +11351,10 @@ window.ZoeyCount = (function () {
   function nextRound() {
     if (!alive) return;
     round++; clearTimers(false); cancel(nudgeT);
-    total = counted >= total ? (total >= LAST ? FIRST : total + 1) : total;   /* one more only when she counted them all */
+    if (counted >= total) {                                                   /* one more only when she counted them all */
+      noteBest(total);
+      total = total >= LAST ? Math.max(FIRST, LAST - 3) : total + 1;          /* round the top it is seven, not three */
+    }
     state = 'count';
     deal();
     els.field.classList.remove('cnt-in'); void els.field.offsetWidth; els.field.classList.add('cnt-in');
@@ -9863,7 +11394,10 @@ window.ZoeyCount = (function () {
     root.hidden = false;
     els = build(root);
     alive = true; paused = false; lastPress = 0; deferred = []; round++;
-    total = FIRST; state = 'count';
+    /* the number she is NEXT, not the one she last finished: she counted three yesterday, so today
+       she opens on four. At the top of the ladder it stops at ten rather than running off it. */
+    total = readBest() ? Math.min(LAST, readBest() + 1) : FIRST;
+    state = 'count';
     deal();
     els.field.classList.add('cnt-in');
     say('cnt_start', false);
@@ -10027,6 +11561,33 @@ window.ZoeyCount = (function () {
    -- the shelf (2) - said once the lullaby has ended, one line each nap, the two in turn (it starts from the night count, so a child who naps once a day hears both). NEITHER HAS A NUMBER IN IT: the nights are the moons, and a count from one to a year cannot be a recording (spec section 3) --
    spn_shelf_0   : סְפִּינוֹ יָשֵׁן עַכְשָׁיו. הוּא חוֹלֵם עַל הַחֲבֵרִים שֶׁלּוֹ.
    spn_shelf_1   : הוּא אִתָּךְ מֵאָז שֶׁבָּקַע מֵהַבֵּיצָה.
+
+   -- HIS OWN VOICE (19 + 1) - Cartoon Avi Levi, not Hila. Everything above is the narrator talking ABOUT him in
+      the third person; these are him, in the first, and the two must never overlap or Zoey hears one sentence
+      twice in two voices. chirp() enforces that: a line of his is SKIPPED while she is being told something,
+      never queued behind it. Most of them are sounds, and most live in the idle moods, which were silent. --
+   spc_sneeze    : אַפְּצִ׳י!          (the `sneeze` mood)
+   spc_hiccup    : הִיק!             (the `hiccup` mood)
+   spc_hum       : לַה, לַה, לַה!      (the `humming` and `bop` moods - 1.7 s, inside a 2.15 s mood, so not a press)
+   spc_yawn      : אַההה...           (the `stretch` mood, and being tucked in)
+   spc_giggle    : חִי־חִי־חִי!        (petting him, and the `love` mood)
+   spc_roar      : רוֹאַר!            (the growth ceremony, where the synthesised roar is)
+   spc_brr       : בְּרר!             (the `shiver` mood, and the wash)
+   spc_wheee     : יוּהוּ!             (the `jump` and `spin` moods, and playing ball)
+   spc_hi        : שָׁלוֹם!            (his first word, answering her hello at the hatching)
+   spc_grew      : גָּדַלְתִּי!          (closing the growth ceremony, after she is told what grew)
+   spc_yum       : טָעִים!            (fed)
+   spc_more      : עוֹד!              (fed, and playing)
+   spc_cold      : קַר!               (the wash)
+   spc_clean     : נָקִי!             (the wash)
+   spc_night     : לַיְלָה טוֹב.        (tucked in)
+   spc_thanks    : תּוֹדָה!            (fed, and playing)
+   spc_love      : אֲנִי אוֹהֵב אוֹתָךְ!  (the `love` mood)
+   spc_friend    : שָׁלוֹם, חָבֵר!      (greeting a visitor who has just walked in - 1.4 s, inside a long scene)
+   spc_myturn    : תּוֹרִי!            (each contest round, right after spn_vis_turn tells her whose turn it is:
+                                     an announcement and an eager answer, two speakers, like the hello at
+                                     the hatching. It waits for nothing - the round has its own clock.)
+   bib_peek      : קוּקוּ!             (BIBI, same voice at speaking_speed 1.25: on Spino's back, with spn_learn_bibi)
    ===================================================================== */
 PH.spn_inv_0 = 'סְפִּינוֹ מְחַכֶּה לַדָּג שֶׁלּוֹ.';
 PH.spn_inv_1 = 'הוּא רוֹצֶה לְשַׂחֵק אִתָּךְ!';
@@ -10085,6 +11646,27 @@ PH.spn_vis_gift = 'מַתָּנָה בִּשְׁבִיל סְפִּינוֹ!';
 PH.spn_vis_bye = 'לְהִתְרָאוֹת!';
 PH.spn_shelf_0 = 'סְפִּינוֹ יָשֵׁן עַכְשָׁיו. הוּא חוֹלֵם עַל הַחֲבֵרִים שֶׁלּוֹ.';
 PH.spn_shelf_1 = 'הוּא אִתָּךְ מֵאָז שֶׁבָּקַע מֵהַבֵּיצָה.';
+/* his own voice - see the block above */
+PH.spc_sneeze = 'אַפְּצִ׳י!';
+PH.spc_hiccup = 'הִיק!';
+PH.spc_hum = 'לַה, לַה, לַה!';
+PH.spc_yawn = 'אַההה...';
+PH.spc_giggle = 'חִי־חִי־חִי!';
+PH.spc_roar = 'רוֹאַר!';
+PH.spc_brr = 'בְּרר!';
+PH.spc_wheee = 'יוּהוּ!';
+PH.spc_hi = 'שָׁלוֹם!';
+PH.spc_grew = 'גָּדַלְתִּי!';
+PH.spc_yum = 'טָעִים!';
+PH.spc_more = 'עוֹד!';
+PH.spc_cold = 'קַר!';
+PH.spc_clean = 'נָקִי!';
+PH.spc_night = 'לַיְלָה טוֹב.';
+PH.spc_thanks = 'תּוֹדָה!';
+PH.spc_love = 'אֲנִי אוֹהֵב אוֹתָךְ!';
+PH.spc_friend = 'שָׁלוֹם, חָבֵר!';
+PH.spc_myturn = 'תּוֹרִי!';
+PH.bib_peek = 'קוּקוּ!';
 
 window.ZoeySpino = (function () {
   let running = false, paused = false;
@@ -10116,10 +11698,13 @@ window.ZoeySpino = (function () {
      queue one behind it (queue = true: speak() really queues, clips never overlap). Where a line SHOULD cut the one before it
      (a new phase or screen), the caller says so with an explicit stopSpeech() - the default here is never to interrupt. */
   let lastSayAt = -Infinity, inflight = 0;
-  function say(key, queue, onEnd) {
+  /* `gap` defaults to true and arms the two-second quiet window that the action lines and the moods
+     both wait on. A sound of HIS passes false: see moodSound() below for why that matters. */
+  function say(key, queue, onEnd, gap) {
     const g = gen;
     let ended = false;
-    lastSayAt = now(); inflight++;
+    if (gap !== false) lastSayAt = now();
+    inflight++;
     const done = () => {
       if (ended) return; ended = true;
       if (g !== gen || !running) return;                /* pause()/stop() already reset the count */
@@ -10131,6 +11716,19 @@ window.ZoeySpino = (function () {
   /* True while a line is playing (inflight - the only truthful answer: the recorded clips run 3-4 s, so no fixed window can know),
      and for VOICE_GAP after any line started (a clock that went backwards counts as not). Lines that must not interrupt ask this. */
   function voiceBusy() { const d = now() - lastSayAt; return inflight > 0 || (d >= 0 && d < VOICE_GAP); }
+  /* HIS voice, which is not the narrator's. Every one of the 71 lines above is Hila describing him in the
+     third person; these are him in the first, and if the two ever overlap Zoey hears the same thing twice
+     in two voices. So a chirp is SKIPPED when anything is being said - never queued behind it, which is
+     the idiom the egg taps already use: a queued line would arrive after the moment it belongs to.
+     Where he answers her deliberately (the hatching, the growth) the caller chains it instead, through
+     say()'s own onEnd, so the exchange is sequential by construction and cannot need this guard. */
+  function chirp(key) { if (!voiceBusy()) say(key, false); }
+  /* A mood's sound is not a line: it is him making a noise while nobody is talking to her. Arming the
+     narrator's two-second gap for it cost most of the moods - moodFree() waits on that gap, so one
+     sneeze silenced the next few things he would have done and he grew quieter the more he had to
+     say, which is the opposite of the point. This still marks the clip as playing, through inflight,
+     so he cannot talk over himself; it just does not make her wait afterwards. */
+  function moodSound(key) { say(key, false, undefined, false); }
 
   /* =====================================================================
      STATE - the one clock, and the shape of the memory (spec section 9)
@@ -10598,6 +12196,7 @@ window.ZoeySpino = (function () {
     cancelTuck();
     tone(720, 0, 0.08, { type: 'triangle', f1: 1100, g: 0.1 }); tone(940, 0.1, 0.12, { type: 'triangle', f1: 1250, g: 0.09 });
     setAct('pet', 800);
+    chirp('spc_giggle');                              /* the one thing the keypad cannot reach, and it had no voice at all */
     prop('spn-p-heart', HEART, 1000, 'left:calc(var(--hx) - ' + rand(14) + '% * var(--sz));top:calc(var(--hy) - 10% * var(--sz))');
   }
   /* all four lit: a great day (the doubling itself already happened in giveTreat) */
@@ -10627,13 +12226,24 @@ window.ZoeySpino = (function () {
      section 5). A different button's line is a different thing to hear, so it is queued behind the one playing, not
      dropped and not cut. At most one line may be waiting: a child running down the row and back must not build a backlog
      that talks on long after she has stopped. A press either of these swallows does not use up a clip. */
+  /* His answer to each treat, one per narrator line, in the same turn-taking order. It is chained through
+     onEnd and not spoken alongside, so a press is one voice and then the other: the action lines run 0.99
+     to 1.96 s and his run 0.72 to 1.15, so the worst press is about 3.1 s - the length of one long line
+     elsewhere in this game, and within the two seconds a repeat of the same button already waits. */
+  const ACT_VOICE = {
+    fed: ['spc_yum', 'spc_thanks', 'spc_more'],
+    play: ['spc_wheee', 'spc_more', 'spc_thanks'],
+    wash: ['spc_cold', 'spc_brr', 'spc_clean'],
+    sleep: ['spc_night', 'spc_yawn', 'spc_night']
+  };
   function sayAction(i) {
     const t = now(), k = STEM[i], last = lastActAt[k];
     if (last !== undefined && t - last >= 0 && t - last < VOICE_GAP) return;
     if (inflight >= 2) return;
     lastActAt[k] = t;
     const n = cyc[k] = (k in cyc ? cyc[k] + 1 : 0);
-    say('spn_' + k + '_' + (n % 3), true);
+    const his = ACT_VOICE[k] && ACT_VOICE[k][n % 3];
+    say('spn_' + k + '_' + (n % 3), true, his ? () => chirp(his) : undefined);
   }
   function press(i) {
     if (!running || paused || !els) return;
@@ -10750,7 +12360,9 @@ window.ZoeySpino = (function () {
     if (phase !== 'hatching') return;
     render(S);                                          /* the same animal in the same place, now with his four treats */
     els.den.classList.add('spn-arrive');
-    say('spn_egg_hi', true);                            /* behind the hatching line if that is still playing */
+    /* She is told to say hello and he says it back: an exchange, not the same line twice. It is chained
+       through onEnd rather than chirped, so his first word cannot be swallowed by the greeting it answers. */
+    say('spn_egg_hi', true, () => chirp('spc_hi'));     /* behind the hatching line if that is still playing */
   }
   /* a press while he is coming out: a happy chirp, so no button ever does nothing */
   function hatchlingChirp() {
@@ -10879,7 +12491,17 @@ window.ZoeySpino = (function () {
     }
     later(() => revealGrowth(g), 900);
     later(() => ringGrowth(g), 1050);
-    later(() => { if (growth === g) { sndSpinoRoar(); say('spn_grow_' + to, true); } }, 1300);
+    /* He roars first in his own voice, THEN she is told what grew, then he says it himself. Three beats in
+       order, chained so none can land on another: the synthesised roar stays underneath his, because it is
+       the big noise of the moment and his voice alone is a small animal's. */
+    later(() => {
+      if (growth !== g) return;
+      sndSpinoRoar();
+      say('spc_roar', true, () => {
+        if (growth !== g) return;
+        say('spn_grow_' + to, true, () => { if (growth === g) chirp('spc_grew'); });
+      });
+    }, 1300);
     later(() => { if (growth === g) finishGrowth(true); }, GROW_MS);   /* only its own: a later ceremony must not be ended by this one's clock */
   }
   /* the moment the bigger one appears: he is the new size for everything else on the screen (hearts, bubbles), a flash, confetti, the fanfare */
@@ -10962,7 +12584,8 @@ window.ZoeySpino = (function () {
     const fx = LESSON_FX[l.id];
     setAct('l-' + l.id, fx.ms);
     fx.run();
-    say(l.phrase, true);
+    /* The one lesson with somebody else in it: Bibi rides on his back, so Bibi is the one who speaks. */
+    say(l.phrase, true, l.id === 'bibi' ? () => chirp('bib_peek') : undefined);
     later(() => { lessonOn = false; }, fx.ms);
   }
 
@@ -11205,7 +12828,10 @@ window.ZoeySpino = (function () {
     els.slots.forEach((e, i) => e.addEventListener('pointerdown', (ev) => { if (ev.button > 0) return; ev.preventDefault(); press(i); }));
     els.vstage.classList.add('spn-in'); els.visitor.classList.add('pd');      /* he walks in: the engine's parade walk moves his legs */
     [0, 0.42, 0.84, 1.26].forEach((t, k) => tone(100 + k * 6, t, 0.2, { f1: 55, g: 0.12 }));
+    /* "T-rex came to visit!" is her news; "hello, friend!" is his greeting. Chirped, not chained, because
+       the contest's own sequencer owns what happens next and must not wait on a courtesy. */
     beat(v, WALK_MS, 'spn_visit_' + d.id, () => {
+      chirp('spc_friend');
       els.vstage.classList.remove('spn-in'); els.visitor.classList.remove('pd');
       [659, 784, 988].forEach((f, k) => tone(f, k * 0.09, 0.22, { type: 'triangle', g: 0.09 }));
       beginRound(v);
@@ -11219,7 +12845,11 @@ window.ZoeySpino = (function () {
     v.mode = 'wait';
     const tok = ++v.tok;
     els.moves.classList.add('wait');
-    say('spn_vis_turn', true);
+    /* She is told whose turn it is and he says it himself, eagerly - a different speaker and a
+       different thing to say, like the hello she gives him at the hatching and the one he gives
+       back. It cannot slow her down: the round's own timer below runs on its own clock, so his
+       line plays while she is deciding and nothing waits for it. */
+    say('spn_vis_turn', true, () => chirp('spc_myturn'));
     later(() => { if (visit !== v || v.tok !== tok) return; v.auto = true; autoMove(v); }, v.auto ? AUTO_GAP : IDLE_MS);
   }
   function autoMove(v) {
@@ -11550,20 +13180,20 @@ window.ZoeySpino = (function () {
   /* id -> the class blipped on him, how long it runs, and the picture that goes with it, if any.
      The three that end in a picture are the ones a three-year-old will point at; the rest are him. */
   const MOODS = [
-    { id: 'sneeze', ms: 1000, puff: 560 },
-    { id: 'hiccup', ms: 1150 },
-    { id: 'shiver', ms: 950 },
+    { id: 'sneeze', ms: 1000, puff: 560, voice: 'spc_sneeze' },
+    { id: 'hiccup', ms: 1150, voice: 'spc_hiccup' },
+    { id: 'shiver', ms: 950, voice: 'spc_brr' },
     { id: 'bow', ms: 1350 },
     { id: 'sway', ms: 2150 },
-    { id: 'spin', ms: 1150 },
+    { id: 'spin', ms: 1150, voice: 'spc_wheee' },
     { id: 'nod', ms: 1250 },
     { id: 'no', ms: 1250 },
     { id: 'tall', ms: 1450 },
     { id: 'pounce', ms: 1200 },
     { id: 'roll', ms: 1650 },
     { id: 'wobble', ms: 1550 },
-    { id: 'jump', ms: 1350 },
-    { id: 'stretch', ms: 1650 },
+    { id: 'jump', ms: 1350, voice: 'spc_wheee' },
+    { id: 'stretch', ms: 1650, voice: 'spc_yawn' },
     { id: 'sky', ms: 2050, art: 'star', dur: 1500 },
     { id: 'wink', ms: 750 },
     { id: 'blinks', ms: 1550 },
@@ -11572,9 +13202,9 @@ window.ZoeySpino = (function () {
        shakes a leaf off his nose. They get names of their own rather than a second row under
        someone else's - two different things wearing one class is a thing no check can tell apart,
        and the bag assertion in tools/spino-moods-check.js caught exactly that. */
-    { id: 'humming', ms: 2150, art: 'note', dur: 2100 },
-    { id: 'bop', ms: 1250, art: 'note', dur: 2100 },
-    { id: 'love', ms: 1450, art: 'heart', dur: 1700 },
+    { id: 'humming', ms: 2150, art: 'note', dur: 2100, voice: 'spc_hum' },
+    { id: 'bop', ms: 1250, art: 'note', dur: 2100, voice: 'spc_hum' },
+    { id: 'love', ms: 1450, art: 'heart', dur: 1700, voice: 'spc_love' },
     { id: 'follow', ms: 2050, art: 'fly', dur: 4200 },
     { id: 'leafoff', ms: 1250, art: 'leaf', dur: 2800 }
   ];
@@ -11593,6 +13223,9 @@ window.ZoeySpino = (function () {
       !greatOn && !voiceBusy() && els && els.spino && now() - lastPressAt > MOOD_QUIET;
   }
   function playMood(m) {
+    /* Nine of the twenty-two have a sound of his. It needs no guard: moodFree() already refuses to start a
+       mood while anything is being said, so a mood is by definition a moment the narrator is not using. */
+    if (m.voice) moodSound(m.voice);
     blip(els.spino, 'spn-md-' + m.id, m.ms);
     if (m.art) prop('spn-p-md-' + m.art, MD_ART[m.art], m.dur);
     if (m.puff) prop('spn-p-puff', '<i></i>', m.puff, 'left:var(--mx);top:var(--my)');
@@ -11692,7 +13325,7 @@ window.ZoeySpino = (function () {
       LULLABY_MS: LULLABY_MS, startVisit: startVisit, visitMove: visitMove, pickVisitor: pickVisitor, lastVisitor: () => lastVisitor,
       showShelf: showShelf, wake: wake,
       setVisits: (on) => { visitsOn = on !== false; }, state: () => S,
-      MOODS: MOODS, moodsLeft: () => moodBag.length,
+      MOODS: MOODS, moodsLeft: () => moodBag.length, ACT_VOICE: ACT_VOICE,
       /* The idle theatre's own clock, so a check can watch a minute of him in a few seconds. It is
          the only way to see all twenty-two without waiting four real minutes, and it is the same
          kind of seam as _setNow: one place, named, and the game never calls it itself. */
@@ -12515,6 +14148,30 @@ if (window.DinoAnim) DinoAnim.auto(document);
     return '<span class="pk-duo">' + prop(COUNT123) + dinoPic('bronto') + '</span>';
   }
 /* <<< count:card */
+/* >>> math:card - tools/fold-math.js */
+  /* two fish and a plus: arithmetic, with nothing to read */
+  const PLUSFISH = '<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">' +
+    '<g stroke="#2b6c86" stroke-width="4" stroke-linejoin="round">' +
+    '<path d="M16 24 L30 14 L28 24 L30 34 Z" fill="#ff9a3c" stroke="#c76a16"/>' +
+    '<ellipse cx="-2" cy="24" rx="20" ry="12" fill="#5bc8f5"/>' +
+    '<path d="M86 24 L100 14 L98 24 L100 34 Z" fill="#ff9a3c" stroke="#c76a16"/>' +
+    '<ellipse cx="68" cy="24" rx="20" ry="12" fill="#7ad3c0"/></g>' +
+    '<path d="M50 48 L50 92 M28 70 L72 70" fill="none" stroke="#fff" stroke-width="18" stroke-linecap="round"/>' +
+    '<path d="M50 48 L50 92 M28 70 L72 70" fill="none" stroke="#ff7a18" stroke-width="11" stroke-linecap="round"/></svg>';
+  function artMath() { /* fish plus fish, and the one who eats them */
+    return '<span class="pk-duo">' + prop(PLUSFISH) + dinoPic('spino') + '</span>';
+  }
+/* <<< math:card */
+/* >>> write:card - tools/fold-write.js */
+  /* a 2 with the route through it, and the dot where a finger starts */
+  const TRACE2 = '<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">' +
+    '<text x="50" y="54" font-size="82" font-weight="700" fill="rgba(42,98,255,.16)" text-anchor="middle" dominant-baseline="central">2</text>' +
+    '<path d="M28 33 C28 21 39 14 51 14 C65 14 75 23 75 35 C75 51 47 63 25 86 L78 86" fill="none" stroke="#2a62ff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 10"/>' +
+    '<circle cx="28" cy="33" r="9" fill="#1fb34a" stroke="#fff" stroke-width="4"/></svg>';
+  function artWrite() { /* the route through a number, and whose finger follows it */
+    return '<span class="pk-duo">' + prop(TRACE2) + dinoPic('spino') + '</span>';
+  }
+/* <<< write:card */
 
   /* ---------- the fifteen games ----------
      id      the name launch()/gameOf() use and the localStorage "recently played" key
@@ -12540,6 +14197,10 @@ if (window.DinoAnim) DinoAnim.auto(document);
     { id: 'spino', global: 'ZoeySpino', root: 'spn-root', titleHe: 'הספינו של זואי', card: artSpino }/* <<< spino:row */
     /* >>> count:row - tools/fold-count.js */,
     { id: 'count', global: 'ZoeyCount', root: 'cnt-root', titleHe: 'סופרים ביחד', card: artCount }/* <<< count:row */
+    /* >>> math:row - tools/fold-math.js */,
+    { id: 'math', global: 'ZoeyMath', root: 'mth-root', titleHe: 'חשבון עד עשר', card: artMath }/* <<< math:row */
+    /* >>> write:row - tools/fold-write.js */,
+    { id: 'write', global: 'ZoeyWrite', root: 'wr-root', titleHe: 'כותבים מספרים', card: artWrite, touchOnly: true }/* <<< write:row */
   ];
   const entryOf = (id) => { for (let i = 0; i < GAMES.length; i++) { if (GAMES[i].id === id) return GAMES[i]; } return null; };
   const gameOf = (which) => { const e = entryOf(which); return e ? (window[e.global] || null) : null; };
@@ -12561,10 +14222,18 @@ if (window.DinoAnim) DinoAnim.auto(document);
     a.unshift(id);
     try { window.localStorage.setItem(RECENT_KEY, JSON.stringify(a.slice(0, PER))); } catch (e) { /* ignore */ }
   }
+  /* A row may say `touchOnly: true`, and then it is in the picker only when a finger can play
+     it. "כותבים מספרים" is the first: Harel asked for it as an iPad game and you cannot draw a 3
+     with four buttons, so with the keypad in charge the card is not there at all. A game she
+     can see and cannot play is worse than a game that is not there, and the mode switch is in
+     the settings panel for a parent who wants it.
+     Read off <html data-touch> rather than off the core's own variable, because that attribute
+     is the single place the mode is written down and the toggle updates it. */
+  const playable = (g) => !g.touchOnly || document.documentElement.getAttribute('data-touch') === 'on';
   function orderedGames() {
     const rec = readRecent(), out = [];
-    rec.forEach(id => out.push(entryOf(id)));
-    GAMES.forEach(g => { if (rec.indexOf(g.id) < 0) out.push(g); });
+    rec.forEach(id => { const e = entryOf(id); if (e && playable(e)) out.push(e); });
+    GAMES.forEach(g => { if (rec.indexOf(g.id) < 0 && playable(g)) out.push(g); });
     return out;
   }
 
@@ -12573,19 +14242,29 @@ if (window.DinoAnim) DinoAnim.auto(document);
   const CCLASS = ['c-blue', 'c-yellow', 'c-red'];
   const CNAME = ['הכפתור הכחול', 'הכפתור הצהוב', 'הכפתור האדום'];
   let order = GAMES.slice(), page = 0;
-  const pageCount = () => Math.max(1, Math.ceil(order.length / PER));
-  const pageGames = () => order.slice(page * PER, page * PER + PER);
+  /* Three when the keypad owns the screen, nine when her finger does - see the note at the top of
+     this block. PER itself stays 3: it is how many games are remembered as recently played, which
+     is about screen ONE and not about how many fit. */
+  const perScreen = () => (touchOn ? 9 : PER);
+  const pageCount = () => Math.max(1, Math.ceil(order.length / perScreen()));
+  const pageGames = () => { const n = perScreen(); return order.slice(page * n, page * n + n); };
   function cardHTML(g, i) {
-    return '<button type="button" class="pk-card ' + CCLASS[i] + '" dir="rtl" data-game="' + g.id + '" aria-label="' + g.titleHe + ', ' + CNAME[i] + '">' +
+    /* only the first three can be launched by a button, so only those three wear a button's colour
+       and its marker. The rest are plain cards in a colour no button has. */
+    const keyed = i < CCLASS.length;
+    return '<button type="button" class="pk-card ' + (keyed ? CCLASS[i] : 'c-plain') + (keyed ? '' : ' pk-tapOnly') + '" dir="rtl" data-game="' + g.id + '" aria-label="' + g.titleHe + (keyed ? ', ' + CNAME[i] : '') + '">' +
       '<span class="pk-pic">' + g.card() + '</span>' +
       '<span class="pk-name">' + g.titleHe + '</span>' +
-      '<span class="pk-marker" aria-hidden="true"></span></button>';
+      (keyed ? '<span class="pk-marker" aria-hidden="true"></span>' : '') + '</button>';
   }
   function renderPage(animate) {
-    slot.innerHTML = pageGames().map(cardHTML).join('');
+    const list = pageGames();
+    slot.innerHTML = list.map(cardHTML).join('');
+    slot.classList.toggle('pk-grid', list.length > CCLASS.length);
     slot.classList.remove('pk-slide');
     if (animate && !reduce) { void slot.offsetWidth; slot.classList.add('pk-slide'); }
   }
+  ZG.repage = function () { page = 0; renderPage(false); };
   function nextPage() { /* green is ALWAYS this, on every screen, and wraps round from the last */
     ensureAudio();
     page = (page + 1) % pageCount();
@@ -12682,6 +14361,7 @@ if (window.DinoAnim) DinoAnim.auto(document);
     const e = entryOf(which); if (!e) return;
     const g = window[e.global]; if (!g) return;
     stopIdle();
+    closeSettings();                                   /* it must never be left hanging over what she is playing */
     ensureAudio(); enterFs(); hadFs = false; /* a pick is a user gesture */
     stopSpeech();
     noteRecent(which);
@@ -12730,7 +14410,22 @@ if (window.DinoAnim) DinoAnim.auto(document);
     if (b && b.getAttribute('data-game')) launch(b.getAttribute('data-game'));
   });
   moreBtn.addEventListener('click', nextPage);
-  $('#btnAlbumOpen').addEventListener('click', openAlbum);
+  $('#btnAlbumOpen').addEventListener('click', () => { closeSettings(); openAlbum(); });
+
+  /* ---------- the parent's corner ----------
+     Opened and closed here and nowhere else, so there is exactly one way in and three ways out: the
+     gear again, the close button, and a touch anywhere off the card. The last one matters most on a
+     tablet, where there is no Esc and a panel with one small exit is a trap. It also closes itself
+     whenever a game starts, so it can never be left hanging over what she is playing. */
+  const settingsBtn = $('#btnSettings'), settingsPanel = $('#settingsPanel');
+  function setSettings(on) {
+    settingsPanel.classList.toggle('on', on);
+    settingsBtn.setAttribute('aria-expanded', String(on));
+  }
+  function closeSettings() { setSettings(false); }
+  settingsBtn.addEventListener('click', (e) => { e.stopPropagation(); setSettings(!settingsPanel.classList.contains('on')); });
+  settingsPanel.addEventListener('click', (e) => { if (e.target === settingsPanel) closeSettings(); });
+  $('#btnSettingsClose').addEventListener('click', closeSettings);
   const tv = $('#toggleVoice');
   tv.setAttribute('aria-checked', speechOn ? 'true' : 'false');
   tv.addEventListener('click', () => { setSpeechOn(!speechOn); tv.setAttribute('aria-checked', speechOn ? 'true' : 'false'); });
@@ -12777,7 +14472,14 @@ if (window.DinoAnim) DinoAnim.auto(document);
       + keepWarning();
   };
   showMode();
-  tt.addEventListener('click', () => { setTouchOn(!touchOn); showMode(); });
+  tt.addEventListener('click', () => {
+    setTouchOn(!touchOn);
+    showMode();
+    /* how many games fit on a screen is a question about the MODE, so the board is wrong the moment
+       the switch moves: page back to the start and draw it again rather than leaving her on a page
+       number that no longer exists. */
+    ZG.repage();
+  });
 
   /* picker art: the scenery, Zoey + Bibi (full rig), the spinosaurus, and the first screen */
   $$('.sceneHost[data-scene="picker"]').forEach(h => { h.innerHTML = sceneSVG('pk'); });
@@ -12795,7 +14497,10 @@ if (window.DinoAnim) DinoAnim.auto(document);
   window.ZoeyGames = {
     launch: launch, toPicker: toPicker, openAlbum: openAlbum, nextPage: nextPage,
     where: () => where, page: () => page, pages: pageCount,
-    ids: () => GAMES.map(g => g.id), screen: () => pageGames().map(g => g.id)
+    /* the games the picker can actually reach in the mode it is in - a touchOnly card is not
+       there with the keypad in charge, and a test that paged through every screen and then
+       asked "did I see them all" would be asking about a card the picker deliberately hid */
+    ids: () => orderedGames().map(g => g.id), all: () => GAMES.map(g => g.id), screen: () => pageGames().map(g => g.id)
   };
 })();
 </script>
