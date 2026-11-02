@@ -2951,6 +2951,95 @@ button:focus-visible { outline: 5px solid var(--focus); outline-offset: 4px; bor
   .wr-rider, .wr-stone { transition: none; }
 }
 /* <<< write:css */
+
+/* >>> fling:css - games/fling/game.css, folded in verbatim by tools/fold-fling.js; edit the module and re-run the tool, never this block */
+/* ---------- fling (ZoeyFling, .fl-) ---------- */
+/* The shell hides a game that is not the active one, and the rule that does it is a list of
+   root ids up at "the ten game containers". This game's line is here instead, inside its own
+   region, so that folding it in or taking it out is one tool and one block - the alternative
+   is a sixth anchor in the middle of a selector, which is a worse thing to own. */
+#fl-root:not([data-on]) { display: none; }
+/* "הקלע של ספינו" - every selector starts with .fl-
+   The playfield is a 200x112 world fitted into the stage. Everything inside .fl-world is placed in
+   WORLD UNITS through the --u custom property that game.js sets, so one tower is the same tower on
+   a phone and on an iPad and the physics never has to know about pixels. */
+.fl-stage { position: fixed; inset: 0; z-index: 5; overflow: hidden; display: flex; flex-direction: column;
+  -webkit-user-select: none; user-select: none; }
+.fl-stage.fl-paused * { animation-play-state: paused !important; }
+.fl-scene { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.fl-scene svg { width: 100%; height: 100%; display: block; }
+
+/* BOTTOM-aligned, not centred: the world's own ground line has to land on the ground of the scene
+   behind it, or the crates stack in mid-air over the grass. */
+.fl-field { position: relative; z-index: 2; flex: 1 1 0; min-height: 0; display: flex; align-items: flex-end; justify-content: center;
+  padding: calc(1vh + var(--sa-t, 0px)) 2vw 0; touch-action: none; }
+.fl-world { position: relative; --u: 4px; }
+.fl-ground { position: absolute; left: -4vw; right: -4vw; top: calc(var(--u) * 100); bottom: calc(var(--u) * -4);
+  background: linear-gradient(#d8bd84, #c2a467); border-top: calc(var(--u) * 1) solid #ecd9a8; }
+
+/* ----- the catapult ----- */
+.fl-sling { position: absolute; left: calc(var(--u) * 20); top: calc(var(--u) * 78); width: calc(var(--u) * 12); height: calc(var(--u) * 22); }
+.fl-arm { position: absolute; left: 42%; bottom: 0; width: 18%; height: 100%; background: #8b5a2b; border-radius: calc(var(--u) * 0.6); }
+.fl-band { position: absolute; left: 10%; top: 0; width: 80%; height: 16%; background: #6b4a2a; border-radius: 50%; }
+/* whoever is next into the sky, sitting in the sling until she lets go */
+.fl-rider { position: absolute; left: calc(var(--u) * 20); top: calc(var(--u) * 68); width: calc(var(--u) * 13); z-index: 3; pointer-events: none; }
+.fl-rider svg { width: 100%; height: auto; display: block; overflow: visible; }
+.fl-rider.fl-away { opacity: 0; }
+.fl-sling.fl-snap { animation: flSnap 0.3s ease-out; }
+
+/* the aim: an arrow out of the sling, as long as the power and pointing where it will go */
+.fl-aim { position: absolute; width: 0; height: 0; transform-origin: 0 0; }
+.fl-arrow { position: absolute; left: 0; top: calc(var(--u) * -0.9);
+  width: calc(var(--u) * var(--len, 10)); height: calc(var(--u) * 1.8);
+  background: linear-gradient(90deg, rgba(255, 154, 60, 0.35), #ff9a3c);
+  border-radius: calc(var(--u) * 0.9); transform: rotate(var(--a, -45deg)); transform-origin: 0 50%; }
+.fl-arrow::after { content: ''; position: absolute; right: calc(var(--u) * -1.4); top: 50%; transform: translateY(-50%);
+  border-left: calc(var(--u) * 2.4) solid #ff9a3c; border-top: calc(var(--u) * 1.6) solid transparent; border-bottom: calc(var(--u) * 1.6) solid transparent; }
+
+.fl-shot { position: absolute; z-index: 4; }
+.fl-shot svg { width: 100%; height: auto; display: block; overflow: visible; }
+.fl-trail i { position: absolute; width: calc(var(--u) * 1.2); height: calc(var(--u) * 1.2); margin: calc(var(--u) * -0.6);
+  border-radius: 50%; background: rgba(255, 255, 255, 0.8); box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08); }
+
+/* ----- the crates and the eggs ----- */
+.fl-crate, .fl-egg { position: absolute; transform-origin: 50% 50%; }
+.fl-crate svg, .fl-egg svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.fl-egg.fl-hatched { filter: drop-shadow(0 0 calc(var(--u) * 1.5) rgba(255, 212, 0, 0.9)); }
+.fl-pop { animation: flPop 0.6s cubic-bezier(0.3, 1.6, 0.5, 1); }
+
+/* On the sand at the far left, BEHIND the catapult rather than beside the tower: on the right she
+   stands in the pile she is trying to knock down. */
+.fl-zoey { position: absolute; left: calc(0.5vw + var(--sa-l, 0px)); bottom: calc(13vh + var(--sa-b, 0px));
+  width: clamp(48px, 10vh, 92px); z-index: 3; pointer-events: none; }
+.fl-zoey svg { width: 100%; height: auto; display: block; overflow: visible; }
+@media (max-aspect-ratio: 5/4) { .fl-zoey { display: none; } }
+
+/* ----- the power bar, which is only up while it means something ----- */
+.fl-bar { position: relative; z-index: 4; flex: none; width: min(60vw, 70vh); height: min(2.4vh, 20px); margin: 1vh auto 0;
+  border-radius: 99px; background: rgba(255, 255, 255, 0.7); overflow: hidden; visibility: hidden;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.18); }
+.fl-barIn { height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, #1fb34a, #ffd400 55%, #e8242b); }
+
+/* ----- the four buttons: any of them aims, any of them fires ----- */
+.fl-row { position: relative; z-index: 4; flex: none; display: flex; gap: 2%; direction: ltr;
+  width: min(84vw, 104vh); margin: 1vh auto 0;
+  padding: 0 calc(1.5vw + var(--sa-l, 0px)) calc(2vh + var(--sa-b, 0px)) calc(1.5vw + var(--sa-r, 0px)); }
+.fl-btn { flex: 1; min-width: 0; min-height: 48px; aspect-ratio: 1 / 0.42; border-radius: 50% / 46%;
+  border: 0.5vh solid rgba(255, 255, 255, 0.92); cursor: pointer; -webkit-tap-highlight-color: transparent;
+  background: radial-gradient(ellipse at 35% 28%, var(--cl) 0 10%, var(--c) 46%, var(--cd) 140%);
+  box-shadow: 0 0.7vh 0 var(--cd), 0 1.4vh 1.8vh rgba(0, 0, 0, 0.25); }
+.fl-btn.fl-down { transform: translateY(6%) scale(0.95); }
+.fl-btn.fl-wave { animation: flWave 0.42s ease-in-out; }
+.fl-btn:focus-visible { outline: 5px solid var(--focus); outline-offset: 4px; }
+
+@keyframes flSnap { 0% { transform: rotate(0); } 35% { transform: rotate(-14deg); } 100% { transform: rotate(0); } }
+@keyframes flPop { 0% { transform: scale(0.5); } 55% { transform: scale(1.25); } 100% { transform: scale(1); } }
+@keyframes flWave { 0%, 100% { transform: none; } 50% { transform: translateY(-14%) scale(1.07); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .fl-sling.fl-snap, .fl-pop, .fl-btn.fl-wave { animation: none; }
+}
+/* <<< fling:css */
 </style>
 
 <div id="zg" dir="rtl" lang="he">
@@ -3094,6 +3183,9 @@ button:focus-visible { outline: 5px solid var(--focus); outline-offset: 4px; bor
   <!-- >>> write:root - tools/fold-write.js -->
   <div id="wr-root" dir="rtl" lang="he"></div>
   <!-- <<< write:root -->
+  <!-- >>> fling:root - tools/fold-fling.js -->
+  <div id="fl-root" dir="rtl" lang="he"></div>
+  <!-- <<< fling:root -->
 
   <button type="button" id="btnExit" class="exitBtn">יציאה</button>
 
@@ -3895,9 +3987,30 @@ const VOICE_CLIPS = {
   z_turn: "voice/more/z_turn.mp3",
   /* <<< more:clips */
   /* >>> color:clips - assets/voice/color/*.mp3, folded in by tools/fold-more-voice.js; never edit this block, re-run the tool */
+  col_ash: "voice/color/col_ash.mp3",
+  col_azure: "voice/color/col_azure.mp3",
+  col_black: "voice/color/col_black.mp3",
+  col_brown: "voice/color/col_brown.mp3",
+  col_forest: "voice/color/col_forest.mp3",
+  col_gold: "voice/color/col_gold.mp3",
+  col_grey: "voice/color/col_grey.mp3",
+  col_lemon: "voice/color/col_lemon.mp3",
+  col_lilac: "voice/color/col_lilac.mp3",
+  col_maroon: "voice/color/col_maroon.mp3",
+  col_mint: "voice/color/col_mint.mp3",
   col_more: "voice/color/col_more.mp3",
+  col_navy: "voice/color/col_navy.mp3",
   col_orange: "voice/color/col_orange.mp3",
+  col_peach: "voice/color/col_peach.mp3",
+  col_pink: "voice/color/col_pink.mp3",
+  col_plum: "voice/color/col_plum.mp3",
   col_purple: "voice/color/col_purple.mp3",
+  col_rose: "voice/color/col_rose.mp3",
+  col_silver: "voice/color/col_silver.mp3",
+  col_sky: "voice/color/col_sky.mp3",
+  col_tan: "voice/color/col_tan.mp3",
+  col_turq: "voice/color/col_turq.mp3",
+  col_white: "voice/color/col_white.mp3",
   /* <<< color:clips */
   /* >>> count:clips - assets/voice/count/*.mp3, folded in by tools/fold-more-voice.js; never edit this block, re-run the tool */
   cnt_again: "voice/count/cnt_again.mp3",
@@ -3939,6 +4052,51 @@ const VOICE_CLIPS = {
   spc_yawn: "voice/chars/spc_yawn.mp3",
   spc_yum: "voice/chars/spc_yum.mp3",
   /* <<< chars:clips */
+  /* >>> math:clips - assets/voice/math/*.mp3, folded in by tools/fold-more-voice.js; never edit this block, re-run the tool */
+  mth_ate: "voice/math/mth_ate.mp3",
+  mth_came: "voice/math/mth_came.mp3",
+  mth_left: "voice/math/mth_left.mp3",
+  mth_press: "voice/math/mth_press.mp3",
+  mth_start: "voice/math/mth_start.mp3",
+  mth_up: "voice/math/mth_up.mp3",
+  /* <<< math:clips */
+  /* >>> write:clips - assets/voice/write/*.mp3, folded in by tools/fold-more-voice.js; never edit this block, re-run the tool */
+  wr_c_circle: "voice/write/wr_c_circle.mp3",
+  wr_c_cross: "voice/write/wr_c_cross.mp3",
+  wr_c_d0: "voice/write/wr_c_d0.mp3",
+  wr_c_d1: "voice/write/wr_c_d1.mp3",
+  wr_c_d2: "voice/write/wr_c_d2.mp3",
+  wr_c_d3: "voice/write/wr_c_d3.mp3",
+  wr_c_d4: "voice/write/wr_c_d4.mp3",
+  wr_c_d5: "voice/write/wr_c_d5.mp3",
+  wr_c_d6: "voice/write/wr_c_d6.mp3",
+  wr_c_d7: "voice/write/wr_c_d7.mp3",
+  wr_c_d8: "voice/write/wr_c_d8.mp3",
+  wr_c_d9: "voice/write/wr_c_d9.mp3",
+  wr_c_diagA: "voice/write/wr_c_diagA.mp3",
+  wr_c_diagB: "voice/write/wr_c_diagB.mp3",
+  wr_c_ex: "voice/write/wr_c_ex.mp3",
+  wr_c_hline: "voice/write/wr_c_hline.mp3",
+  wr_c_square: "voice/write/wr_c_square.mp3",
+  wr_c_tri: "voice/write/wr_c_tri.mp3",
+  wr_c_vline: "voice/write/wr_c_vline.mp3",
+  wr_c_zig: "voice/write/wr_c_zig.mp3",
+  wr_dot: "voice/write/wr_dot.mp3",
+  wr_fade: "voice/write/wr_fade.mp3",
+  wr_pick: "voice/write/wr_pick.mp3",
+  wr_start: "voice/write/wr_start.mp3",
+  /* <<< write:clips */
+  /* >>> fling:clips - assets/voice/fling/*.mp3, folded in by tools/fold-more-voice.js; never edit this block, re-run the tool */
+  fl_again: "voice/fling/fl_again.mp3",
+  fl_aim: "voice/fling/fl_aim.mp3",
+  fl_fire: "voice/fling/fl_fire.mp3",
+  fl_hatch: "voice/fling/fl_hatch.mp3",
+  fl_hit: "voice/fling/fl_hit.mp3",
+  fl_pull: "voice/fling/fl_pull.mp3",
+  fl_start: "voice/fling/fl_start.mp3",
+  fl_tired: "voice/fling/fl_tired.mp3",
+  fl_win: "voice/fling/fl_win.mp3",
+  /* <<< fling:clips */
   pk_more: "voice/games/pk_more.mp3",
   where: "voice/hub/where.mp3",
   wow: "voice/hub/wow.mp3",
@@ -4287,6 +4445,8 @@ const SCENES = {
                       matters more here than the rule that neighbours in the picker differ */
   wr: 'meadow',    /* writing: a plain sky and a plain field. The card she draws on covers most of
                       the screen anyway, and whatever is left must not compete with it */
+  fl: 'volcano',   /* the catapult: a wide empty sky to arc a dinosaur across, and the volcano's
+                      own slope on the right to stack the crates against */
   jmp: 'shore',    /* running, with sky for the star */
   bnd: 'dusk',     /* a concert at sunset */
   say: 'jungle',
@@ -10195,6 +10355,512 @@ window.ZoeyDomino = (function () {
 
 
 
+
+<!-- >>> fling:js - folded in by tools/fold-fling.js; edit games/fling/game.js and re-run the tool, never this block -->
+<script>
+/* ===== הקלע של ספינו - games/fling/game.js, folded in verbatim ===== */
+'use strict';
+/* =====================================================================
+   "הַקֶּלַע שֶׁל סְפִּינוֹ" - Spino's catapult  (slug fling, global ZoeyFling, CSS prefix fl-)
+
+   Harel asked for "a game in the style of ANGRY BIRDS, only with dinosaurs". This is that, with
+   three things changed because it is for a three-year-old and because of the rules this app has
+   kept since the first game.
+
+   1. THERE IS NOBODY TO BE ANGRY AT. Angry Birds is about knocking down the pigs who stole the
+      eggs. Every dinosaur in this app is a friendly baby that smiles and never bares its teeth,
+      and there are no villains anywhere in it. So the tower is not a fortress and nothing is
+      destroyed: the EGGS ARE STUCK in a pile of crates, and what she is doing is getting them out.
+      A crate that falls is a crate out of the way, an egg that reaches the ground HATCHES, and the
+      baby that comes out cheers. Nothing is hurt and nothing is lost.
+
+   2. THERE IS NO AIMING SKILL TO LACK. The whole of Angry Birds is pulling the sling to exactly
+      the right angle, and a three-year-old cannot do that - the game would be a wall. So there are
+      two ways to shoot and they are the same game:
+        - a FINGER drags the sling back and lets go, which is the gesture everyone knows;
+        - the KEYPAD gets the oldest control in games: an arrow that sweeps the angle on its own,
+          one press to stop it, a power bar that fills on its own, one press to fire. Two presses,
+          no precision, and exactly as likely to hit.
+      Both put the same two numbers into the same shot. There is no mode and no setting.
+
+   3. NO FAIL STATE, AND NO WAY TO GET STUCK. Shots are unlimited. And because an unlucky child
+      can arrange a pile she genuinely cannot reach, after MERCY shots that free nothing a crate
+      gets tired and falls over by itself - the game quietly comes down to meet her, which is what
+      the counting game's ceiling and the spinosaurus's growth both do.
+
+   THE PHYSICS IS DELIBERATELY NOT A SOLVER. A real stacking simulation is a week of work and
+   wobbles for ever at rest. Here a crate is SETTLED until something happens to it, and then it is
+   LOOSE: it falls with gravity, spins, lands on the ground or on another settled crate, and goes
+   back to sleep. Two things make a crate loose - being hit, or finding nothing underneath it - and
+   the second is what makes a pile collapse when you knock its leg out. It reads exactly like the
+   real thing at this size and it cannot jitter, because a sleeping crate is not integrated at all.
+
+   RECORDING SCRIPT - the PH keys this game adds (key : text, full nikud)
+     fl_start : בּוֹאִי נְשַׁחְרֵר אֶת הַבֵּיצִים!
+     fl_aim   : לַחֲצִי כְּדֵי לְכַוֵּן!
+     fl_fire  : לַחֲצִי כְּדֵי לִירוֹת!
+     fl_pull  : מִשְׁכִי אֶת הַקֶּלַע אֲחוֹרָה!
+     fl_hit   : פָּגַעְתְּ!
+     fl_hatch : בָּקַע גּוֹזָל!
+     fl_again : עוֹד פַּעַם!
+     fl_win   : כׇּל הַבֵּיצִים חׇפְשִׁיּוֹת!
+     fl_tired : אַחַת הַקֻּפְסָאוֹת הִתְעַיְּפָה!
+   ===================================================================== */
+window.ZoeyFling = (function () {
+  const KEYMAP = { KeyS: 0, KeyG: 1, KeyK: 2, Quote: 3 };
+  const NOTE = [392, 440, 494, 587];
+  const SAVE = 'zoey-fling';
+  /* The world is 200 wide and 112 tall and is fitted into the stage; everything below is in those
+     units, so a tower is the same tower on a phone and on an iPad. */
+  const W = 200, H = 112, GROUND = 100;
+  const G = 0.052;                        /* gravity, world units per tick^2 */
+  const SLING = { x: 26, y: GROUND - 14 };
+  const MERCY = 4;                        /* shots that free nothing before a crate gets tired */
+
+  PH.fl_start = 'בּוֹאִי נְשַׁחְרֵר אֶת הַבֵּיצִים!';
+  PH.fl_aim = 'לַחֲצִי כְּדֵי לְכַוֵּן!';
+  PH.fl_fire = 'לַחֲצִי כְּדֵי לִירוֹת!';
+  PH.fl_pull = 'מִשְׁכִי אֶת הַקֶּלַע אֲחוֹרָה!';
+  PH.fl_hit = 'פָּגַעְתְּ!';
+  PH.fl_hatch = 'בָּקַע גּוֹזָל!';
+  PH.fl_again = 'עוֹד פַּעַם!';
+  PH.fl_win = 'כׇּל הַבֵּיצִים חׇפְשִׁיּוֹת!';
+  PH.fl_tired = 'אַחַת הַקֻּפְסָאוֹת הִתְעַיְּפָה!';
+
+  /* ---------- the towers, easiest first ----------
+     b: crates [x, y, w, h]  ·  e: eggs [x, y]  — all with y as the TOP edge, bottom-aligned on
+     GROUND by construction so nothing starts out floating. */
+  const CRATE = 13, EGG = 11;
+  function tower(n) {
+    const b = [], e = [];
+    const col = (x, k) => { for (let i = 0; i < k; i++) b.push([x, GROUND - CRATE * (i + 1), CRATE, CRATE]); };
+    if (n === 0) {                                   /* one egg on one crate: she will hit it by accident */
+      col(140, 1); e.push([140 + (CRATE - EGG) / 2, GROUND - CRATE - EGG]);
+    } else if (n === 1) {                            /* two legs and a lintel, the egg under it */
+      col(132, 2); col(158, 2);
+      b.push([132, GROUND - CRATE * 3, CRATE * 3, CRATE]);
+      e.push([145, GROUND - EGG]);
+    } else if (n === 2) {                            /* a wall with an egg on top and one behind */
+      col(136, 3); col(150, 3);
+      e.push([138, GROUND - CRATE * 3 - EGG]); e.push([166, GROUND - EGG]);
+    } else if (n === 3) {                            /* a tall thin stack: knock the leg and it all goes */
+      col(146, 4);
+      b.push([160, GROUND - CRATE, CRATE, CRATE]);
+      e.push([147, GROUND - CRATE * 4 - EGG]); e.push([161, GROUND - CRATE - EGG]);
+    } else {                                         /* a house: two legs, a roof, an egg inside and one up top */
+      col(130, 3); col(162, 3);
+      b.push([130, GROUND - CRATE * 4, CRATE * 4.5, CRATE]);
+      e.push([145, GROUND - EGG]); e.push([148, GROUND - CRATE * 4 - EGG]);
+    }
+    return { b: b, e: e };
+  }
+  const LEVELS = 5;
+
+  /* ---------- state ---------- */
+  let alive = false, paused = false;
+  let round = 0, phase = 'aim';           /* aim | power | fly | settle | won */
+  let level = 0, crates = [], eggs = [], shot = null, trail = [];
+  let angle = 45, power = 0, sweep = 1, dragging = false, dragFrom = null, misses = 0, hatched = 0;
+  let raf = 0, lastPress = 0, speechSeq = 0;
+  let timers = [], deferred = [], nudgeT = null;
+  let els = null;
+
+  function readLevel() {
+    try { const o = JSON.parse(window.localStorage.getItem(SAVE) || 'null'); const n = o && +o.lvl;
+      return (n >= 0 && n < LEVELS) ? Math.floor(n) : 0; } catch (e) { return 0; }
+  }
+  function writeLevel(n) {
+    try { window.localStorage.setItem(SAVE, JSON.stringify({ lvl: Math.max(readLevel(), Math.min(LEVELS - 1, n)) })); } catch (e) { /* ignore */ }
+  }
+
+  /* ---------- timers ---------- */
+  function arm(t) { t.due = performance.now() + t.left; t.h = setTimeout(t.run, t.left); }
+  function later(ms, fn, keep) {
+    const t = { left: ms, due: 0, h: 0, rd: round, keep: !!keep };
+    t.run = function () { timers = timers.filter(x => x !== t); if (!alive || (!t.keep && t.rd !== round)) return; fn(); };
+    timers.push(t); if (!paused) arm(t);
+    return t;
+  }
+  function cancel(t) { if (!t) return; clearTimeout(t.h); timers = timers.filter(x => x !== t); }
+  function clearTimers(all) { timers = timers.filter(t => { if (all || !t.keep) { clearTimeout(t.h); return false; } return true; }); }
+  function say(key, queue, then) {
+    const s = ++speechSeq, rd = round;
+    const fin = then ? function () {
+      if (!alive || rd !== round || s !== speechSeq) return;
+      if (paused) { deferred.push([rd, then]); return; }
+      then();
+    } : undefined;
+    if (!VOICE_CLIPS[key]) { if (fin) later(120, fin, true); return; }
+    speak(key, queue, fin);
+  }
+  function blip(el, cls, ms) {
+    if (!el) return;
+    el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+    later(ms, () => el.classList.remove(cls), true);
+  }
+
+  /* ---------- the world on screen ---------- */
+  function fit() {
+    const r = els.field.getBoundingClientRect();
+    const s = Math.min(r.width / W, r.height / H);
+    els.world.style.setProperty('--u', s + 'px');
+    els.world.style.width = (W * s) + 'px';
+    els.world.style.height = (H * s) + 'px';
+  }
+  const put = (el, x, y, rot) => {
+    el.style.left = 'calc(var(--u) * ' + x + ')';
+    el.style.top = 'calc(var(--u) * ' + y + ')';
+    el.style.transform = rot ? 'rotate(' + rot + 'deg)' : '';
+  };
+  function sizeOf(el, w, h) {
+    el.style.width = 'calc(var(--u) * ' + w + ')';
+    el.style.height = 'calc(var(--u) * ' + h + ')';
+  }
+
+  function build(root) {
+    root.innerHTML =
+      '<div class="fl-stage">' +
+        '<div class="fl-scene" aria-hidden="true">' + sceneSVG('fl') + '</div>' +
+        '<div class="fl-field"><div class="fl-world">' +
+          '<div class="fl-ground"></div>' +
+          '<div class="fl-sling"><div class="fl-arm"></div><div class="fl-band"></div></div>' +
+          '<div class="fl-rider"></div>' +
+          '<div class="fl-aim"><div class="fl-arrow"></div></div>' +
+          '<div class="fl-shot"></div>' +
+          '<div class="fl-trail"></div>' +
+          '<div class="fl-crates"></div>' +
+        '</div></div>' +
+        '<div class="fl-zoey">' + drawZoey() + '</div>' +
+        '<div class="fl-bar"><div class="fl-barIn"></div></div>' +
+        '<div class="fl-row" dir="ltr">' +
+          '<button type="button" class="fl-btn c-blue" data-i="0" aria-label="כחול"></button>' +
+          '<button type="button" class="fl-btn c-yellow" data-i="1" aria-label="צהוב"></button>' +
+          '<button type="button" class="fl-btn c-red" data-i="2" aria-label="אדום"></button>' +
+          '<button type="button" class="fl-btn c-green" data-i="3" aria-label="ירוק"></button>' +
+        '</div>' +
+      '</div>';
+    const q = (s) => root.querySelector(s);
+    return { stage: q('.fl-stage'), field: q('.fl-field'), world: q('.fl-world'), sling: q('.fl-sling'),
+      aim: q('.fl-aim'), shot: q('.fl-shot'), trail: q('.fl-trail'), crates: q('.fl-crates'),
+      rider: q('.fl-rider'), zoey: q('.fl-zoey'), bar: q('.fl-bar'), barIn: q('.fl-barIn'),
+      btns: Array.prototype.slice.call(root.querySelectorAll('.fl-btn')) };
+  }
+
+  /* ---------- a level ---------- */
+  function deal() {
+    const t = tower(level);
+    crates = t.b.map((b) => ({ x: b[0], y: b[1], w: b[2], h: b[3], vx: 0, vy: 0, rot: 0, vr: 0, loose: false, gone: false, el: null }));
+    eggs = t.e.map((e) => ({ x: e[0], y: e[1], w: EGG, h: EGG, vx: 0, vy: 0, rot: 0, vr: 0, loose: false, egg: true, hatched: false, el: null }));
+    hatched = 0; misses = 0;
+    els.crates.innerHTML = '';
+    crates.concat(eggs).forEach((o) => {
+      const d = document.createElement('div');
+      d.className = o.egg ? 'fl-egg' : 'fl-crate';
+      d.innerHTML = o.egg ? eggArt() : crateArt();
+      els.crates.appendChild(d);
+      o.el = d;
+      sizeOf(d, o.w, o.h);
+      put(d, o.x, o.y, 0);
+    });
+    els.rider.innerHTML = dinoById('compsy').draw();
+    paintSling();
+  }
+  const crateArt = () => '<svg viewBox="0 0 40 40" aria-hidden="true" focusable="false">' +
+    '<rect x="2" y="2" width="36" height="36" rx="4" fill="#c99a63" stroke="#8b5a2b" stroke-width="3"/>' +
+    '<path d="M4 20 H36 M20 4 V36" stroke="#8b5a2b" stroke-width="2.5" opacity=".6"/></svg>';
+  const eggArt = () => '<svg viewBox="0 0 40 44" aria-hidden="true" focusable="false">' +
+    '<path d="M20 3 C30 3 36 20 36 29 C36 37 29 41 20 41 C11 41 4 37 4 29 C4 20 10 3 20 3 Z" fill="#fff6e0" stroke="#c9a46a" stroke-width="3"/>' +
+    '<circle cx="14" cy="18" r="3" fill="#f4a6c0"/><circle cx="26" cy="26" r="3.6" fill="#8fd0e8"/><circle cx="15" cy="31" r="3" fill="#b9a4e8"/></svg>';
+  const chickArt = () => '<svg viewBox="0 0 40 44" aria-hidden="true" focusable="false">' +
+    '<ellipse cx="20" cy="30" rx="13" ry="11" fill="#7ad3c0" stroke="#2b6c86" stroke-width="3"/>' +
+    '<circle cx="20" cy="17" r="9" fill="#7ad3c0" stroke="#2b6c86" stroke-width="3"/>' +
+    '<circle cx="17" cy="15" r="2.2" fill="#22303a"/><circle cx="24" cy="15" r="2.2" fill="#22303a"/>' +
+    '<path d="M16 21 q4 3 8 0" fill="none" stroke="#2b6c86" stroke-width="2.4" stroke-linecap="round"/></svg>';
+
+  /* ---------- aiming ---------- */
+  function paintSling() {
+    const a = angle * Math.PI / 180;
+    const len = 10 + power * 0.14;
+    put(els.aim, SLING.x, SLING.y, 0);
+    els.aim.style.setProperty('--a', (-angle) + 'deg');
+    els.aim.style.setProperty('--len', len);
+    els.shot.style.display = phase === 'fly' ? '' : 'none';
+    els.rider.classList.toggle('fl-away', phase === 'fly');
+    els.barIn.style.width = power + '%';
+    els.bar.style.visibility = (phase === 'power' || dragging) ? 'visible' : 'hidden';
+  }
+
+  /* ---------- the shot ---------- */
+  function fire() {
+    phase = 'fly';
+    cancel(nudgeT);
+    const a = angle * Math.PI / 180, v = 0.9 + power * 0.021;
+    shot = { x: SLING.x, y: SLING.y, vx: Math.cos(a) * v, vy: -Math.sin(a) * v, r: 5, hit: 0 };
+    trail = [];
+    els.trail.innerHTML = '';
+    sizeOf(els.shot, 10, 10);
+    els.shot.innerHTML = dinoById('compsy').draw();
+    blip(els.sling, 'fl-snap', 320);
+    tone(220, 0, 0.1, { f1: 90, g: 0.12 });
+    paintSling();
+    start();
+  }
+  function loose(o, vx, vy) {
+    if (o.loose) return;
+    o.loose = true; o.vx = vx; o.vy = vy; o.vr = (vx || 0.2) * (2 + Math.random() * 3);
+  }
+  const bottom = (o) => o.y + o.h;
+  const overlapX = (a, b) => a.x < b.x + b.w - 1 && a.x + a.w > b.x + 1;
+  /* a thing is supported if the ground or a sleeping thing is directly under it */
+  function supported(o, all) {
+    if (bottom(o) >= GROUND - 0.5) return true;
+    for (let i = 0; i < all.length; i++) {
+      const p = all[i];
+      if (p === o || p.gone || p.loose) continue;
+      if (overlapX(o, p) && Math.abs(bottom(o) - p.y) < 1.5) return true;
+    }
+    return false;
+  }
+  function step() {
+    const all = crates.concat(eggs).filter((o) => !o.gone);
+    /* 1. the shot */
+    if (shot) {
+      shot.vy += G;
+      shot.x += shot.vx; shot.y += shot.vy;
+      if (trail.length < 70 && (trail.length === 0 || Math.abs(shot.x - trail[trail.length - 1][0]) > 2.5)) {
+        trail.push([shot.x, shot.y]);
+        const d = document.createElement('i');
+        put(d, shot.x, shot.y, 0);
+        els.trail.appendChild(d);
+      }
+      put(els.shot, shot.x - 5, shot.y - 5, shot.x * 6);
+      for (let i = 0; i < all.length; i++) {
+        const o = all[i];
+        if (shot.x + shot.r > o.x && shot.x - shot.r < o.x + o.w && shot.y + shot.r > o.y && shot.y - shot.r < o.y + o.h) {
+          loose(o, shot.vx * 0.8, Math.min(-0.4, shot.vy * 0.5));
+          shot.hit++;
+          tone(300 - shot.hit * 20, 0, 0.12, { type: 'square', g: 0.1 });
+          shot.vx *= 0.45; shot.vy = Math.min(shot.vy, -0.5) * 0.5;
+          if (shot.hit === 1) say('fl_hit', false);
+          if (shot.hit >= 3) shot = null;
+          break;
+        }
+      }
+      if (shot && (shot.y > GROUND || shot.x > W + 20 || shot.x < -20)) {
+        if (shot.y > GROUND) { tone(140, 0, 0.14, { g: 0.08 }); burstAt(shot.x, GROUND); }
+        shot = null;
+      }
+    }
+    /* 2. anything with nothing underneath comes down - this is what makes a pile collapse */
+    all.forEach((o) => { if (!o.loose && !supported(o, all)) loose(o, (Math.random() - 0.5) * 0.2, 0); });
+    /* 3. the loose ones fall, land, and go back to sleep */
+    let moving = !!shot;
+    all.forEach((o) => {
+      if (!o.loose) return;
+      moving = true;
+      o.vy += G; o.x += o.vx; o.y += o.vy; o.rot += o.vr; o.vx *= 0.995;
+      let floor = GROUND;
+      for (let i = 0; i < all.length; i++) {
+        const p = all[i];
+        if (p === o || p.gone || p.loose) continue;
+        if (overlapX(o, p) && bottom(o) <= p.y + Math.abs(o.vy) + 1) floor = Math.min(floor, p.y);
+      }
+      if (bottom(o) >= floor) {
+        o.y = floor - o.h;
+        if (o.vy > 0.35) { tone(150 + Math.random() * 60, 0, 0.1, { type: 'square', g: 0.07 }); }
+        o.vy = 0; o.vx = 0; o.vr = 0; o.loose = false;
+        o.rot = Math.round(o.rot / 90) * 90;                 /* a crate at rest lies square */
+        if (o.egg && !o.hatched) hatch(o);
+      }
+      if (o.x < -30 || o.x > W + 30 || o.y > H + 30) { o.gone = true; if (o.el) o.el.style.display = 'none'; }
+      put(o.el, o.x, o.y, o.rot);
+    });
+    if (moving) { raf = requestAnimationFrame(step); return; }
+    raf = 0;
+    land();
+  }
+  function burstAt(x, y) {
+    const r = els.world.getBoundingClientRect();
+    const u = r.width / W;
+    burst(r.left + x * u, r.top + y * u, ['#c99a63', '#8b5a2b', '#ffffff'], reduce ? 5 : 12);
+  }
+  function hatch(o) {
+    o.hatched = true; hatched++;
+    o.el.className = 'fl-egg fl-hatched';
+    o.el.innerHTML = chickArt();
+    blip(o.el, 'fl-pop', 620);
+    [523, 659, 880].forEach((f, i) => later(i * 90, () => tone(f, 0, 0.28, { g: 0.09 })));
+    burstAt(o.x + o.w / 2, o.y);
+    say('fl_hatch', true);
+  }
+  function land() {
+    if (phase !== 'fly') return;
+    phase = 'settle';
+    els.shot.style.display = 'none';
+    if (hatched >= eggs.length) { win(); return; }
+    misses++;
+    if (misses >= MERCY) {
+      /* the game comes down to meet her: the highest crate still standing gets tired */
+      const standing = crates.filter((c) => !c.gone && !c.loose).sort((a, b) => a.y - b.y)[0];
+      if (standing) {
+        misses = 0;
+        say('fl_tired', false);
+        later(500, () => { loose(standing, (Math.random() - 0.5) * 0.6, -0.5); if (!raf) raf = requestAnimationFrame(step); });
+        later(900, () => { phase = 'aim'; angle = 45; power = 0; paintSling(); armNudge(); });
+        return;
+      }
+    }
+    later(700, () => { phase = 'aim'; angle = 45; power = 0; paintSling(); say('fl_again', false); armNudge(); });
+  }
+  function win() {
+    phase = 'won';
+    cancel(nudgeT);
+    zoeyDo('cheer', 2400);
+    const r = els.world.getBoundingClientRect();
+    burst(r.left + r.width * 0.7, r.top + r.height * 0.5, ['#ffd400', '#2a62ff', '#e8242b', '#1fb34a', '#ffffff'], reduce ? 16 : 44);
+    [523, 659, 784, 1047].forEach((f, i) => later(i * 110, () => tone(f, 0, 0.34, { g: 0.1 })));
+    say('fl_win', true);
+    level = (level + 1) % LEVELS;
+    writeLevel(level);
+    later(2600, () => { if (phase !== 'won') return; round++; clearTimers(false); phase = 'aim'; angle = 45; power = 0; deal(); say('fl_start', false); armNudge(); });
+  }
+  function start() { if (!raf) raf = requestAnimationFrame(step); }
+
+  /* ---------- her two ways to shoot ---------- */
+  function sweepTick() {
+    if (!alive || paused) return;
+    if (phase === 'aim' && !dragging) { angle += sweep * 1.3; if (angle > 78) { angle = 78; sweep = -1; } if (angle < 8) { angle = 8; sweep = 1; } paintSling(); }
+    else if (phase === 'power' && !dragging) { power += sweep * 2.6; if (power > 100) { power = 100; sweep = -1; } if (power < 2) { power = 2; sweep = 1; } paintSling(); }
+    sweepT = later(28, sweepTick, true);
+  }
+  let sweepT = null;
+  function press(i) {
+    tone(NOTE[i], 0, 0.16, { type: 'triangle', g: 0.12 });
+    blip(els.btns[i], 'fl-down', 180);
+    if (phase === 'aim') { phase = 'power'; power = 2; sweep = 1; paintSling(); say('fl_fire', false); armNudge(); return; }
+    if (phase === 'power') { fire(); return; }
+    if (phase === 'won') { blip(els.zoey, 'cheer', 600); }
+  }
+  /* a finger: drag back from the sling and let go, which is the gesture everyone already knows */
+  function onDown(e) {
+    if (!alive || paused || (phase !== 'aim' && phase !== 'power')) return;
+    if (e.target.closest && e.target.closest('.fl-btn')) return;       /* the four buttons are the row's */
+    dragging = true; dragFrom = world(e);
+    cancel(nudgeT);
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+    e.preventDefault();
+  }
+  function onMove(e) {
+    if (!dragging) return;
+    const p = world(e);
+    const dx = SLING.x - p[0], dy = SLING.y - p[1];
+    const d = Math.hypot(dx, dy);
+    if (d > 1) {
+      angle = Math.max(5, Math.min(85, Math.atan2(-dy, dx) * 180 / Math.PI));
+      /* pulling the sling BACKWARDS (to the left and down) is what loads it */
+      power = Math.max(2, Math.min(100, d * 3.2));
+      phase = 'power';
+      paintSling();
+    }
+    e.preventDefault();
+  }
+  function onUp() {
+    if (!dragging) return;
+    dragging = false;
+    if (phase === 'power' && power > 6) fire(); else { phase = 'aim'; power = 0; paintSling(); armNudge(); }
+  }
+  function world(e) {
+    const r = els.world.getBoundingClientRect();
+    const u = r.width / W;
+    return [(e.clientX - r.left) / u, (e.clientY - r.top) / u];
+  }
+
+  function zoeyDo(cls, ms) { blip(els.zoey, cls, ms); }
+  function armNudge() {
+    cancel(nudgeT);
+    nudgeT = later(8000, () => {
+      if (phase !== 'aim' && phase !== 'power') return;
+      els.btns.forEach((b, i) => later(i * 140, () => blip(b, 'fl-wave', 420), true));
+      say(phase === 'aim' ? (touchMode() ? 'fl_pull' : 'fl_aim') : 'fl_fire', false);
+      armNudge();
+    });
+  }
+  const touchMode = () => document.documentElement.getAttribute('data-touch') === 'on';
+
+  /* ---------- module API ---------- */
+  function startGame() {
+    const root = document.getElementById('fl-root');
+    if (!root) return;
+    if (alive) stop();
+    root.hidden = false;
+    els = build(root);
+    alive = true; paused = false; deferred = []; round++;
+    level = readLevel(); phase = 'aim'; angle = 45; power = 0; sweep = 1; dragging = false;
+    fit();
+    deal();
+    els.field.addEventListener('pointerdown', onDown);
+    els.field.addEventListener('pointermove', onMove);
+    els.field.addEventListener('pointerup', onUp);
+    els.field.addEventListener('pointercancel', onUp);
+    window.addEventListener('resize', fit);
+    sweepTick();
+    say('fl_start', false);
+    armNudge();
+  }
+  function stop() {
+    const was = alive;
+    alive = false; paused = false; phase = 'aim'; dragging = false; round++;
+    if (raf) { cancelAnimationFrame(raf); raf = 0; }
+    clearTimers(true); deferred = []; nudgeT = null; sweepT = null; speechSeq++;
+    window.removeEventListener('resize', fit);
+    if (was) { try { stopSpeech(); } catch (e) { /* ignore */ } try { stopMusic(); } catch (e) { /* ignore */ } try { clearFx(); } catch (e) { /* ignore */ } }
+    const root = document.getElementById('fl-root');
+    if (root) root.innerHTML = '';
+    els = null; crates = []; eggs = []; shot = null;
+  }
+  function pause() {
+    if (!alive || paused) return false;
+    paused = true;
+    if (raf) { cancelAnimationFrame(raf); raf = 0; }
+    const now = performance.now();
+    timers.forEach(t => { clearTimeout(t.h); t.left = Math.max(0, t.due - now); });
+    try { stopSpeech(); } catch (e) { /* ignore */ }
+    if (els) els.stage.classList.add('fl-paused');
+    return true;
+  }
+  function resume() {
+    if (!alive || !paused) return;
+    paused = false;
+    if (els) els.stage.classList.remove('fl-paused');
+    timers.forEach(arm);
+    const d = deferred; deferred = [];
+    d.forEach(p => { if (alive && p[0] === round) p[1](); });
+    if (phase === 'fly') start();
+  }
+  function keydown(e) {
+    if (!alive) return;
+    if (e.code === 'Escape') return;
+    const i = KEYMAP[e.code];
+    if (i === undefined || e.ctrlKey || e.metaKey || e.altKey) return;
+    e.preventDefault();
+    if (e.repeat) return;
+    const now = performance.now();
+    if (now - lastPress < 150) return;
+    lastPress = now;
+    ensureAudio();
+    if (paused || !els) return;
+    press(i);
+  }
+  function keyup(e) { if (alive && KEYMAP[e.code] !== undefined) e.preventDefault(); }
+
+  return { start: startGame, stop: stop, pause: pause, resume: resume, keydown: keydown, keyup: keyup,
+    _: { W: W, H: H, GROUND: GROUND, LEVELS: LEVELS, MERCY: MERCY, tower: tower, SAVE: SAVE,
+      phase: () => phase, level: () => level, crates: () => crates, eggs: () => eggs,
+      hatched: () => hatched, misses: () => misses, setLevel: (n) => { level = n; },
+      aim: (a, p) => { angle = a; power = p; }, fire: fire, deal: deal, readLevel: readLevel } };
+})();
+</script>
+<!-- <<< fling:js -->
 <!-- >>> write:js - folded in by tools/fold-write.js; edit games/write/game.js and re-run the tool, never this block -->
 <script>
 /* ===== כותבים מספרים - games/write/game.js, folded in verbatim ===== */
@@ -14172,6 +14838,18 @@ if (window.DinoAnim) DinoAnim.auto(document);
     return '<span class="pk-duo">' + prop(TRACE2) + dinoPic('spino') + '</span>';
   }
 /* <<< write:card */
+/* >>> fling:card - tools/fold-fling.js */
+  /* a catapult, an arc, and what is waiting at the end of it */
+  const SLINGPIC = '<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">' +
+    '<path d="M12 74 Q44 14 86 52" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-dasharray="2 10"/>' +
+    '<rect x="6" y="52" width="9" height="34" rx="4" fill="#8b5a2b"/>' +
+    '<path d="M2 52 L22 52" stroke="#6b4a2a" stroke-width="7" stroke-linecap="round"/>' +
+    '<rect x="64" y="54" width="32" height="32" rx="4" fill="#c99a63" stroke="#8b5a2b" stroke-width="4"/>' +
+    '<path d="M66 70 H94 M80 56 V84" stroke="#8b5a2b" stroke-width="3" opacity=".6"/></svg>';
+  function artFling() { /* the catapult, and who rides it */
+    return '<span class="pk-duo">' + prop(SLINGPIC) + dinoPic('compsy') + '</span>';
+  }
+/* <<< fling:card */
 
   /* ---------- the fifteen games ----------
      id      the name launch()/gameOf() use and the localStorage "recently played" key
@@ -14201,6 +14879,8 @@ if (window.DinoAnim) DinoAnim.auto(document);
     { id: 'math', global: 'ZoeyMath', root: 'mth-root', titleHe: 'חשבון עד עשר', card: artMath }/* <<< math:row */
     /* >>> write:row - tools/fold-write.js */,
     { id: 'write', global: 'ZoeyWrite', root: 'wr-root', titleHe: 'כותבים מספרים', card: artWrite, touchOnly: true }/* <<< write:row */
+    /* >>> fling:row - tools/fold-fling.js */,
+    { id: 'fling', global: 'ZoeyFling', root: 'fl-root', titleHe: 'הקלע של ספינו', card: artFling }/* <<< fling:row */
   ];
   const entryOf = (id) => { for (let i = 0; i < GAMES.length; i++) { if (GAMES[i].id === id) return GAMES[i]; } return null; };
   const gameOf = (which) => { const e = entryOf(which); return e ? (window[e.global] || null) : null; };
