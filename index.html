@@ -198,7 +198,6 @@ button:focus-visible { outline: 5px solid var(--focus); outline-offset: 4px; bor
    top-left corner. */
 .fernIn { transform-box: fill-box; transform-origin: 50% 100%; animation: sway 6s ease-in-out infinite alternate; }
 .fernB .fernIn { animation-duration: 7.6s; animation-delay: -2s; }
-.flower { transform-box: fill-box; transform-origin: 50% 100%; animation: bob 3.4s ease-in-out infinite alternate; animation-delay: var(--d, 0s); }
 @keyframes sway { from { transform: rotate(-2deg); } to { transform: rotate(2deg); } }
 @keyframes bob { from { transform: translateY(0); } to { transform: translateY(-5px); } }
 
@@ -234,6 +233,76 @@ button:focus-visible { outline: 5px solid var(--focus); outline-offset: 4px; bor
 .fly { fill: #ffe98a; opacity: 0; animation: firefly 5s ease-in-out infinite; animation-delay: var(--d, 0s); }
 @keyframes twinkle { from { opacity: 0.3; } to { opacity: 0.95; } }
 @keyframes firefly { 0%, 100% { opacity: 0; transform: translate(0, 0); } 40% { opacity: 0.9; } 50% { transform: translate(26px, -22px); } 90% { opacity: 0; transform: translate(50px, -44px); } }
+
+
+/* ---------- the sky has sizes now (2026-11-02) ----------
+   Harel asked for giant birds and for more going on behind the games. The small pterodactyl was
+   the only thing crossing the sky and it crossed every sky identically. Three layers now, and they
+   are told apart by SPEED and WING RATE rather than by size alone, because that is what the eye
+   actually reads as distance: the flock is tiny, highest and slowest; the pterodactyl is the one
+   that was always there; the giant is low, near, and beats its wings half as often. */
+.bigFlyer { transform: translate(-400px, var(--fy, 300px)); animation: bigGlide 64s linear infinite; }
+.bigFlyerIn { transform-box: fill-box; transform-origin: center; animation: bigFlap 1.9s ease-in-out infinite alternate; }
+.bfWing { fill: var(--fern-dark); opacity: 0.5; }
+.bfBody { fill: var(--fern-dark); opacity: 0.72; }
+.bfCrest { fill: var(--fern-dark); opacity: 0.6; }
+.bfEye { fill: var(--sky-bottom); opacity: 0.9; }
+@keyframes bigGlide { 0% { transform: translate(-400px, var(--fy, 300px)); } 62%, 100% { transform: translate(2000px, calc(var(--fy, 300px) + 60px)); } }
+@keyframes bigFlap { from { transform: scaleY(1); } to { transform: scaleY(0.52); } }
+
+.flock { transform: translate(-200px, var(--fy, 110px)); animation: flockGlide 88s linear infinite; }
+.flockB { fill: var(--fern-dark); opacity: 0.45; transform-box: fill-box; transform-origin: center;
+  animation: flockFlap 0.7s ease-in-out infinite alternate; animation-delay: calc(var(--k, 0) * -0.22s); }
+@keyframes flockGlide { 0% { transform: translate(-200px, var(--fy, 110px)); } 70%, 100% { transform: translate(1800px, calc(var(--fy, 110px) - 30px)); } }
+@keyframes flockFlap { from { transform: scaleY(1); } to { transform: scaleY(0.3); } }
+
+/* a herd on the skyline: it never arrives and never leaves, it is just always going somewhere */
+.herd { transform: translate(-300px, 668px); animation: herdWalk 150s linear infinite; }
+.herd path { fill: var(--hill-far); opacity: 0.55; }
+.herdOne { transform-box: fill-box; transform-origin: 50% 100%; animation: herdBob 1.6s ease-in-out infinite alternate; animation-delay: calc(var(--k, 0) * -0.5s); }
+@keyframes herdWalk { from { transform: translate(-300px, 668px); } to { transform: translate(1750px, 668px); } }
+@keyframes herdBob { from { transform: translateY(0); } to { transform: translateY(-4px); } }
+
+/* ---------- five flowers instead of one dot ----------
+   A flower here used to be <circle r="9">, eight times. These are drawn from the ground up, so the
+   stem's foot is the anchor and the bob turns about it the way a real stem does. */
+.flower { transform-box: fill-box; transform-origin: 50% 100%; animation: bob 3.4s ease-in-out infinite alternate; animation-delay: var(--d, 0s); }
+.flower .stem { fill: none; stroke: var(--grass-dark); stroke-width: 4.5; stroke-linecap: round; opacity: 0.9; }
+.flower .pet { fill: var(--flower-a); }
+.flower .eye { fill: var(--flower-c); }
+.flower.f1 .pet { fill: var(--flower-b); }
+.flower.f3 .pet { fill: var(--flower-c); }
+.flower.f3 .eye { fill: var(--flower-a); }
+.flower .stalkL { fill: none; stroke: var(--flower-b); stroke-width: 7; stroke-linecap: round; }
+.flower .puffB { fill: var(--flower-b); opacity: 0.45; }
+.flower .puffD { fill: var(--flower-a); }
+.flower .head { transform-box: fill-box; transform-origin: 50% 100%; animation: nodHead 4.6s ease-in-out infinite alternate; animation-delay: var(--d, 0s); }
+@keyframes nodHead { from { transform: rotate(-7deg); } to { transform: rotate(7deg); } }
+
+/* ---------- one thing per place that belongs to nowhere else ---------- */
+.dfly { transform: translate(var(--x, 600px), var(--y, 720px)); animation: dart 13s ease-in-out infinite alternate; }
+.dflyIn { transform-box: fill-box; transform-origin: center; animation: dWing 0.18s linear infinite alternate; }
+.dW { fill: #bfefff; opacity: 0.75; }
+.dW2 { opacity: 0.5; }
+.dB { fill: #2f8fb8; }
+@keyframes dart { 0% { transform: translate(var(--x), var(--y)); } 25% { transform: translate(calc(var(--x) + 180px), calc(var(--y) - 70px)); }
+  55% { transform: translate(calc(var(--x) - 90px), calc(var(--y) - 30px)); } 100% { transform: translate(calc(var(--x) + 240px), calc(var(--y) - 110px)); } }
+@keyframes dWing { from { transform: scaleY(1); } to { transform: scaleY(0.25); } }
+
+.leaf { fill: var(--fern); opacity: 0.8; transform: translate(var(--x, 300px), -60px) scale(var(--s, 1));
+  animation: fall 14s linear infinite; animation-delay: var(--d, 0s); }
+@keyframes fall { 0% { transform: translate(var(--x), -60px) rotate(0deg) scale(var(--s)); opacity: 0; }
+  10% { opacity: 0.85; } 100% { transform: translate(calc(var(--x) + 120px), 940px) rotate(540deg) scale(var(--s)); opacity: 0; } }
+
+.spore { fill: #ffffff; opacity: 0; transform: translate(var(--x, 400px), 900px);
+  animation: drift 16s linear infinite; animation-delay: var(--d, 0s); }
+@keyframes drift { 0% { transform: translate(var(--x), 900px); opacity: 0; } 15% { opacity: 0.7; }
+  100% { transform: translate(calc(var(--x) + 170px), 230px); opacity: 0; } }
+
+.shoot { fill: none; stroke: #fff; stroke-width: 4; stroke-linecap: round; opacity: 0;
+  transform: translate(180px, 90px); animation: shootStar 17s linear infinite; }
+@keyframes shootStar { 0%, 86% { opacity: 0; transform: translate(180px, 90px); }
+  88% { opacity: 0.95; } 94% { opacity: 0.9; transform: translate(1080px, 430px); } 95%, 100% { opacity: 0; transform: translate(1080px, 430px); } }
 
 /* --- the meadow --- */
 .tuft path { fill: var(--grass-dark); opacity: 0.75; }
@@ -704,6 +773,15 @@ button:focus-visible { outline: 5px solid var(--focus); outline-offset: 4px; bor
      first frame, and the first frame of a firefly is "off" and of the pterodactyl is "off-screen" */
   .fly { opacity: 0.75; }
   .flyer { transform: translate(560px, var(--fy, 150px)); }
+  .bigFlyer, .bigFlyerIn, .flock, .flockB, .herd, .herdOne, .flower, .flower .head,
+  .dfly, .dflyIn, .leaf, .spore, .shoot { animation: none; }
+  /* the four that END invisible have to be parked somewhere visible instead, or they are simply
+     gone under reduced motion - the same trap the firefly and the pterodactyl taught */
+  .leaf { opacity: 0.8; transform: translate(var(--x), 500px) scale(var(--s)); }
+  .spore { opacity: 0.6; transform: translate(var(--x), 620px); }
+  .shoot { opacity: 0; }
+  .bigFlyer { transform: translate(700px, var(--fy, 300px)); }
+  .flock { transform: translate(980px, var(--fy, 110px)); }
   .critter { animation: none; opacity: 1; }
   .walking { animation: none; }
   .bush.found .dinoWrap { animation: none; }
@@ -4479,9 +4557,39 @@ function sceneSVG(uid, kind) {
   const bfly = (cls, x, y, s) => '<g class="bflyAt ' + cls + '" transform="translate(' + x + ' ' + y + ') scale(' + s + ')"><g class="bfly">' +
     '<g class="bflyIn"><ellipse class="bflyW" cx="-13" cy="-4" rx="13" ry="16"/><ellipse class="bflyW" cx="13" cy="-4" rx="13" ry="16"/>' +
     '<ellipse class="bflyB" cx="0" cy="0" rx="3.5" ry="13"/></g></g></g>';
+  /* UNUSUAL FLOWERS (Harel, 2026-11-02: "more variety in the backgrounds, more moving animations
+     in the background of giant birds, unusual flowers, and so on"). Until now a flower in this
+     world was a <circle r="9"> - a coloured dot, eight of them, the same dot every time. These are
+     five species on stems: a daisy, a bell that hangs, a fiddlehead curled like a fern about to
+     open, a tall fan, and a puffball. They are drawn from the ground UP, so (x, y) is where the
+     stem meets the earth and the bloom is above it, which is also why they bob about that point. */
+  function bloom(x, y, s, sp, cls, d) {
+    const head = sp === 0
+      ? [0, 1, 2, 3, 4, 5].map((k) => '<ellipse class="pet" cx="0" cy="-16" rx="7" ry="15" transform="rotate(' + (k * 60) + ')"/>').join('') +
+        '<circle class="eye" cx="0" cy="0" r="8"/>'
+      : sp === 1
+      ? '<path class="pet" d="M-15 -4 Q-15 -26 0 -26 Q15 -26 15 -4 Q8 10 0 16 Q-8 10 -15 -4 Z"/><circle class="eye" cx="0" cy="12" r="4"/>'
+      : sp === 2
+      ? '<path class="stalkL" d="M0 10 Q-2 -14 14 -18 Q28 -20 26 -6 Q24 4 14 2 Q8 1 9 -5"/>'
+      : sp === 3
+      ? '<path class="pet" d="M0 12 Q-30 -6 -24 -34 Q-10 -20 0 -24 Q10 -20 24 -34 Q30 -6 0 12 Z"/><ellipse class="eye" cx="0" cy="-4" rx="5" ry="9"/>'
+      : '<circle class="puffB" cx="0" cy="-6" r="17"/>' +
+        [0, 1, 2, 3, 4, 5, 6, 7].map((k) => '<circle class="puffD" cx="' + Math.round(Math.cos(k * 0.785) * 15) + '" cy="' + (Math.round(Math.sin(k * 0.785) * 15) - 6) + '" r="3.4"/>').join('');
+    /* OUTER g places it, INNER g bobs - the trap this file warns about three times and which I
+       walked straight into: a CSS transform on the element that carries a transform ATTRIBUTE
+       REPLACES it, and every flower piled up at the top-left corner of the world. The old flowers
+       were <circle cx cy>, which has no attribute to lose, so the bug arrived with the shapes. */
+    return '<g class="flowerAt" transform="translate(' + x + ' ' + y + ') scale(' + s + ')">' +
+      '<g class="flower f' + sp + ' ' + (cls || '') + '" style="--d:' + d + 's">' +
+      '<path class="stem" d="M0 0 Q4 -24 0 -44"/><g class="head" transform="translate(0 -50)">' + head + '</g></g></g>';
+  }
   let fl = '';
-  [[120, 905, 'fa'], [330, 930, 'fb'], [560, 960, 'fc'], [900, 940, 'fa'], [1180, 920, 'fb'], [1420, 955, 'fa'], [1530, 900, 'fc'], [700, 900, 'fb']]
-    .forEach((f, i) => { fl += '<circle class="flower ' + f[2] + '" style="--d:' + (i * 0.4).toFixed(1) + 's" cx="' + f[0] + '" cy="' + f[1] + '" r="9"/>'; });
+  /* the stem FOOT is the anchor and the bloom sits fifty units above it, so these are forty or so
+     higher than the dots they replaced - the first run put half of them with their heads below the
+     bottom edge, which is the one place in this picture nothing is ever seen. */
+  [[120, 916, 1.3, 0], [330, 934, 1.0, 2], [560, 952, 1.2, 1], [900, 938, 1.4, 4], [1180, 922, 1.1, 3],
+   [1420, 950, 1.0, 0], [1530, 908, 1.25, 1], [700, 910, 1.15, 2], [1020, 956, 1.3, 3], [250, 896, 0.9, 4]]
+    .forEach((f, i) => { fl += bloom(f[0], f[1], f[2], f[3], 'fa', +(i * 0.4).toFixed(1)); });
 
   const volcano = '<g class="volcano"><path class="volc" d="M880 700 L1060 330 Q1100 290 1150 330 L1330 700 Z"/><path class="volcShade" d="M1100 300 L1150 330 L1330 700 L1180 700 Z"/><path class="lava" d="M1065 335 Q1105 360 1148 335 Q1105 305 1065 335 Z"/>' +
     '<g class="smoke"><circle cx="1108" cy="290" r="26"/><circle cx="1130" cy="256" r="32"/><circle cx="1105" cy="212" r="38"/></g>' +
@@ -4530,14 +4638,50 @@ function sceneSVG(uid, kind) {
   const middle = kind === 'volcano' ? volcano : kind === 'shore' ? shore : kind === 'dusk' ? volcano : '';
   const front = kind === 'lake' ? lake : kind === 'meadow' ? meadow : '';
   const over = kind === 'jungle' ? jungle : kind === 'dusk' ? flies : '';
+  /* THE GIANT ONE. The pterodactyl above crosses high and fast and reads as far away; this one is
+     four times the size, crosses LOW, takes twice as long and beats its wings half as often - and
+     that last part is what tells a three-year-old it is enormous rather than merely bigger. One per
+     sky, and off-screen for most of its loop like the small one, so it stays an event.
+     The FLOCK is the other half of the same trick: three tiny ones in a V, very high, very slow. */
+  const bigFlyer = (cls, y, s) => '<g class="bigFlyer ' + cls + '" style="--fy:' + y + 'px"><g class="bigFlyerIn" transform="scale(' + s + ')">' +
+    '<path class="bfWing" d="M-124 4 Q-74 -70 -16 -20 L0 -16 L16 -20 Q74 -70 124 4 Q68 28 18 10 L0 12 L-18 10 Q-68 28 -124 4 Z"/>' +
+    '<path class="bfBody" d="M-20 -12 Q6 -22 42 -10 L70 -2 L92 8 L62 12 L36 10 Q6 18 -20 8 Z"/>' +
+    '<path class="bfCrest" d="M44 -14 Q34 -40 62 -46 Q58 -24 72 -8 Z"/>' +
+    '<circle class="bfEye" cx="58" cy="-6" r="4.5"/></g></g>';
+  const flock = (cls, y) => '<g class="flock ' + cls + '" style="--fy:' + y + 'px">' +
+    [[0, 0], [-46, 20], [46, 22]].map((p, i) => '<path class="flockB" style="--k:' + i + '" d="M' + (p[0] - 20) + ' ' + p[1] +
+      ' q20 -16 20 0 q0 -16 20 0 q-20 8 -20 0 q0 8 -20 0 Z"/>').join('') + '</g>';
+  /* a herd walking the skyline, which is the cheapest thing in this file and the one that most
+     makes the world look like it goes on past the edges */
+  const herd = '<g class="herd">' + [0, 1, 2].map((k) => '<g class="herdOne" style="--k:' + k + '" transform="translate(' + (k * 120) + ' 0)">' +
+    '<path d="M0 0 q-6 -26 10 -34 q18 -9 40 -2 q10 -14 22 -12 q10 2 8 14 l16 6 q10 4 8 14 l-6 14 l-8 0 l2 -12 l-18 2 l-4 10 l-8 0 l2 -10 l-26 2 l-4 8 l-8 0 l2 -10 q-18 -4 -28 -10 Z"/></g>').join('') + '</g>';
   const bugs = (kind === 'meadow' || kind === 'jungle') ? bfly('b1', 390, 790, 1.1) + bfly('b2', 1250, 736, 0.9) : '';
+  /* one thing per place that belongs to that place and to nowhere else */
+  const dragon = (x, y) => '<g class="dfly" style="--x:' + x + 'px;--y:' + y + 'px"><g class="dflyIn">' +
+    '<ellipse class="dW" cx="-16" cy="-5" rx="22" ry="5"/><ellipse class="dW" cx="16" cy="-5" rx="22" ry="5"/>' +
+    '<ellipse class="dW dW2" cx="-13" cy="4" rx="17" ry="4"/><ellipse class="dW dW2" cx="13" cy="4" rx="17" ry="4"/>' +
+    '<ellipse class="dB" cx="0" cy="0" rx="4" ry="19"/></g></g>';
+  let leaves = '';
+  [[260, 1.0, 0], [640, 0.8, 2.6], [1010, 1.15, 5.1], [1380, 0.9, 7.4], [840, 0.7, 9.2]]
+    .forEach((l) => { leaves += '<path class="leaf" style="--x:' + l[0] + 'px;--s:' + l[1] + ';--d:' + l[2] + 's" d="M0 0 q16 -12 30 -2 q-10 16 -30 2 Z"/>'; });
+  let spores = '';
+  [[200, 6.1], [520, 0.8], [880, 3.3], [1240, 8.0], [1480, 2.2], [700, 5.0]]
+    .forEach((p) => { spores += '<circle class="spore" style="--x:' + p[0] + 'px;--d:' + p[1] + 's" r="5"/>'; });
+  const shoot = '<path class="shoot" d="M0 0 L120 46"/>';
+  const extra = kind === 'lake' ? dragon(520, 700) + dragon(1180, 760)
+    : kind === 'jungle' ? leaves
+    : kind === 'meadow' ? spores
+    : kind === 'dusk' ? shoot
+    : '';
 
   return '<svg class="scene sc-' + kind + '" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">' +
     '<defs><linearGradient id="sky-' + uid + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="skyTop"/><stop offset="1" class="skyBot"/></linearGradient></defs>' +
     '<rect width="1600" height="1000" fill="url(#sky-' + uid + ')"/>' +
     (kind === 'dusk' ? dusk : '') + SUN +
     cloud('c1', 300, 170, 1) + cloud('c2', 860, 108, 0.8) + cloud('c3', 1240, 220, 0.62) +
+    flock('k1', 96) +
     flyer('f1', 150, 0.9) +
+    bigFlyer('g1', 300, 1) +
     middle +
     (kind === 'shore' ? '' : '<path class="hillFar" d="M0 700 Q250 580 520 680 T1000 690 T1600 640 L1600 1000 L0 1000 Z"/>') +
     '<path class="hillNear" d="M0 770 Q300 690 640 770 T1280 750 T1600 730 L1600 1000 L0 1000 Z"/>' +
@@ -4545,7 +4689,8 @@ function sceneSVG(uid, kind) {
     '<path class="groundDark" d="M0 930 Q400 900 800 935 T1600 915 L1600 1000 L0 1000 Z"/>' +
     front +
     fern(60, 860, 1.3, 'fernA') + fern(250, 840, 0.9, 'fernB') + fern(1560, 870, 1.3, 'fernA') + fern(1330, 840, 0.9, 'fernB') + fern(760, 830, 0.8, 'fernA') +
-    fl + bugs + over + '</svg>';
+    fl + bugs + over + extra +
+    (kind === 'meadow' || kind === 'volcano' || kind === 'shore' ? herd : '') + '</svg>';
 }
 /* ---------- audio ---------- */
 let ac = null, musicBus = null;
