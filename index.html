@@ -3118,6 +3118,91 @@ button:focus-visible { outline: 5px solid var(--focus); outline-offset: 4px; bor
   .fl-sling.fl-snap, .fl-pop, .fl-btn.fl-wave { animation: none; }
 }
 /* <<< fling:css */
+
+/* >>> countwrite:css - games/countwrite/game.css, folded in verbatim by tools/fold-countwrite.js; edit the module and re-run the tool, never this block */
+/* ---------- fling (ZoeyCountWrite, .cw-) ---------- */
+/* The shell hides a game that is not the active one, and the rule that does it is a list of
+   root ids up at "the ten game containers". This game's line is here instead, inside its own
+   region, so that folding it in or taking it out is one tool and one block - the alternative
+   is a sixth anchor in the middle of a selector, which is a worse thing to own. */
+#cw-root:not([data-on]) { display: none; }
+/* "סופרים וכותבים" - every selector starts with .cw-
+   Two halves of one round, and only one of them is on screen at a time: the nest she counts, then
+   the card she writes on. The stage carries data-phase so the swap is one attribute and not a pile
+   of classes to get out of step. */
+.cw-stage { position: fixed; inset: 0; z-index: 5; overflow: hidden; -webkit-user-select: none; user-select: none; }
+.cw-stage.cw-paused * { animation-play-state: paused !important; }
+.cw-scene { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.cw-scene svg { width: 100%; height: 100%; display: block; }
+.cw-board { position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center;
+  padding: calc(1vh + var(--sa-t, 0px)) calc(2vw + var(--sa-r, 0px)) calc(2vh + var(--sa-b, 0px)) calc(2vw + var(--sa-l, 0px));
+  touch-action: none; }
+.cw-stage[data-phase="count"] .cw-card { display: none; }
+.cw-stage[data-phase="write"] .cw-nest, .cw-stage[data-phase="done"] .cw-nest { display: none; }
+
+/* ----- the eggs she counts ----- */
+.cw-nest { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: min(2vw, 2.6vh);
+  width: min(92vw, 150vh); }
+/* five to a row once there are more than five, the picture every counting screen in this app uses */
+.cw-nest.cw-wrap { width: min(86vw, calc(5 * (min(13vh, 15vw) + min(2vw, 2.6vh)))); }
+.cw-egg { position: relative; width: min(13vh, 15vw); min-width: 48px; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  animation: cwIn 0.4s ease-out both; animation-delay: var(--d, 0s); }
+.cw-egg svg { width: 100%; height: auto; display: block; overflow: visible; }
+.cw-egg svg path { fill: #fff6e0; stroke: #c9a46a; stroke-width: 3; stroke-linejoin: round; }
+.cw-spot { fill: #f4a6c0; }
+.cw-egg.cw-lit svg path { fill: #ffe9a8; stroke: #d79a2b; }
+.cw-egg.cw-next::after { content: ''; position: absolute; inset: -8%; border-radius: 50%;
+  border: 0.6vh dashed #ff8a00; animation: cwSpin 5s linear infinite; }
+.cw-num { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%);
+  font-size: min(6.5vh, 7.5vw); font-weight: 700; color: #2a62ff; -webkit-text-stroke: 0.4vh #fff; paint-order: stroke; }
+.cw-egg.cw-hop { animation: cwHop 0.56s cubic-bezier(0.3, 1.5, 0.5, 1); }
+.cw-egg.cw-wob { animation: cwWob 0.46s ease-in-out; }
+
+/* ----- the card she writes on: square, so one svg unit is one per cent of it ----- */
+.cw-card { position: relative; width: min(74vh, 86vw); aspect-ratio: 1; border-radius: 4vh;
+  background: rgba(255, 255, 255, 0.95); border: 0.8vh solid #fff;
+  box-shadow: 0 1vh 0 rgba(0, 0, 0, 0.12), 0 2vh 4vh rgba(0, 0, 0, 0.18); }
+.cw-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; overflow: visible; }
+.cw-ghost { font-family: inherit; font-size: 92px; font-weight: 700; fill: rgba(42, 98, 255, 0.1); text-anchor: middle; dominant-baseline: central; }
+/* the line she has joined so far - never a lane to stay inside, which is the other game's idea */
+.cw-join { fill: none; stroke: #2a62ff; stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; }
+.cw-join.cw-flash { animation: cwFlash 0.42s ease-out; }
+
+.cw-dot circle { fill: #fff; stroke: #9aa3ab; stroke-width: 2.4; }
+.cw-dot text { font-family: inherit; font-size: 6px; font-weight: 700; fill: #6b7a90; text-anchor: middle; dominant-baseline: central; }
+/* the one she wants is the only one on screen that answers, so it is the only one that moves */
+.cw-dot.cw-on circle { fill: #1fb34a; stroke: #fff; stroke-width: 1.6; animation: cwPulse 1.3s ease-in-out infinite; }
+.cw-dot.cw-on text { fill: #fff; }
+.cw-dot.cw-had circle { fill: #2a62ff; stroke: #fff; }
+.cw-dot.cw-had text { fill: #fff; }
+/* a stroke she has not started is NOT on screen. The 4 is two strokes that cross, and showing
+   both sets at once put a "7" of one beside a "7" of the other - two different sevens, touching. */
+.cw-dot.cw-later { display: none; }
+.cw-dot.cw-ping circle { animation: cwPing 0.9s ease-out 1; }
+.cw-svg.cw-won .cw-ghost { fill: rgba(31, 179, 74, 0.32); }
+.cw-svg.cw-won { animation: cwWon 0.6s ease-out; }
+
+.cw-zoey { position: absolute; left: calc(0.5vw + var(--sa-l, 0px)); bottom: calc(1vh + var(--sa-b, 0px));
+  width: clamp(48px, 10vh, 92px); z-index: 3; pointer-events: none; }
+.cw-zoey svg { width: 100%; height: auto; display: block; overflow: visible; }
+@media (max-aspect-ratio: 5/4) { .cw-zoey { display: none; } }
+
+@keyframes cwIn { from { opacity: 0; transform: translateY(14%) scale(0.8); } to { opacity: 1; transform: none; } }
+@keyframes cwHop { 0%, 100% { transform: translateY(0) scale(1); } 45% { transform: translateY(-14%) scale(1.07, 0.94); } }
+@keyframes cwWob { 0%, 100% { transform: none; } 25% { transform: rotate(-7deg); } 70% { transform: rotate(7deg); } }
+@keyframes cwSpin { to { transform: rotate(360deg); } }
+@keyframes cwPulse { 0%, 100% { r: 4.6; } 50% { r: 6.2; } }
+@keyframes cwPing { 0% { r: 4.6; } 60% { r: 11; } 100% { r: 4.6; } }
+@keyframes cwFlash { 0% { filter: brightness(2.2); } 100% { filter: none; } }
+@keyframes cwWon { 0%, 100% { transform: none; } 35% { transform: scale(1.035); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .cw-egg, .cw-egg.cw-hop, .cw-egg.cw-wob, .cw-egg.cw-next::after, .cw-dot.cw-on circle,
+  .cw-dot.cw-ping circle, .cw-join.cw-flash, .cw-svg.cw-won { animation: none; }
+  /* the eggs fade IN, so with the animation off they would never arrive */
+  .cw-egg { opacity: 1; transform: none; }
+}
+/* <<< countwrite:css */
 </style>
 
 <div id="zg" dir="rtl" lang="he">
@@ -3264,6 +3349,9 @@ button:focus-visible { outline: 5px solid var(--focus); outline-offset: 4px; bor
   <!-- >>> fling:root - tools/fold-fling.js -->
   <div id="fl-root" dir="rtl" lang="he"></div>
   <!-- <<< fling:root -->
+  <!-- >>> countwrite:root - tools/fold-countwrite.js -->
+  <div id="cw-root" dir="rtl" lang="he"></div>
+  <!-- <<< countwrite:root -->
 
   <button type="button" id="btnExit" class="exitBtn">יציאה</button>
 
@@ -4175,6 +4263,14 @@ const VOICE_CLIPS = {
   fl_tired: "voice/fling/fl_tired.mp3",
   fl_win: "voice/fling/fl_win.mp3",
   /* <<< fling:clips */
+  /* >>> countwrite:clips - assets/voice/countwrite/*.mp3, folded in by tools/fold-more-voice.js; never edit this block, re-run the tool */
+  cw_count: "voice/countwrite/cw_count.mp3",
+  cw_done: "voice/countwrite/cw_done.mp3",
+  cw_dot: "voice/countwrite/cw_dot.mp3",
+  cw_next: "voice/countwrite/cw_next.mp3",
+  cw_start: "voice/countwrite/cw_start.mp3",
+  cw_write: "voice/countwrite/cw_write.mp3",
+  /* <<< countwrite:clips */
   pk_more: "voice/games/pk_more.mp3",
   where: "voice/hub/where.mp3",
   wow: "voice/hub/wow.mp3",
@@ -4467,6 +4563,25 @@ function nudgeKey(own) { return own ? pickLine(own.concat(NUDGE), 'nudge:' + own
 /* the same line without its vowel points: everything spoken carries full nikud, nothing shown does */
 function plainHe(s) { return String(s || '').replace(/[\u0591-\u05C7]/g, ''); }
 
+/* ---------- how a numeral is made ----------
+   The stroke paths of the ten digits, in a 0..100 box, each starting AT THE TOP where the
+   numeral does - the one rule every teaching source agrees on (docs/WRITING-NUMBERS.md). They
+   live here rather than in a game because TWO games teach writing now and they must not be able
+   to disagree about how a 4 is made: "כותבים מספרים" has her trace the stroke inside a lane, and
+   "סופרים וכותבים" puts numbered dots along the very same stroke and has her join them. */
+const NUMERAL = {
+  '0': ['M50 12 A30 38 0 1 0 50 88 A30 38 0 1 0 50 12'],
+  '1': ['M50 13 L50 87'],
+  '2': ['M24 30 C24 18 36 11 50 11 C65 11 76 20 76 33 C76 50 46 62 22 87 L80 87'],
+  '3': ['M24 24 C29 15 39 11 50 11 C64 11 73 19 73 30 C73 40 63 48 50 48 C63 48 76 55 76 67 C76 81 63 89 48 89 C36 89 27 84 23 76'],
+  '4': ['M64 13 L20 62 L82 62', 'M64 13 L64 87'],
+  '5': ['M36 14 L29 47 C41 39 56 39 65 47 C76 57 74 77 59 86 C47 93 32 89 24 79', 'M36 14 L74 14'],
+  '6': ['M70 14 C48 18 28 40 28 60 C28 77 40 88 52 88 C66 88 76 78 76 65 C76 52 65 44 52 44 C41 44 32 50 28 58'],
+  '7': ['M20 16 L80 16 L44 86'],
+  '8': ['M50 12 C34 12 29 25 42 35 L58 49 C71 59 67 88 50 88 C33 88 29 59 42 49 L58 35 C71 25 66 12 50 12'],
+  '9': ['M72 32 C72 19 62 11 50 11 C38 11 28 20 28 32 C28 44 38 53 50 53 C62 53 72 44 72 32 L72 87']
+};
+
 /* ---------- bush + scenery + critters ---------- */
 function bushSVG() {
   const L = [[62, 140, 50], [104, 108, 58], [136, 150, 50]], R = [[238, 140, 50], [196, 108, 58], [164, 150, 50]];
@@ -4525,6 +4640,8 @@ const SCENES = {
                       the screen anyway, and whatever is left must not compete with it */
   fl: 'volcano',   /* the catapult: a wide empty sky to arc a dinosaur across, and the volcano's
                       own slope on the right to stack the crates against */
+  cw: 'lake',     /* counting and writing: the calmest place there is, because the eggs she is
+                      counting must be the only countable things on the screen */
   jmp: 'shore',    /* running, with sky for the star */
   bnd: 'dusk',     /* a concert at sunset */
   say: 'jungle',
@@ -10501,6 +10618,359 @@ window.ZoeyDomino = (function () {
 
 
 
+
+<!-- >>> countwrite:js - folded in by tools/fold-countwrite.js; edit games/countwrite/game.js and re-run the tool, never this block -->
+<script>
+/* ===== סופרים וכותבים - games/countwrite/game.js, folded in verbatim ===== */
+'use strict';
+/* =====================================================================
+   "סופרים וכותבים" - Count it, then write it  (slug countwrite, global ZoeyCountWrite, prefix cw-)
+
+   The SECOND way this app teaches writing a numeral, and it is deliberately a different method
+   rather than more of the first one.
+
+   WHAT IS DIFFERENT FROM "כותבים מספרים". That game is TRACING: a lane to stay inside, and the
+   line fills in where her finger has actually been. This one is DOT-TO-DOT: numbered dots sitting
+   along the very same stroke, and she joins them in order. Three things follow from that.
+     - It is EASIER, and it is the rung below tracing: she has to reach a place, not follow a route.
+       Where her finger goes between two dots does not matter at all.
+     - It teaches the thing tracing teaches only by accident - the ORDER. A numeral is a sequence
+       of movements, and the dots say what the sequence is, out loud, in pictures.
+     - And it cannot be done wrong. The next dot is the only thing on screen that answers.
+
+   AND IT IS BRIDGED FROM THE COUNTING SHE ALREADY HAS. The round does not start with a numeral; it
+   starts with eggs in a nest. She counts them by touching them, one at a time, which is exactly
+   what "סופרים ביחד" taught her, and only THEN does the numeral appear to be written. That order
+   is the whole point: the symbol arrives as the record of something she just did, instead of as a
+   shape she is asked to copy for its own sake.
+
+   The stroke paths are NUMERAL in the shared core, the same data "כותבים מספרים" traces, so the two
+   games cannot disagree about how a 4 is made.
+
+   TOUCH ONLY, like the other writing game and for the same reason: you cannot join dots with four
+   buttons. Its root carries data-pointer, which tells the shared tap layer to leave it alone.
+
+   RECORDING SCRIPT - the PH keys this game adds (key : text, full nikud)
+     cw_start : בּוֹאִי נִסְפֹּר וְנִכְתֹּב!
+     cw_count : סִפְרִי אֶת הַבֵּיצִים!
+     cw_write : עַכְשָׁו נִכְתֹּב אֶת הַמִּסְפָּר!
+     cw_dot   : הַתְחִילִי מֵהַנְּקֻדָּה הַיְרֻקָּה!
+     cw_next  : לַנְּקֻדָּה הַבָּאָה!
+     cw_done  : כָּתַבְתְּ אֶת הַמִּסְפָּר!
+   The numbers themselves are count_1 ... count_10, which are recorded, and the praise is the
+   twenty cheers.
+   ===================================================================== */
+window.ZoeyCountWrite = (function () {
+  const SAVE = 'zoey-countwrite';
+  /* How many dots a stroke gets is NOT a constant: a straight line down needs three and the 8
+     needs eight, and giving the line eight is eight taps for one movement while giving the 8
+     three is no guidance at all through its crossings. So it is read off the stroke's own
+     length, which is the only thing that knows the difference. */
+  const dotsFor = (len) => Math.max(3, Math.min(8, Math.round(len / 24)));
+  const NEAR = 15;                        /* how near her finger has to get, in the 0..100 box */
+
+  PH.cw_start = 'בּוֹאִי נִסְפֹּר וְנִכְתֹּב!';
+  PH.cw_count = 'סִפְרִי אֶת הַבֵּיצִים!';
+  PH.cw_write = 'עַכְשָׁו נִכְתֹּב אֶת הַמִּסְפָּר!';
+  PH.cw_dot = 'הַתְחִילִי מֵהַנְּקֻדָּה הַיְרֻקָּה!';
+  PH.cw_next = 'לַנְּקֻדָּה הַבָּאָה!';
+  PH.cw_done = 'כָּתַבְתְּ אֶת הַמִּסְפָּר!';
+
+  /* ---------- state ---------- */
+  let alive = false, paused = false;
+  let round = 0, phase = 'count';         /* count | write | done */
+  let n = 1, counted = 0, strokes = [], si = 0, di = 0, drawing = false;
+  let best = 0, lastPress = 0, speechSeq = 0;
+  let timers = [], deferred = [], nudgeT = null;
+  let els = null;
+
+  function readBest() {
+    try { const o = JSON.parse(window.localStorage.getItem(SAVE) || 'null'); const b = o && +o.best;
+      return (b >= 1 && b <= 10) ? Math.floor(b) : 0; } catch (e) { return 0; }
+  }
+  function noteBest(v) {
+    try { window.localStorage.setItem(SAVE, JSON.stringify({ best: Math.max(readBest(), Math.min(10, v)) })); } catch (e) { /* ignore */ }
+  }
+
+  /* ---------- timers ---------- */
+  function arm(t) { t.due = performance.now() + t.left; t.h = setTimeout(t.run, t.left); }
+  function later(ms, fn, keep) {
+    const t = { left: ms, due: 0, h: 0, rd: round, keep: !!keep };
+    t.run = function () { timers = timers.filter(x => x !== t); if (!alive || (!t.keep && t.rd !== round)) return; fn(); };
+    timers.push(t); if (!paused) arm(t);
+    return t;
+  }
+  function cancel(t) { if (!t) return; clearTimeout(t.h); timers = timers.filter(x => x !== t); }
+  function clearTimers(all) { timers = timers.filter(t => { if (all || !t.keep) { clearTimeout(t.h); return false; } return true; }); }
+  function say(key, queue, then) {
+    const s = ++speechSeq, rd = round;
+    const fin = then ? function () {
+      if (!alive || rd !== round || s !== speechSeq) return;
+      if (paused) { deferred.push([rd, then]); return; }
+      then();
+    } : undefined;
+    if (!VOICE_CLIPS[key]) { if (fin) later(120, fin, true); return; }
+    speak(key, queue, fin);
+  }
+  function blip(el, cls, ms) {
+    if (!el) return;
+    el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+    later(ms, () => el.classList.remove(cls), true);
+  }
+
+  /* ---------- the eggs she counts ---------- */
+  const eggArt = (i) => '<svg viewBox="0 0 40 46" aria-hidden="true" focusable="false">' +
+    '<path d="M20 3 C30 3 36 20 36 30 C36 39 29 43 20 43 C11 43 4 39 4 30 C4 20 10 3 20 3 Z"/>' +
+    '<circle class="cw-spot" cx="14" cy="19" r="3.2"/><circle class="cw-spot" cx="27" cy="27" r="3.8"/>' +
+    '<circle class="cw-spot" cx="15" cy="33" r="3.2"/></svg>';
+  function deal() {
+    els.nest.className = 'cw-nest' + (n > 5 ? ' cw-wrap' : '');
+    els.nest.innerHTML = Array.apply(null, { length: n }).map((_, i) =>
+      '<span class="cw-egg" data-i="' + i + '" style="--d:' + (i * 0.07).toFixed(2) + 's">' + eggArt(i) +
+      '<span class="cw-num" aria-hidden="true"></span></span>').join('');
+    counted = 0;
+    markEgg();
+  }
+  const eggs = () => Array.prototype.slice.call(els.nest.querySelectorAll('.cw-egg'));
+  function markEgg() {
+    eggs().forEach((e, i) => e.classList.toggle('cw-next', i === counted && phase === 'count'));
+  }
+  function countOne(el) {
+    const list = eggs(), i = list.indexOf(el);
+    if (i !== counted) {                                   /* not the next one: no scolding, just a nudge */
+      blip(el, 'cw-wob', 460);
+      markEgg();
+      return;
+    }
+    counted++;
+    el.classList.add('cw-lit');
+    el.querySelector('.cw-num').textContent = counted;
+    blip(el, 'cw-hop', 560);
+    tone(392 + counted * 44, 0, 0.22, { type: 'triangle', g: 0.11 });
+    say('count_' + counted, false);
+    markEgg();
+    if (counted >= n) later(650, toWrite);
+    armNudge();
+  }
+
+  /* ---------- the numeral she writes, as dots in order ---------- */
+  function sample(d, el, want) {
+    el.setAttribute('d', d);
+    const L = el.getTotalLength();
+    const pts = [];
+    for (let k = 0; k <= want; k++) { const p = el.getPointAtLength(L * k / want); pts.push([p.x, p.y]); }
+    return pts;
+  }
+  function toWrite() {
+    if (phase !== 'count') return;
+    phase = 'write';
+    si = 0; di = 0;
+    const paths = NUMERAL[String(n > 9 ? 0 : n)] || NUMERAL['1'];
+    const digit = n > 9 ? '10' : String(n);
+    els.card.innerHTML =
+      '<svg class="cw-svg" viewBox="0 0 100 100" aria-hidden="true" focusable="false">' +
+        '<text class="cw-ghost" x="50" y="50">' + digit + '</text>' +
+        paths.map((d, i) => '<path class="cw-join" data-i="' + i + '" d="' + d + '"/>').join('') +
+        '<path class="cw-probe" d="" style="display:none"/>' +
+        '<g class="cw-dots"></g>' +
+      '</svg>';
+    els.stage.setAttribute('data-phase', 'write');
+    const probe = els.card.querySelector('.cw-probe');
+    strokes = paths.map((d, i) => {
+      const el = els.card.querySelector('.cw-join[data-i="' + i + '"]');
+      const len = el.getTotalLength();
+      const pts = sample(d, probe, dotsFor(len));
+      el.style.strokeDasharray = len;
+      el.style.strokeDashoffset = len;
+      return { el: el, pts: pts, len: len };
+    });
+    const g = els.card.querySelector('.cw-dots');
+    g.innerHTML = strokes.map((s, k) => s.pts.map((p, j) =>
+      '<g class="cw-dot" data-s="' + k + '" data-j="' + j + '"><circle r="4.6" cx="' + p[0] + '" cy="' + p[1] + '"/>' +
+      '<text x="' + p[0] + '" y="' + (p[1] + 0.4) + '">' + (j + 1) + '</text></g>').join('')).join('');
+    paintDots();
+    say('cw_write', false, () => say('cw_dot', true));
+    armNudge();
+  }
+  function paintDots() {
+    els.card.querySelectorAll('.cw-dot').forEach((d) => {
+      const s = +d.getAttribute('data-s'), j = +d.getAttribute('data-j');
+      d.classList.toggle('cw-on', s === si && j === di);
+      d.classList.toggle('cw-had', s < si || (s === si && j < di));
+      d.classList.toggle('cw-later', s > si);
+    });
+    strokes.forEach((s, k) => {
+      const frac = k < si ? 1 : (k === si ? di / (s.pts.length - 1) : 0);
+      s.el.style.strokeDashoffset = s.len * (1 - frac);
+    });
+  }
+  function reach(p) {
+    const s = strokes[si];
+    if (!s) return;
+    const t = s.pts[di];
+    if (!t) return;
+    const dx = t[0] - p[0], dy = t[1] - p[1];
+    if (dx * dx + dy * dy > NEAR * NEAR) return;
+    di++;
+    tone(440 + di * 36, 0, 0.1, { type: 'triangle', g: 0.07 });
+    if (di >= s.pts.length) {
+      blip(s.el, 'cw-flash', 420);
+      tone(700, 0, 0.18, { type: 'triangle', g: 0.1 });
+      si++; di = 0;
+      if (si >= strokes.length) { paintDots(); win(); return; }
+    }
+    paintDots();
+  }
+  function win() {
+    phase = 'done';
+    cancel(nudgeT);
+    els.card.querySelector('.cw-svg').classList.add('cw-won');
+    noteBest(n);
+    const r = els.card.getBoundingClientRect();
+    burst(r.left + r.width / 2, r.top + r.height / 2, ['#ffd400', '#2a62ff', '#e8242b', '#1fb34a', '#ffffff'], reduce ? 14 : 38);
+    [523, 659, 784, 1047].forEach((f, i) => later(i * 100, () => tone(f, 0, 0.32, { g: 0.1 })));
+    zoeyDo('cheer', 2200);
+    say('count_' + n, false, () => say('cw_done', true, () => say(cheerKey(), true)));
+    later(2800, next);
+  }
+  function next() {
+    if (!alive) return;
+    round++; clearTimers(false); cancel(nudgeT);
+    /* up to ten and then back to a floor that rises with her, the way the counting game does */
+    n = n >= 10 ? Math.max(1, Math.min(7, readBest() - 2)) : n + 1;
+    phase = 'count';
+    els.stage.setAttribute('data-phase', 'count');
+    els.card.innerHTML = '';
+    deal();
+    say('cw_count', false);
+    armNudge();
+  }
+
+  /* ---------- her finger ---------- */
+  function world(e) {
+    const svg = els.card.querySelector('.cw-svg');
+    if (!svg) return null;
+    const r = svg.getBoundingClientRect();
+    if (!r.width) return null;
+    return [(e.clientX - r.left) / r.width * 100, (e.clientY - r.top) / r.height * 100];
+  }
+  function onDown(e) {
+    if (!alive || paused) return;
+    if (e.button > 0) return;
+    cancel(nudgeT);
+    if (phase === 'count') {
+      const egg = e.target.closest && e.target.closest('.cw-egg');
+      if (egg) { e.preventDefault(); countOne(egg); }
+      return;
+    }
+    if (phase !== 'write') return;
+    const p = world(e);
+    if (!p) return;
+    drawing = true;
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+    reach(p);
+    e.preventDefault();
+  }
+  function onMove(e) {
+    if (!drawing || !alive || paused || phase !== 'write') return;
+    const p = world(e);
+    if (p) reach(p);
+    e.preventDefault();
+  }
+  function onUp() { if (drawing) { drawing = false; if (phase === 'write') armNudge(); } }
+
+  function zoeyDo(cls, ms) { blip(els.zoey, cls, ms); }
+  function armNudge() {
+    cancel(nudgeT);
+    nudgeT = later(7000, () => {
+      if (phase === 'count') {
+        const list = eggs();
+        if (list[counted]) blip(list[counted], 'cw-hop', 620);
+        say('cw_count', false);
+      } else if (phase === 'write') {
+        const d = els.card.querySelector('.cw-dot.cw-on');
+        if (d) blip(d, 'cw-ping', 900);
+        say(di === 0 && si === 0 ? 'cw_dot' : 'cw_next', false);
+      } else return;
+      armNudge();
+    });
+  }
+
+  /* ---------- module API ---------- */
+  function start() {
+    const root = document.getElementById('cw-root');
+    if (!root) return;
+    if (alive) stop();
+    root.hidden = false;
+    root.setAttribute('data-pointer', '');            /* a touch in here is a touch, not a keypress */
+    root.innerHTML =
+      '<div class="cw-stage" data-phase="count">' +
+        '<div class="cw-scene" aria-hidden="true">' + sceneSVG('cw') + '</div>' +
+        '<div class="cw-board">' +
+          '<div class="cw-nest"></div>' +
+          '<div class="cw-card"></div>' +
+        '</div>' +
+        '<div class="cw-zoey">' + drawZoey() + '</div>' +
+      '</div>';
+    const q = (s) => root.querySelector(s);
+    els = { stage: q('.cw-stage'), board: q('.cw-board'), nest: q('.cw-nest'), card: q('.cw-card'), zoey: q('.cw-zoey') };
+    alive = true; paused = false; deferred = []; round++;
+    best = readBest();
+    n = best ? Math.min(10, best + 1) : 1;            /* where she left off, never back to one */
+    phase = 'count'; drawing = false;
+    deal();
+    els.board.addEventListener('pointerdown', onDown);
+    els.board.addEventListener('pointermove', onMove);
+    els.board.addEventListener('pointerup', onUp);
+    els.board.addEventListener('pointercancel', onUp);
+    say('cw_start', false, () => say('cw_count', true));
+    armNudge();
+  }
+  function stop() {
+    const was = alive;
+    alive = false; paused = false; phase = 'count'; drawing = false; round++;
+    clearTimers(true); deferred = []; nudgeT = null; speechSeq++;
+    if (was) { try { stopSpeech(); } catch (e) { /* ignore */ } try { stopMusic(); } catch (e) { /* ignore */ } try { clearFx(); } catch (e) { /* ignore */ } }
+    const root = document.getElementById('cw-root');
+    if (root) { root.innerHTML = ''; root.removeAttribute('data-pointer'); }
+    els = null; strokes = [];
+  }
+  function pause() {
+    if (!alive || paused) return false;
+    paused = true; drawing = false;
+    const now = performance.now();
+    timers.forEach(t => { clearTimeout(t.h); t.left = Math.max(0, t.due - now); });
+    try { stopSpeech(); } catch (e) { /* ignore */ }
+    if (els) els.stage.classList.add('cw-paused');
+    return true;
+  }
+  function resume() {
+    if (!alive || !paused) return;
+    paused = false;
+    if (els) els.stage.classList.remove('cw-paused');
+    timers.forEach(arm);
+    const d = deferred; deferred = [];
+    d.forEach(p => { if (alive && p[0] === round) p[1](); });
+  }
+  /* No keypad targets here, on purpose. Esc is the hub's; green skips to the next number so a
+     parent with the keypad in the room is not stuck watching. */
+  function keydown(e) {
+    if (!alive) return;
+    if (e.code === 'Escape') return;
+    if (e.code === 'Quote') { e.preventDefault(); if (!e.repeat && phase !== 'done') { cancel(nudgeT); next(); } }
+  }
+  function keyup() { /* nothing */ }
+
+  return { start: start, stop: stop, pause: pause, resume: resume, keydown: keydown, keyup: keyup,
+    _: { dotsFor: dotsFor, NEAR: NEAR, SAVE: SAVE, phase: () => phase, n: () => n, counted: () => counted,
+      si: () => si, di: () => di, strokes: () => strokes, readBest: readBest,
+      /* a test seam: toWrite() guards on phase so a stray timer cannot re-enter it, which also
+         means a check cannot ask it for a second numeral without saying it is back at the start */
+      reset: () => { phase = 'count'; },
+      setN: (v) => { n = v; }, toWrite: toWrite, deal: deal } };
+})();
+</script>
+<!-- <<< countwrite:js -->
 <!-- >>> fling:js - folded in by tools/fold-fling.js; edit games/fling/game.js and re-run the tool, never this block -->
 <script>
 /* ===== הקלע של ספינו - games/fling/game.js, folded in verbatim ===== */
@@ -11099,17 +11569,19 @@ window.ZoeyWrite = (function () {
     { id: 'ex', kind: 'line', name: 'איקס', s: ['M18 16 L82 84', 'M82 16 L18 84'] },
     { id: 'zig', kind: 'line', name: 'זיגזג', s: ['M12 24 L32 76 L50 24 L68 76 L88 24'] },
     { id: 'tri', kind: 'line', name: 'משולש', s: ['M50 14 L86 82 L14 82 Z'] },
-    /* --- part two: the digits, grouped by shape and not by counting --- */
-    { id: 'd1', kind: 'digit', g: '1', s: ['M50 13 L50 87'] },
-    { id: 'd4', kind: 'digit', g: '4', s: ['M64 13 L20 62 L82 62', 'M64 13 L64 87'] },
-    { id: 'd7', kind: 'digit', g: '7', s: ['M20 16 L80 16 L44 86'] },
-    { id: 'd0', kind: 'digit', g: '0', s: ['M50 12 A30 38 0 1 0 50 88 A30 38 0 1 0 50 12'] },
-    { id: 'd6', kind: 'digit', g: '6', s: ['M70 14 C48 18 28 40 28 60 C28 77 40 88 52 88 C66 88 76 78 76 65 C76 52 65 44 52 44 C41 44 32 50 28 58'] },
-    { id: 'd9', kind: 'digit', g: '9', s: ['M72 32 C72 19 62 11 50 11 C38 11 28 20 28 32 C28 44 38 53 50 53 C62 53 72 44 72 32 L72 87'] },
-    { id: 'd8', kind: 'digit', g: '8', s: ['M50 12 C34 12 29 25 42 35 L58 49 C71 59 67 88 50 88 C33 88 29 59 42 49 L58 35 C71 25 66 12 50 12'] },
-    { id: 'd2', kind: 'digit', g: '2', s: ['M24 30 C24 18 36 11 50 11 C65 11 76 20 76 33 C76 50 46 62 22 87 L80 87'] },
-    { id: 'd3', kind: 'digit', g: '3', s: ['M24 24 C29 15 39 11 50 11 C64 11 73 19 73 30 C73 40 63 48 50 48 C63 48 76 55 76 67 C76 81 63 89 48 89 C36 89 27 84 23 76'] },
-    { id: 'd5', kind: 'digit', g: '5', s: ['M36 14 L29 47 C41 39 56 39 65 47 C76 57 74 77 59 86 C47 93 32 89 24 79', 'M36 14 L74 14'] }
+    /* --- part two: the digits, grouped by shape and not by counting ---
+       The stroke paths themselves are NUMERAL in the shared core, because the dot-to-dot game
+       teaches the same strokes and the two must not be able to drift apart. --- */
+    { id: 'd1', kind: 'digit', g: '1', s: NUMERAL['1'] },
+    { id: 'd4', kind: 'digit', g: '4', s: NUMERAL['4'] },
+    { id: 'd7', kind: 'digit', g: '7', s: NUMERAL['7'] },
+    { id: 'd0', kind: 'digit', g: '0', s: NUMERAL['0'] },
+    { id: 'd6', kind: 'digit', g: '6', s: NUMERAL['6'] },
+    { id: 'd9', kind: 'digit', g: '9', s: NUMERAL['9'] },
+    { id: 'd8', kind: 'digit', g: '8', s: NUMERAL['8'] },
+    { id: 'd2', kind: 'digit', g: '2', s: NUMERAL['2'] },
+    { id: 'd3', kind: 'digit', g: '3', s: NUMERAL['3'] },
+    { id: 'd5', kind: 'digit', g: '5', s: NUMERAL['5'] }
   ];
   const CUE = {
     vline: 'קַו אֶחָד לְמַטָּה!', hline: 'קַו אֶחָד הַצִּדָּה!', circle: 'מִסָּבִיב, כְּמוֹ בֵּיצָה!',
@@ -14995,6 +15467,20 @@ if (window.DinoAnim) DinoAnim.auto(document);
     return '<span class="pk-duo">' + prop(SLINGPIC) + dinoPic('compsy') + '</span>';
   }
 /* <<< fling:card */
+/* >>> countwrite:card - tools/fold-countwrite.js */
+  /* count them, then write what you counted */
+  const COUNTWRITE = '<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">' +
+    '<g fill="#fff6e0" stroke="#c9a46a" stroke-width="4">' +
+    '<path d="M14 12 C21 12 25 24 25 31 C25 37 20 40 14 40 C8 40 3 37 3 31 C3 24 7 12 14 12 Z"/>' +
+    '<path d="M36 12 C43 12 47 24 47 31 C47 37 42 40 36 40 C30 40 25 37 25 31 C25 24 29 12 36 12 Z"/>' +
+    '<path d="M58 12 C65 12 69 24 69 31 C69 37 64 40 58 40 C52 40 47 37 47 31 C47 24 51 12 58 12 Z"/></g>' +
+    '<text x="52" y="74" font-size="46" font-weight="700" fill="rgba(42,98,255,.18)" text-anchor="middle" dominant-baseline="central">3</text>' +
+    '<g fill="#1fb34a" stroke="#fff" stroke-width="3">' +
+    '<circle cx="38" cy="56" r="7"/><circle cx="58" cy="58" r="7"/><circle cx="58" cy="74" r="7"/><circle cx="40" cy="90" r="7"/></g></svg>';
+  function artCountWrite() { /* eggs counted, and the number they came to */
+    return '<span class="pk-duo">' + prop(COUNTWRITE) + dinoPic('maia') + '</span>';
+  }
+/* <<< countwrite:card */
 
   /* ---------- the fifteen games ----------
      id      the name launch()/gameOf() use and the localStorage "recently played" key
@@ -15026,6 +15512,8 @@ if (window.DinoAnim) DinoAnim.auto(document);
     { id: 'write', global: 'ZoeyWrite', root: 'wr-root', titleHe: 'כותבים מספרים', card: artWrite, touchOnly: true }/* <<< write:row */
     /* >>> fling:row - tools/fold-fling.js */,
     { id: 'fling', global: 'ZoeyFling', root: 'fl-root', titleHe: 'הקלע של ספינו', card: artFling }/* <<< fling:row */
+    /* >>> countwrite:row - tools/fold-countwrite.js */,
+    { id: 'countwrite', global: 'ZoeyCountWrite', root: 'cw-root', titleHe: 'סופרים וכותבים', card: artCountWrite, touchOnly: true }/* <<< countwrite:row */
   ];
   const entryOf = (id) => { for (let i = 0; i < GAMES.length; i++) { if (GAMES[i].id === id) return GAMES[i]; } return null; };
   const gameOf = (which) => { const e = entryOf(which); return e ? (window[e.global] || null) : null; };
