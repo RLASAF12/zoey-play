@@ -3203,6 +3203,254 @@ button:focus-visible { outline: 5px solid var(--focus); outline-offset: 4px; bor
   .cw-egg { opacity: 1; transform: none; }
 }
 /* <<< countwrite:css */
+
+/* >>> give:css - games/give/game.css, folded in verbatim by tools/fold-give.js; edit the module and re-run the tool, never this block */
+/* ---------- give (ZoeyGive, .gv-) ---------- */
+/* The shell hides a game that is not the active one, and the rule that does it is a list of
+   root ids up at "the ten game containers". This game's line is here instead, inside its own
+   region, so that folding it in or taking it out is one tool and one block - the alternative
+   is a sixth anchor in the middle of a selector, which is a worse thing to own. */
+#gv-root:not([data-on]) { display: none; }
+/* "תן לספינו שלוש" - every selector starts with .gv- */
+.gv-stage { position: fixed; inset: 0; z-index: 5; overflow: hidden; display: flex; flex-direction: column;
+  -webkit-user-select: none; user-select: none; }
+.gv-stage.gv-paused * { animation-play-state: paused !important; }
+.gv-scene { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.gv-scene svg { width: 100%; height: 100%; display: block; }
+
+/* ----- the sign: the number he wants, as a numeral AND as the dots the counting game uses, so it
+   says the same thing twice in two languages she is learning at once ----- */
+.gv-sign { position: relative; z-index: 3; flex: none; align-self: center; display: flex; align-items: center; gap: min(2vw, 2.4vh);
+  margin: calc(1.5vh + var(--sa-t, 0px)) 0 0; padding: min(1.2vh, 14px) min(3vw, 3.4vh);
+  border-radius: 99px; background: rgba(255, 255, 255, 0.94); border: 0.6vh solid #fff;
+  box-shadow: 0 0.8vh 0 rgba(0, 0, 0, 0.12), 0 1.6vh 2.6vh rgba(0, 0, 0, 0.18); }
+.gv-num { font-size: min(9vh, 11vw); font-weight: 800; line-height: 1; color: #2a62ff;
+  -webkit-text-stroke: 0.5vh rgba(0, 0, 0, 0.12); paint-order: stroke; }
+.gv-dots { width: min(11vh, 13vw); }
+.gv-dots svg { width: 100%; height: auto; display: block; }
+.gv-dot { fill: #2a62ff; opacity: 0.85; }
+.gv-sign.gv-pop { animation: gvPop 0.5s cubic-bezier(0.3, 1.5, 0.5, 1); }
+
+/* ----- him, and the fish she has given him ----- */
+.gv-board { position: relative; z-index: 2; flex: 1 1 0; min-height: 0; display: flex; align-items: flex-end; justify-content: center;
+  gap: min(2vw, 3vh); padding: 1vh 2vw 1vh; }
+.gv-spino { width: clamp(90px, 26vh, 260px); flex: none; }
+.gv-spino svg { width: 100%; height: auto; display: block; overflow: visible; }
+.gv-spino.gv-munch { animation: gvMunch 0.52s ease-in-out; }
+.gv-spino.gv-hope { animation: gvHope 1.4s ease-in-out; }
+.gv-spino.gv-laugh { animation: gvLaugh 0.6s ease-in-out; }
+.gv-spino.gv-happy { animation: gvHappy 0.56s ease-in-out 4; }
+
+/* the fish stand in a row she can count, and in rows of five once there are more than five - the
+   same picture every counting screen in this app draws */
+.gv-pile { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: flex-start; gap: min(1vw, 1.4vh);
+  --gv-fish: min(9vh, 9cqw, 86px); width: min(52vw, calc(5 * (min(9vh, 86px) + min(1vw, 1.4vh)))); }
+.gv-fish { width: var(--gv-fish); flex: none; display: block; }
+.gv-fish svg { width: 100%; height: auto; display: block; overflow: visible; }
+.gv-body { stroke: #2b6c86; stroke-width: 3.5; }
+.gv-fin { fill: #ff9a3c; stroke: #c76a16; stroke-width: 3.5; stroke-linejoin: round; }
+.gv-eye { fill: #fff; stroke: #2b6c86; stroke-width: 2.5; }
+.gv-pupil { fill: #22303a; }
+.gv-smile { stroke: #2b6c86; stroke-width: 3; stroke-linecap: round; }
+.gv-fish.gv-in { animation: gvFishIn 0.55s cubic-bezier(0.25, 1.2, 0.4, 1) both; }
+.gv-fish.gv-out { animation: gvFishOut 0.5s ease-in both; }
+.gv-fish.gv-eaten { animation: gvEaten 0.55s ease-in both; }
+
+.gv-zoey { position: absolute; right: calc(1vw + var(--sa-r, 0px)); bottom: calc(17vh + var(--sa-b, 0px));
+  width: clamp(48px, 11vh, 100px); z-index: 3; pointer-events: none; }
+.gv-zoey svg { width: 100%; height: auto; display: block; overflow: visible; }
+@media (max-aspect-ratio: 5/4) { .gv-zoey { display: none; } }
+
+/* ----- three that give a fish, and one that says "that is all" ----- */
+.gv-row { position: relative; z-index: 4; flex: none; display: flex; gap: 2%; direction: ltr;
+  width: min(84vw, 104vh); margin: 0 auto;
+  padding: 0 calc(1.5vw + var(--sa-l, 0px)) calc(2vh + var(--sa-b, 0px)) calc(1.5vw + var(--sa-r, 0px)); }
+.gv-btn { flex: 1; min-width: 0; min-height: 48px; aspect-ratio: 1 / 0.6; border-radius: 50% / 46%;
+  border: 0.5vh solid rgba(255, 255, 255, 0.92); cursor: pointer; -webkit-tap-highlight-color: transparent;
+  display: flex; align-items: center; justify-content: center; padding: 2%;
+  background: radial-gradient(ellipse at 35% 28%, var(--cl) 0 10%, var(--c) 46%, var(--cd) 140%);
+  box-shadow: 0 0.7vh 0 var(--cd), 0 1.4vh 1.8vh rgba(0, 0, 0, 0.25); }
+.gv-btn svg { width: 62%; height: auto; display: block; }
+.gv-btnFish { width: 64%; display: block; opacity: 0.95; }
+.gv-btnFish svg { width: 100%; }
+.gv-btn:active { transform: translateY(6%) scale(0.96); }
+.gv-btn.gv-wave { animation: gvWave 0.44s ease-in-out; }
+.gv-btn:focus-visible { outline: 5px solid var(--focus); outline-offset: 4px; }
+
+@keyframes gvPop { 0% { transform: scale(0.8); } 55% { transform: scale(1.08); } 100% { transform: scale(1); } }
+@keyframes gvFishIn { from { opacity: 0; transform: translateX(40vw) rotate(18deg) scale(0.6); } to { opacity: 1; transform: none; } }
+@keyframes gvFishOut { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateX(34vw) rotate(-20deg) scale(0.55); } }
+@keyframes gvEaten { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateX(-26vw) scale(0.3) rotate(-30deg); } }
+@keyframes gvMunch { 0%, 100% { transform: none; } 30% { transform: scale(1.06, 0.94); } 65% { transform: scale(0.97, 1.05); } }
+@keyframes gvHope { 0%, 100% { transform: none; } 25% { transform: rotate(-5deg) translateY(-2%); } 60% { transform: rotate(5deg) translateY(-2%); } }
+@keyframes gvLaugh { 0%, 100% { transform: none; } 25% { transform: translateY(-5%) rotate(-4deg); } 60% { transform: translateY(-3%) rotate(4deg); } }
+@keyframes gvHappy { 0%, 100% { transform: none; } 40% { transform: translateY(-8%) scale(0.97, 1.05); } }
+@keyframes gvWave { 0%, 100% { transform: none; } 50% { transform: translateY(-12%) scale(1.06); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .gv-sign.gv-pop, .gv-fish.gv-in, .gv-fish.gv-out, .gv-fish.gv-eaten, .gv-spino.gv-munch,
+  .gv-spino.gv-hope, .gv-spino.gv-laugh, .gv-spino.gv-happy, .gv-btn.gv-wave { animation: none; }
+  /* the three that END invisible must not simply never arrive or never leave */
+  .gv-fish.gv-in { opacity: 1; transform: none; }
+  .gv-fish.gv-out, .gv-fish.gv-eaten { opacity: 0; }
+}
+/* <<< give:css */
+
+/* >>> gone:css - games/gone/game.css, folded in verbatim by tools/fold-gone.js; edit the module and re-run the tool, never this block */
+/* ---------- gone (ZoeyGone, .gn-) ---------- */
+/* The shell hides a game that is not the active one, and the rule that does it is a list of
+   root ids up at "the ten game containers". This game's line is here instead, inside its own
+   region, so that folding it in or taking it out is one tool and one block - the alternative
+   is a sixth anchor in the middle of a selector, which is a worse thing to own. */
+#gn-root:not([data-on]) { display: none; }
+/* "מי נעלם?" - every selector starts with .gn- */
+.gn-stage { position: fixed; inset: 0; z-index: 5; overflow: hidden; display: flex; flex-direction: column;
+  -webkit-user-select: none; user-select: none; }
+.gn-stage.gn-paused * { animation-play-state: paused !important; }
+.gn-scene { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.gn-scene svg { width: 100%; height: 100%; display: block; }
+
+/* ----- the group she is asked to remember ----- */
+.gn-field { position: relative; z-index: 2; flex: 1 1 0; min-height: 0; display: flex; align-items: flex-end; justify-content: center;
+  padding: calc(2vh + var(--sa-t, 0px)) 2vw 2vh; }
+.gn-row-dinos { display: flex; align-items: flex-end; justify-content: center; gap: min(2.5vw, 3vh); width: 100%; }
+.gn-one { flex: 0 1 auto; width: min(22vh, 20vw); animation: gnIn 0.45s ease-out both; animation-delay: calc(var(--k, 0) * 0.09s); }
+.gn-row-dinos.gn-many .gn-one { width: min(18vh, 16vw); }
+.gn-pic { display: block; }
+.gn-pic svg { width: 100%; height: auto; display: block; overflow: visible; }
+/* THE EMPTY PLACE. It keeps its width - that is the whole point: the row does not close up, so a
+   three-year-old can see that somebody is missing without having to notice the group got smaller. */
+.gn-one.gn-gone .gn-pic { visibility: hidden; }
+.gn-one.gn-gone::after { content: ''; position: absolute; left: 50%; bottom: 0; transform: translateX(-50%);
+  width: 70%; height: 10%; border-radius: 50%; background: rgba(0, 0, 0, 0.12); }
+.gn-one { position: relative; }
+.gn-one.gn-back { animation: gnBack 0.7s cubic-bezier(0.3, 1.5, 0.5, 1); }
+
+/* the gust of leaves that covers them */
+.gn-leaves { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.gn-leaf { position: absolute; left: -16%; top: calc(6% + var(--k, 0) * 12%);
+  width: min(26vh, 30vw); height: min(26vh, 30vw); border-radius: 60% 40% 55% 45%;
+  background: var(--fern, #359070); opacity: 0.92;
+  animation: gnSweep 0.95s cubic-bezier(0.4, 0, 0.3, 1) both; animation-delay: calc(var(--k, 0) * 0.05s); }
+
+.gn-zoey { position: absolute; left: calc(0.5vw + var(--sa-l, 0px)); bottom: calc(24vh + var(--sa-b, 0px));
+  width: clamp(44px, 10vh, 92px); z-index: 3; pointer-events: none; }
+.gn-zoey svg { width: 100%; height: auto; display: block; overflow: visible; }
+@media (max-aspect-ratio: 5/4) { .gn-zoey { display: none; } }
+
+/* ----- the four cards ----- */
+.gn-cards { position: relative; z-index: 4; flex: none; display: flex; gap: 1.6%; direction: ltr;
+  width: min(92vw, 128vh); margin: 0 auto;
+  padding: 0 calc(1.5vw + var(--sa-l, 0px)) calc(2vh + var(--sa-b, 0px)) calc(1.5vw + var(--sa-r, 0px)); }
+.gn-card { flex: 1; min-width: 0; min-height: 48px; aspect-ratio: 1 / 0.92; border-radius: 3vh;
+  border: 0.6vh solid rgba(255, 255, 255, 0.95); cursor: pointer; -webkit-tap-highlight-color: transparent;
+  display: flex; align-items: flex-end; justify-content: center; padding: 4% 4% 2%;
+  background: radial-gradient(ellipse at 40% 20%, var(--cl) 0 12%, var(--c) 56%, var(--cd) 150%);
+  box-shadow: 0 0.7vh 0 var(--cd), 0 1.4vh 1.8vh rgba(0, 0, 0, 0.25); }
+.gn-cardPic { width: 88%; display: block; }
+.gn-cardPic svg { width: 100%; height: auto; display: block; overflow: visible; }
+.gn-stage[data-phase="look"] .gn-cards, .gn-stage[data-phase="cover"] .gn-cards { visibility: hidden; }
+.gn-card.gn-lit { box-shadow: 0 0.7vh 0 var(--cd), 0 0 0 0.6vh #fff, 0 0 3vh 1vh var(--cl); }
+.gn-card.gn-wob { animation: gnWob 0.6s ease-in-out; }
+.gn-card.gn-hint { animation: gnHint 1s ease-in-out infinite alternate; }
+.gn-card.gn-right { animation: gnRight 0.7s ease-out; }
+.gn-card.gn-wave { animation: gnWave 0.44s ease-in-out; }
+.gn-card:focus-visible { outline: 5px solid var(--focus); outline-offset: 4px; }
+
+@keyframes gnIn { from { opacity: 0; transform: translateY(12%) scale(0.9); } to { opacity: 1; transform: none; } }
+@keyframes gnBack { 0% { opacity: 0; transform: translateY(-30%) scale(0.7); } 60% { opacity: 1; transform: translateY(4%) scale(1.06); } 100% { transform: none; } }
+@keyframes gnSweep { from { transform: translateX(0) rotate(0deg); } to { transform: translateX(150vw) rotate(300deg); } }
+@keyframes gnWob { 0%, 100% { transform: none; } 20% { transform: rotate(-6deg); } 55% { transform: rotate(6deg); } }
+@keyframes gnHint { from { transform: scale(1); filter: brightness(1); } to { transform: scale(1.05); filter: brightness(1.3); } }
+@keyframes gnRight { 0% { transform: scale(1); } 40% { transform: scale(1.12); } 100% { transform: scale(1); } }
+@keyframes gnWave { 0%, 100% { transform: none; } 50% { transform: translateY(-10%) scale(1.05); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .gn-one, .gn-one.gn-back, .gn-leaf, .gn-card.gn-wob, .gn-card.gn-hint, .gn-card.gn-right,
+  .gn-card.gn-wave { animation: none; }
+  /* the dinosaurs fade IN and the leaves sweep OFF: without their animations the first would never
+     arrive and the second would sit over the game for ever */
+  .gn-one { opacity: 1; transform: none; }
+  /* one flat cover instead of a gust, so the beat where they are hidden still happens */
+  .gn-leaf { display: none; }
+  .gn-leaves.gn-on { background: var(--fern, #359070); opacity: 0.95; }
+}
+/* <<< gone:css */
+
+/* >>> pop:css - games/pop/game.css, folded in verbatim by tools/fold-pop.js; edit the module and re-run the tool, never this block */
+/* ---------- pop (ZoeyPop, .pp-) ---------- */
+/* The shell hides a game that is not the active one, and the rule that does it is a list of
+   root ids up at "the ten game containers". This game's line is here instead, inside its own
+   region, so that folding it in or taking it out is one tool and one block - the alternative
+   is a sixth anchor in the middle of a selector, which is a worse thing to own. */
+#pp-root:not([data-on]) { display: none; }
+/* "מי קופץ?" - every selector starts with .pp-
+   The one game in this app where the four buttons on screen ARE the four buttons on the keypad,
+   in the same order and the same colours, with nothing in between. */
+.pp-stage { position: fixed; inset: 0; z-index: 5; overflow: hidden; display: flex; flex-direction: column;
+  -webkit-user-select: none; user-select: none; }
+.pp-stage.pp-paused * { animation-play-state: paused !important; }
+.pp-scene { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.pp-scene svg { width: 100%; height: 100%; display: block; }
+
+/* ----- how many she has caught, as stars she can count ----- */
+.pp-top { position: relative; z-index: 3; flex: none; display: flex; justify-content: center;
+  padding: calc(1.5vh + var(--sa-t, 0px)) 2vw 0; pointer-events: none; }
+.pp-score { display: flex; gap: min(1vw, 1.2vh); }
+.pp-star { width: min(3.2vh, 28px); height: min(3.2vh, 28px); border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5); box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.08); }
+.pp-star.pp-on { background: #ffd400; box-shadow: 0 0 0 2px #fff, 0 2px 5px rgba(0, 0, 0, 0.25); }
+
+/* ----- the four burrows ----- */
+.pp-holes { position: relative; z-index: 2; flex: 1 1 0; min-height: 0; display: flex; align-items: flex-end;
+  gap: 2%; direction: ltr; width: min(94vw, 136vh); margin: 0 auto;
+  padding: 0 calc(1.5vw + var(--sa-l, 0px)) calc(3vh + var(--sa-b, 0px)) calc(1.5vw + var(--sa-r, 0px)); }
+.pp-hole { position: relative; flex: 1; min-width: 0; min-height: 48px; aspect-ratio: 1 / 1.15;
+  border: 0; background: none; padding: 0; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  display: flex; align-items: flex-end; justify-content: center; }
+/* the mound is the coloured thing: it is the button, and it keeps the keypad's own colour */
+.pp-mound { position: absolute; left: 0; right: 0; bottom: 0; height: 34%;
+  border-radius: 46% 46% 30% 30% / 70% 70% 30% 30%;
+  background: radial-gradient(ellipse at 42% 24%, var(--cl) 0 14%, var(--c) 52%, var(--cd) 150%);
+  border-top: 0.5vh solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0.6vh 0 var(--cd), 0 1.2vh 1.8vh rgba(0, 0, 0, 0.26); }
+.pp-mound::after { content: ''; position: absolute; left: 22%; right: 22%; top: 16%; height: 34%;
+  border-radius: 50%; background: rgba(0, 0, 0, 0.3); }
+/* he comes up out of the mound and is clipped by it, so he really looks like he is in a hole */
+/* He rises from INSIDE the burrow: the mound is painted after him, so its front edge covers
+   his feet and the dark hole is where he comes out of. */
+.pp-dino { position: absolute; left: 18%; right: 18%; bottom: 9%; height: 80%;
+  display: flex; align-items: flex-end; justify-content: center;
+  transform: translateY(72%); opacity: 0; transition: transform 0.16s cubic-bezier(0.3, 1.4, 0.5, 1), opacity 0.1s; }
+.pp-dino svg { width: 100%; height: auto; display: block; overflow: visible; }
+.pp-hole.pp-up .pp-dino { transform: translateY(0); opacity: 1; }
+.pp-hole.pp-got .pp-dino { animation: ppGot 0.5s ease-out both; }
+.pp-hole.pp-miss .pp-dino { animation: ppDuck 0.4s ease-in both; }
+.pp-hole.pp-got .pp-mound { box-shadow: 0 0.6vh 0 var(--cd), 0 0 0 0.6vh #fff, 0 0 3vh 1vh var(--cl); }
+/* a press on the wrong burrow: sand, and nothing else */
+.pp-puff { position: absolute; left: 50%; bottom: 26%; width: 24%; aspect-ratio: 1; margin-left: -12%;
+  border-radius: 50%; background: #e3c88f; opacity: 0; }
+.pp-hole.pp-puffing .pp-puff { animation: ppPuff 0.4s ease-out; }
+.pp-hole:focus-visible { outline: 5px solid var(--focus); outline-offset: 4px; border-radius: 2vh; }
+
+/* top RIGHT: the parent exit button is in the top-left corner of every game in this app */
+.pp-zoey { position: absolute; right: calc(0.5vw + var(--sa-r, 0px)); top: calc(1vh + var(--sa-t, 0px));
+  width: clamp(44px, 9vh, 84px); z-index: 3; pointer-events: none; }
+.pp-zoey svg { width: 100%; height: auto; display: block; overflow: visible; }
+@media (max-aspect-ratio: 5/4) { .pp-zoey { display: none; } }
+
+@keyframes ppGot { 0% { transform: translateY(0) scale(1); opacity: 1; } 40% { transform: translateY(-22%) scale(1.1); opacity: 1; } 100% { transform: translateY(-50%) scale(0.6); opacity: 0; } }
+@keyframes ppDuck { from { transform: translateY(0); opacity: 1; } to { transform: translateY(72%); opacity: 0; } }
+@keyframes ppPuff { 0% { opacity: 0.9; transform: scale(0.4); } 100% { opacity: 0; transform: scale(2.1) translateY(-30%); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .pp-hole.pp-got .pp-dino, .pp-hole.pp-miss .pp-dino, .pp-hole.pp-puffing .pp-puff { animation: none; }
+  /* he still has to APPEAR and DISAPPEAR, or the whole game is invisible - what goes is the
+     travel, not the event: he is simply there or not there. */
+  .pp-dino { transition: none; transform: none; opacity: 0; }
+  .pp-hole.pp-up .pp-dino { opacity: 1; }
+}
+/* <<< pop:css */
 </style>
 
 <div id="zg" dir="rtl" lang="he">
@@ -3352,6 +3600,15 @@ button:focus-visible { outline: 5px solid var(--focus); outline-offset: 4px; bor
   <!-- >>> countwrite:root - tools/fold-countwrite.js -->
   <div id="cw-root" dir="rtl" lang="he"></div>
   <!-- <<< countwrite:root -->
+  <!-- >>> give:root - tools/fold-give.js -->
+  <div id="gv-root" dir="rtl" lang="he"></div>
+  <!-- <<< give:root -->
+  <!-- >>> gone:root - tools/fold-gone.js -->
+  <div id="gn-root" dir="rtl" lang="he"></div>
+  <!-- <<< gone:root -->
+  <!-- >>> pop:root - tools/fold-pop.js -->
+  <div id="pp-root" dir="rtl" lang="he"></div>
+  <!-- <<< pop:root -->
 
   <button type="button" id="btnExit" class="exitBtn">יציאה</button>
 
@@ -4271,6 +4528,35 @@ const VOICE_CLIPS = {
   cw_start: "voice/countwrite/cw_start.mp3",
   cw_write: "voice/countwrite/cw_write.mp3",
   /* <<< countwrite:clips */
+  /* >>> give:clips - assets/voice/give/*.mp3, folded in by tools/fold-more-voice.js; never edit this block, re-run the tool */
+  gv_done: "voice/give/gv_done.mp3",
+  gv_many: "voice/give/gv_many.mp3",
+  gv_more: "voice/give/gv_more.mp3",
+  gv_press: "voice/give/gv_press.mp3",
+  gv_start: "voice/give/gv_start.mp3",
+  gv_want_1: "voice/give/gv_want_1.mp3",
+  gv_want_10: "voice/give/gv_want_10.mp3",
+  gv_want_2: "voice/give/gv_want_2.mp3",
+  gv_want_3: "voice/give/gv_want_3.mp3",
+  gv_want_4: "voice/give/gv_want_4.mp3",
+  gv_want_5: "voice/give/gv_want_5.mp3",
+  gv_want_6: "voice/give/gv_want_6.mp3",
+  gv_want_7: "voice/give/gv_want_7.mp3",
+  gv_want_8: "voice/give/gv_want_8.mp3",
+  gv_want_9: "voice/give/gv_want_9.mp3",
+  /* <<< give:clips */
+  /* >>> gone:clips - assets/voice/gone/*.mp3, folded in by tools/fold-more-voice.js; never edit this block, re-run the tool */
+  gn_ask: "voice/gone/gn_ask.mp3",
+  gn_back: "voice/gone/gn_back.mp3",
+  gn_look: "voice/gone/gn_look.mp3",
+  gn_start: "voice/gone/gn_start.mp3",
+  /* <<< gone:clips */
+  /* >>> pop:clips - assets/voice/pop/*.mp3, folded in by tools/fold-more-voice.js; never edit this block, re-run the tool */
+  pp_fast: "voice/pop/pp_fast.mp3",
+  pp_got: "voice/pop/pp_got.mp3",
+  pp_miss: "voice/pop/pp_miss.mp3",
+  pp_start: "voice/pop/pp_start.mp3",
+  /* <<< pop:clips */
   pk_more: "voice/games/pk_more.mp3",
   where: "voice/hub/where.mp3",
   wow: "voice/hub/wow.mp3",
@@ -4642,6 +4928,13 @@ const SCENES = {
                       own slope on the right to stack the crates against */
   cw: 'lake',     /* counting and writing: the calmest place there is, because the eggs she is
                       counting must be the only countable things on the screen */
+  gv: 'lake',      /* give him three: FISH, so the water is where they come from - and that reads to a
+                      three-year-old in a way a rule about picker neighbours does not. It shares the
+                      lake with "סופרים וכותבים" next to it, the same deliberate exception mth makes
+                      with cnt, and for the same reason: the place says something about the game */
+  gn: 'jungle',    /* who is missing: a busy place would be wrong, but the fronds frame the row she
+                      has to hold in mind, and nothing in them invites counting */
+  pp: 'shore',     /* burrows in the sand, which is the one ground in this world you can dig in */
   jmp: 'shore',    /* running, with sky for the star */
   bnd: 'dusk',     /* a concert at sunset */
   say: 'jungle',
@@ -10619,6 +10912,878 @@ window.ZoeyDomino = (function () {
 
 
 
+
+
+
+<!-- >>> pop:js - folded in by tools/fold-pop.js; edit games/pop/game.js and re-run the tool, never this block -->
+<script>
+/* ===== מי קופץ? - games/pop/game.js, folded in verbatim ===== */
+'use strict';
+/* =====================================================================
+   "מִי קוֹפֵץ?" - Who is popping up?  (slug pop, global ZoeyPop, CSS prefix pp-)
+
+   Harel, 2026-11-03: *"add speed games."* There was nothing in this app that asked her to be QUICK.
+   "דינו קופץ" is about timing - press at the right moment of a thing that is already moving - and
+   everything else waits for her as long as she likes. This is the other one: something appears and
+   she has to answer it before it goes.
+
+   WHY THIS SHAPE AND NOT ANOTHER. A speed game for a three-year-old has to be reaction and nothing
+   else: no aiming, no reading, no choosing between things that look alike. Four burrows in the
+   sand, one under each keypad colour, and a dinosaur pops out of ONE of them. Press that colour.
+   That is the whole game, and it is the only game in the app where the four buttons mean exactly
+   what they say on the screen - which is why it is also the best practice there is for every other
+   game's rows of four.
+
+   THE PACE COMES DOWN TO MEET HER, which is the part that matters most and is easy to get wrong.
+     - Catch one and the next one is a little quicker (SPEED_UP), to a floor of FASTEST.
+     - MISS TWO IN A ROW and it slows back down. A game that only ever speeds up is a game every
+       child loses in the end, and losing is not something this app does.
+     - A miss is never punished and never ends anything: he ducks back, says nothing unkind, and
+       another one comes. The only number on screen is how many she has caught.
+   So the game walks to the edge of what she can do and then stays there, which is where a child
+   actually wants to be.
+
+   AND A PRESS ON THE WRONG BURROW IS NOT A MISS EITHER. That burrow puffs a little sand and the one
+   that is up stays up - there is no cost, because at this age pressing the wrong colour quickly is
+   how she learns which colour is which.
+
+   RECORDING SCRIPT - the PH keys this game adds (key : text, full nikud)
+     pp_start : מִי קוֹפֵץ? לַחֲצִי מַהֵר!
+     pp_got   : תָּפַסְתְּ!
+     pp_miss  : כִּמְעַט!
+     pp_fast  : עַכְשָׁו יוֹתֵר מַהֵר!
+   Short on purpose: a line that runs three seconds would still be talking when the next dinosaur
+   has come and gone. The cheers are the twenty that already exist and are only used between rounds.
+   ===================================================================== */
+window.ZoeyPop = (function () {
+  const KEYMAP = { KeyS: 0, KeyG: 1, KeyK: 2, Quote: 3 };
+  const NOTE = [392, 440, 494, 587];
+  const SAVE = 'zoey-pop';
+  const ROUND = 10;                       /* pops in a round */
+  const SLOWEST = 2000, FASTEST = 780;    /* how long he stays up */
+  const SPEED_UP = 110, SLOW_DOWN = 220;
+  const GAP = 520;                        /* between one going down and the next coming up */
+
+  PH.pp_start = 'מִי קוֹפֵץ? לַחֲצִי מַהֵר!';
+  PH.pp_got = 'תָּפַסְתְּ!';
+  PH.pp_miss = 'כִּמְעַט!';
+  PH.pp_fast = 'עַכְשָׁו יוֹתֵר מַהֵר!';
+
+  /* ---------- state ---------- */
+  let alive = false, paused = false;
+  let round = 0, phase = 'idle';          /* idle | up | down | over */
+  let up = -1, wasUp = -1, upAt = 0, hold = SLOWEST, caught = 0, pops = 0, missRun = 0, best = 0;
+  let lastPress = 0, speechSeq = 0, downT = null, nextT = null;
+  let timers = [], deferred = [];
+  let els = null;
+
+  function readBest() {
+    try { const o = JSON.parse(window.localStorage.getItem(SAVE) || 'null'); const b = o && +o.best;
+      return (b >= 0 && b <= ROUND) ? Math.floor(b) : 0; } catch (e) { return 0; }
+  }
+  function noteBest(v) {
+    try { window.localStorage.setItem(SAVE, JSON.stringify({ best: Math.max(readBest(), Math.min(ROUND, v)) })); } catch (e) { /* ignore */ }
+  }
+
+  /* ---------- timers ---------- */
+  function arm(t) { t.due = performance.now() + t.left; t.h = setTimeout(t.run, t.left); }
+  function later(ms, fn, keep) {
+    const t = { left: ms, due: 0, h: 0, rd: round, keep: !!keep };
+    t.run = function () { timers = timers.filter(x => x !== t); if (!alive || (!t.keep && t.rd !== round)) return; fn(); };
+    timers.push(t); if (!paused) arm(t);
+    return t;
+  }
+  function cancel(t) { if (!t) return; clearTimeout(t.h); timers = timers.filter(x => x !== t); }
+  function clearTimers(all) { timers = timers.filter(t => { if (all || !t.keep) { clearTimeout(t.h); return false; } return true; }); }
+  function say(key, queue, then) {
+    const s = ++speechSeq, rd = round;
+    const fin = then ? function () {
+      if (!alive || rd !== round || s !== speechSeq) return;
+      if (paused) { deferred.push([rd, then]); return; }
+      then();
+    } : undefined;
+    if (!VOICE_CLIPS[key]) { if (fin) later(140, fin, true); return; }
+    speak(key, queue, fin);
+  }
+  function blip(el, cls, ms) {
+    if (!el) return;
+    el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+    later(ms, () => el.classList.remove(cls), true);
+  }
+
+  /* ---------- DOM ---------- */
+  const COLOURS = ['c-blue', 'c-yellow', 'c-red', 'c-green'];
+  function build(root) {
+    root.innerHTML =
+      '<div class="pp-stage">' +
+        '<div class="pp-scene" aria-hidden="true">' + sceneSVG('pp') + '</div>' +
+        '<div class="pp-top" aria-hidden="true"><span class="pp-score"></span></div>' +
+        '<div class="pp-holes" dir="ltr">' +
+          [0, 1, 2, 3].map((i) => '<button type="button" class="pp-hole ' + COLOURS[i] + '" data-i="' + i + '" aria-label="' +
+            ['כחול', 'צהוב', 'אדום', 'ירוק'][i] + '">' +
+            '<span class="pp-dino"></span><span class="pp-mound"></span><span class="pp-puff"></span></button>').join('') +
+        '</div>' +
+        '<div class="pp-zoey">' + drawZoey() + '</div>' +
+      '</div>';
+    const q = (s) => root.querySelector(s);
+    return { stage: q('.pp-stage'), score: q('.pp-score'), zoey: q('.pp-zoey'),
+      holes: Array.prototype.slice.call(root.querySelectorAll('.pp-hole')) };
+  }
+  function showScore() {
+    let h = '';
+    for (let i = 0; i < ROUND; i++) h += '<span class="pp-star' + (i < caught ? ' pp-on' : '') + '"></span>';
+    els.score.innerHTML = h;
+  }
+
+  /* ---------- one pop ---------- */
+  function popUp() {
+    if (!alive || phase === 'over') return;
+    /* Never the same burrow twice running: at this speed a repeat reads as the game being stuck,
+       and she presses the colour she has just pressed - which teaches her the wrong thing about
+       the screen. It is compared against `wasUp` and NOT against `up`, which after() has already
+       set to -1 by the time the next pop is scheduled: written the obvious way, this guard never
+       fired once and three in a row came up. tools/pop-check.js caught it on its first run.
+       `wasUp` deliberately survives startRound(), so the first pop of a round is not the last
+       pop of the one before either. */
+    let k = rand(4);
+    if (k === wasUp) k = (k + 1 + rand(3)) % 4;
+    up = k; wasUp = k; upAt = performance.now();
+    phase = 'up';
+    pops++;
+    const h = els.holes[k];
+    h.classList.add('pp-up');
+    h.querySelector('.pp-dino').innerHTML = dinoById(DINOS[rand(DINOS.length)].id).draw();
+    tone(520, 0, 0.1, { f1: 700, g: 0.07 });
+    downT = later(hold, duck);
+  }
+  function duck() {
+    if (phase !== 'up') return;
+    const h = els.holes[up];
+    h.classList.remove('pp-up');
+    h.classList.add('pp-miss');
+    later(420, () => h.classList.remove('pp-miss'), true);
+    tone(200, 0, 0.14, { type: 'sine', g: 0.06 });
+    missRun++;
+    /* the pace comes down to meet her: two in a row and he waits longer */
+    if (missRun >= 2) { hold = Math.min(SLOWEST, hold + SLOW_DOWN); missRun = 0; say('pp_miss', false); }
+    after();
+  }
+  function after() {
+    up = -1;
+    phase = 'down';
+    if (pops >= ROUND) { later(600, over); return; }
+    nextT = later(GAP, popUp);
+  }
+  function hit(i) {
+    const h = els.holes[i];
+    caught++; missRun = 0;
+    cancel(downT);
+    h.classList.remove('pp-up');
+    h.classList.add('pp-got');
+    later(520, () => h.classList.remove('pp-got'), true);
+    showScore();
+    const r = h.getBoundingClientRect();
+    burst(r.left + r.width / 2, r.top + r.height * 0.3, ['#ffd400', '#1fb34a', '#ffffff'], reduce ? 6 : 16);
+    [660, 880].forEach((f, k) => later(k * 70, () => tone(f, 0, 0.2, { g: 0.1 })));
+    const was = hold;
+    hold = Math.max(FASTEST, hold - SPEED_UP);
+    if (was > FASTEST && hold === FASTEST) say('pp_fast', false); else if (caught % 4 === 0) say('pp_got', false);
+    after();
+  }
+  function over() {
+    phase = 'over';
+    noteBest(caught);
+    zoeyDo('cheer', 2400);
+    const r = els.stage.getBoundingClientRect();
+    burst(r.left + r.width / 2, r.top + r.height * 0.4, ['#ffd400', '#2a62ff', '#e8242b', '#1fb34a', '#ffffff'], reduce ? 16 : 44);
+    [523, 659, 784, 1047].forEach((f, i) => later(i * 110, () => tone(f, 0, 0.34, { g: 0.1 })));
+    say('count_' + Math.max(1, Math.min(10, caught)), false, () => say(cheerKey(), true));
+    later(2800, startRound);
+  }
+  function startRound() {
+    if (!alive) return;
+    round++; clearTimers(false);
+    caught = 0; pops = 0; missRun = 0; up = -1;
+    /* she starts a round a little quicker than the slowest if she has done well before */
+    hold = Math.max(FASTEST, SLOWEST - readBest() * 60);
+    phase = 'down';
+    showScore();
+    els.holes.forEach((h) => h.classList.remove('pp-up', 'pp-got', 'pp-miss'));
+    nextT = later(900, popUp);
+  }
+
+  function zoeyDo(cls, ms) { blip(els.zoey, cls, ms); }
+
+  /* ---------- module API ---------- */
+  function start() {
+    const root = document.getElementById('pp-root');
+    if (!root) return;
+    if (alive) stop();
+    root.hidden = false;
+    els = build(root);
+    alive = true; paused = false; deferred = []; round++;
+    best = readBest();
+    say('pp_start', false);
+    startRound();
+  }
+  function stop() {
+    const was = alive;
+    alive = false; paused = false; phase = 'idle'; up = -1; round++;
+    clearTimers(true); deferred = []; downT = null; nextT = null; speechSeq++;
+    if (was) { try { stopSpeech(); } catch (e) { /* ignore */ } try { stopMusic(); } catch (e) { /* ignore */ } try { clearFx(); } catch (e) { /* ignore */ } }
+    const root = document.getElementById('pp-root');
+    if (root) root.innerHTML = '';
+    els = null;
+  }
+  function pause() {
+    if (!alive || paused) return false;
+    paused = true;
+    const now = performance.now();
+    timers.forEach(t => { clearTimeout(t.h); t.left = Math.max(0, t.due - now); });
+    try { stopSpeech(); } catch (e) { /* ignore */ }
+    if (els) els.stage.classList.add('pp-paused');
+    return true;
+  }
+  function resume() {
+    if (!alive || !paused) return;
+    paused = false;
+    if (els) els.stage.classList.remove('pp-paused');
+    timers.forEach(arm);
+    const d = deferred; deferred = [];
+    d.forEach(p => { if (alive && p[0] === round) p[1](); });
+  }
+  function keydown(e) {
+    if (!alive) return;
+    if (e.code === 'Escape') return;
+    const i = KEYMAP[e.code];
+    if (i === undefined || e.ctrlKey || e.metaKey || e.altKey) return;
+    e.preventDefault();
+    if (e.repeat) return;
+    /* a shorter throttle than the rest of the app on purpose: this is the one game where pressing
+       twice quickly is the point, and 150 ms is long enough to swallow a real second press */
+    const now = performance.now();
+    if (now - lastPress < 90) return;
+    lastPress = now;
+    ensureAudio();
+    if (paused || !els) return;
+    tone(NOTE[i], 0, 0.12, { type: 'triangle', g: 0.1 });
+    if (phase === 'up' && i === up) { hit(i); return; }
+    /* the wrong burrow, or none of them up: a puff of sand and nothing else. No cost, because at
+       three, pressing the wrong colour quickly IS how she learns which colour is which. */
+    blip(els.holes[i], 'pp-puffing', 420);
+  }
+  function keyup(e) { if (alive && KEYMAP[e.code] !== undefined) e.preventDefault(); }
+
+  return { start: start, stop: stop, pause: pause, resume: resume, keydown: keydown, keyup: keyup,
+    _: { ROUND: ROUND, SLOWEST: SLOWEST, FASTEST: FASTEST, SAVE: SAVE,
+      phase: () => phase, up: () => up, wasUp: () => wasUp, hold: () => hold, caught: () => caught, pops: () => pops,
+      missRun: () => missRun, readBest: readBest, popUp: popUp, duck: duck, startRound: startRound,
+      /* A TEST SEAM, and the reason it has to exist. This game drives itself: every duck and every
+         catch schedules the next pop 520 ms later, and the one it is already showing is scheduled
+         to duck. A check that wants to walk through pops one at a time is therefore racing the
+         game - tools/pop-check.js read eight "repeats" that were really its own pops interleaved
+         with the game's, and a catch that scored nothing because nobody was up at the time. This
+         empties the game's own queue so a step can be driven and then measured. It is never
+         called while Zoey is playing. */
+      quiet: () => { clearTimers(true); downT = null; nextT = null; } } };
+})();
+</script>
+<!-- <<< pop:js -->
+<!-- >>> gone:js - folded in by tools/fold-gone.js; edit games/gone/game.js and re-run the tool, never this block -->
+<script>
+/* ===== מי נעלם? - games/gone/game.js, folded in verbatim ===== */
+'use strict';
+/* =====================================================================
+   "מִי נֶעֱלַם?" - Who is missing?  (slug gone, global ZoeyGone, CSS prefix gn-)
+
+   Harel, 2026-11-03: *"add memory games."* There were two already and this is a third KIND rather
+   than a third board, which is the only reason it is worth building:
+     - "זיכרון דינוזאורים" is PAIRS: hold one card in mind and find its twin. Recognition memory.
+     - "זואי אומרת" is a SEQUENCE: blue, yellow, blue - hold an order in mind. Serial memory.
+     - this one is the oldest memory game there is, and the one a three-year-old meets first: look
+       at a group, have it covered, and say what is no longer there. It is recall of a SET, and it
+       is a different muscle from both of the others.
+
+   HOW IT PLAYS. Three dinosaurs stand on the grass and she gets a good look at them. Leaves sweep
+   across, and when they lift one of them is gone - its place is empty, which is the clue that makes
+   this playable at three rather than at five. Four cards below hold the one that went and three
+   that did not; she presses the colour under the right one and he comes running back.
+
+   THE EMPTY PLACE IS NOT A SHORTCUT. She still has to remember WHO stood there, and the four cards
+   are all dinosaurs that were on the grass a moment ago or could have been. What the gap removes is
+   the part that is too hard at three - noticing that the group got smaller at all.
+
+   IT GETS HARDER AND IT IS REMEMBERED (`zoey-gone`): three dinosaurs, then four, then five, and the
+   look she gets shortens. Highest reached is stored and never goes down, so she does not meet three
+   again every afternoon.
+
+   NO FAIL STATE. A wrong card wobbles, a kind word is said, and after two tries the right one glows.
+   The round does not end and nothing is counted against her.
+
+   RECORDING SCRIPT - the PH keys this game adds (key : text, full nikud)
+     gn_start : בּוֹאִי נִזְכֹּר!
+     gn_look  : תִּסְתַּכְּלִי טוֹב!
+     gn_ask   : מִי נֶעֱלַם?
+     gn_back  : הוּא חָזַר!
+   The praise is the twenty cheers and the kind words are the thirteen; the dinosaur's own name is
+   found_<id>_b, which is recorded for all eighteen.
+   ===================================================================== */
+window.ZoeyGone = (function () {
+  const KEYMAP = { KeyS: 0, KeyG: 1, KeyK: 2, Quote: 3 };
+  const NOTE = [392, 440, 494, 587];
+  const SAVE = 'zoey-gone';
+  const FIRST = 3, LAST = 5;
+
+  PH.gn_start = 'בּוֹאִי נִזְכֹּר!';
+  PH.gn_look = 'תִּסְתַּכְּלִי טוֹב!';
+  PH.gn_ask = 'מִי נֶעֱלַם?';
+  PH.gn_back = 'הוּא חָזַר!';
+
+  /* ---------- state ---------- */
+  let alive = false, paused = false;
+  let round = 0, phase = 'look';          /* look | cover | ask | right */
+  let n = FIRST, cast = [], goneId = '', options = [], correct = 0, wrongs = 0;
+  let lastPress = 0, speechSeq = 0;
+  let timers = [], deferred = [], nudgeT = null;
+  let els = null;
+
+  function readBest() {
+    try { const o = JSON.parse(window.localStorage.getItem(SAVE) || 'null'); const b = o && +o.best;
+      return (b >= FIRST && b <= LAST) ? Math.floor(b) : 0; } catch (e) { return 0; }
+  }
+  function noteBest(v) {
+    try { window.localStorage.setItem(SAVE, JSON.stringify({ best: Math.max(readBest(), Math.min(LAST, v)) })); } catch (e) { /* ignore */ }
+  }
+
+  /* ---------- timers ---------- */
+  function arm(t) { t.due = performance.now() + t.left; t.h = setTimeout(t.run, t.left); }
+  function later(ms, fn, keep) {
+    const t = { left: ms, due: 0, h: 0, rd: round, keep: !!keep };
+    t.run = function () { timers = timers.filter(x => x !== t); if (!alive || (!t.keep && t.rd !== round)) return; fn(); };
+    timers.push(t); if (!paused) arm(t);
+    return t;
+  }
+  function cancel(t) { if (!t) return; clearTimeout(t.h); timers = timers.filter(x => x !== t); }
+  function clearTimers(all) { timers = timers.filter(t => { if (all || !t.keep) { clearTimeout(t.h); return false; } return true; }); }
+  function say(key, queue, then) {
+    const s = ++speechSeq, rd = round;
+    const fin = then ? function () {
+      if (!alive || rd !== round || s !== speechSeq) return;
+      if (paused) { deferred.push([rd, then]); return; }
+      then();
+    } : undefined;
+    if (!VOICE_CLIPS[key]) { if (fin) later(140, fin, true); return; }
+    speak(key, queue, fin);
+  }
+  function blip(el, cls, ms) {
+    if (!el) return;
+    el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+    later(ms, () => el.classList.remove(cls), true);
+  }
+  const shuffle = (a) => { const o = a.slice(); for (let i = o.length - 1; i > 0; i--) { const j = rand(i + 1), t = o[i]; o[i] = o[j]; o[j] = t; } return o; };
+
+  /* ---------- DOM ---------- */
+  function build(root) {
+    root.innerHTML =
+      '<div class="gn-stage" data-phase="look">' +
+        '<div class="gn-scene" aria-hidden="true">' + sceneSVG('gn') + '</div>' +
+        '<div class="gn-field"><div class="gn-row-dinos"></div><div class="gn-leaves" aria-hidden="true"></div></div>' +
+        '<div class="gn-zoey">' + drawZoey() + '</div>' +
+        '<div class="gn-cards" dir="ltr">' +
+          '<button type="button" class="gn-card c-blue" data-i="0" aria-label="כחול"></button>' +
+          '<button type="button" class="gn-card c-yellow" data-i="1" aria-label="צהוב"></button>' +
+          '<button type="button" class="gn-card c-red" data-i="2" aria-label="אדום"></button>' +
+          '<button type="button" class="gn-card c-green" data-i="3" aria-label="ירוק"></button>' +
+        '</div>' +
+      '</div>';
+    const q = (s) => root.querySelector(s);
+    return { stage: q('.gn-stage'), field: q('.gn-field'), dinos: q('.gn-row-dinos'), leaves: q('.gn-leaves'),
+      zoey: q('.gn-zoey'), cards: Array.prototype.slice.call(root.querySelectorAll('.gn-card')) };
+  }
+  /* the leaves that sweep across: six of them, each on its own delay, so it reads as a gust and
+     not as a shutter coming down */
+  function leaves() {
+    let h = '';
+    for (let i = 0; i < 7; i++) h += '<span class="gn-leaf" style="--k:' + i + '"></span>';
+    return h;
+  }
+
+  function deal() {
+    const pool = shuffle(DINOS.map((d) => d.id));
+    cast = pool.slice(0, n);
+    els.dinos.className = 'gn-row-dinos' + (n > 4 ? ' gn-many' : '');
+    els.dinos.innerHTML = cast.map((id, i) =>
+      '<span class="gn-one" data-id="' + id + '" style="--k:' + i + '"><span class="gn-pic">' + dinoById(id).draw() + '</span></span>').join('');
+    els.leaves.innerHTML = ''; els.leaves.className = 'gn-leaves';
+    els.cards.forEach((c) => { c.innerHTML = ''; c.classList.remove('gn-hint', 'gn-wob', 'gn-right', 'gn-lit'); });
+    phase = 'look';
+    els.stage.setAttribute('data-phase', 'look');
+    wrongs = 0;
+    say('gn_look', false);
+    /* the look gets shorter as the group gets bigger, which is the difficulty rather than the size */
+    later(n <= 3 ? 3200 : n === 4 ? 2900 : 2600, cover);
+    armNudge();
+  }
+  function cover() {
+    if (phase !== 'look') return;
+    phase = 'cover';
+    els.stage.setAttribute('data-phase', 'cover');
+    els.leaves.className = 'gn-leaves gn-on';
+    els.leaves.innerHTML = leaves();
+    [330, 392, 440].forEach((f, i) => tone(f, i * 0.05, 0.2, { type: 'sine', g: 0.06 }));
+    later(900, reveal);
+  }
+  function reveal() {
+    if (phase !== 'cover') return;
+    phase = 'ask';
+    els.stage.setAttribute('data-phase', 'ask');
+    const k = rand(cast.length);
+    goneId = cast[k];
+    const el = els.dinos.querySelector('.gn-one[data-id="' + goneId + '"]');
+    if (el) el.classList.add('gn-gone');
+    /* the four cards: the one that went, and three others she might believe */
+    const others = shuffle(DINOS.map((d) => d.id).filter((id) => id !== goneId)).slice(0, 3);
+    options = shuffle([goneId].concat(others));
+    correct = options.indexOf(goneId);
+    els.cards.forEach((c, i) => { c.innerHTML = '<span class="gn-cardPic">' + dinoById(options[i]).draw() + '</span>'; c.dataset.id = options[i]; });
+    later(500, () => { els.leaves.innerHTML = ''; els.leaves.className = 'gn-leaves'; });
+    say('gn_ask', false);
+    armNudge();
+  }
+
+  function answer(i) {
+    const c = els.cards[i];
+    if (!c) return;
+    if (c.dataset.id === goneId) {
+      phase = 'right';
+      cancel(nudgeT);
+      c.classList.add('gn-right', 'gn-lit');
+      const back = els.dinos.querySelector('.gn-one[data-id="' + goneId + '"]');
+      if (back) { back.classList.remove('gn-gone'); back.classList.add('gn-back'); }
+      if (!wrongs) noteBest(n);
+      const r = c.getBoundingClientRect();
+      burst(r.left + r.width / 2, r.top, ['#ffd400', '#2a62ff', '#e8242b', '#1fb34a', '#ffffff'], reduce ? 12 : 30);
+      [523, 659, 784, 1047].forEach((f, k) => later(k * 95, () => tone(f, 0, 0.3, { g: 0.09 })));
+      zoeyDo('cheer', 2000);
+      say('found_' + goneId + '_b', false, () => say('gn_back', true, () => say(cheerKey(), true)));
+      later(3000, nextRound);
+      return;
+    }
+    wrongs++;
+    blip(c, 'gn-wob', 600);
+    tone(300, 0, 0.16, { type: 'sine', g: 0.07 });
+    tone(240, 0.1, 0.22, { type: 'sine', g: 0.06 });
+    say(nudgeKey(), false);
+    if (wrongs >= 2) els.cards[correct].classList.add('gn-hint');
+    armNudge();
+  }
+  function nextRound() {
+    if (!alive) return;
+    round++; clearTimers(false); cancel(nudgeT);
+    n = n >= LAST ? FIRST : n + 1;
+    deal();
+  }
+
+  function zoeyDo(cls, ms) { blip(els.zoey, cls, ms); }
+  function armNudge() {
+    cancel(nudgeT);
+    nudgeT = later(9000, () => {
+      if (phase === 'ask') {
+        els.cards.forEach((c, i) => later(i * 140, () => blip(c, 'gn-wave', 440), true));
+        els.cards[correct].classList.add('gn-hint');
+        say('gn_ask', false);
+      } else if (phase === 'look') { say('gn_look', false); } else return;
+      zoeyDo('look', 1700);
+      armNudge();
+    });
+  }
+
+  /* ---------- module API ---------- */
+  function start() {
+    const root = document.getElementById('gn-root');
+    if (!root) return;
+    if (alive) stop();
+    root.hidden = false;
+    els = build(root);
+    alive = true; paused = false; deferred = []; round++;
+    const b = readBest();
+    n = b ? Math.min(LAST, b) : FIRST;               /* she opens where she got to, not at three */
+    say('gn_start', false);
+    deal();
+  }
+  function stop() {
+    const was = alive;
+    alive = false; paused = false; phase = 'look'; round++;
+    clearTimers(true); deferred = []; nudgeT = null; speechSeq++;
+    if (was) { try { stopSpeech(); } catch (e) { /* ignore */ } try { stopMusic(); } catch (e) { /* ignore */ } try { clearFx(); } catch (e) { /* ignore */ } }
+    const root = document.getElementById('gn-root');
+    if (root) root.innerHTML = '';
+    els = null; cast = []; options = [];
+  }
+  function pause() {
+    if (!alive || paused) return false;
+    paused = true;
+    const now = performance.now();
+    timers.forEach(t => { clearTimeout(t.h); t.left = Math.max(0, t.due - now); });
+    try { stopSpeech(); } catch (e) { /* ignore */ }
+    if (els) els.stage.classList.add('gn-paused');
+    return true;
+  }
+  function resume() {
+    if (!alive || !paused) return;
+    paused = false;
+    if (els) els.stage.classList.remove('gn-paused');
+    timers.forEach(arm);
+    const d = deferred; deferred = [];
+    d.forEach(p => { if (alive && p[0] === round) p[1](); });
+  }
+  function keydown(e) {
+    if (!alive) return;
+    if (e.code === 'Escape') return;
+    const i = KEYMAP[e.code];
+    if (i === undefined || e.ctrlKey || e.metaKey || e.altKey) return;
+    e.preventDefault();
+    if (e.repeat) return;
+    const now = performance.now();
+    if (now - lastPress < 150) return;
+    lastPress = now;
+    ensureAudio();
+    if (paused || !els) return;
+    tone(NOTE[i], 0, 0.16, { type: 'triangle', g: 0.12 });
+    blip(els.cards[i], 'gn-lit', 190);
+    cancel(nudgeT);
+    /* a press while she is still looking only hurries the leaves - it can never be an answer,
+       because there is nothing yet to answer */
+    if (phase === 'look') { cover(); return; }
+    if (phase !== 'ask') return;
+    answer(i);
+  }
+  function keyup(e) { if (alive && KEYMAP[e.code] !== undefined) e.preventDefault(); }
+
+  return { start: start, stop: stop, pause: pause, resume: resume, keydown: keydown, keyup: keyup,
+    _: { FIRST: FIRST, LAST: LAST, SAVE: SAVE, phase: () => phase, n: () => n, cast: () => cast,
+      goneId: () => goneId, options: () => options, correct: () => correct, wrongs: () => wrongs,
+      readBest: readBest, setN: (v) => { n = v; }, cover: cover, reveal: reveal, deal: deal } };
+})();
+</script>
+<!-- <<< gone:js -->
+<!-- >>> give:js - folded in by tools/fold-give.js; edit games/give/game.js and re-run the tool, never this block -->
+<script>
+/* ===== תן לספינו שלוש - games/give/game.js, folded in verbatim ===== */
+'use strict';
+/* =====================================================================
+   "תֵּן לִסְפִּינוֹ שָׁלוֹשׁ" - Give him three  (slug give, global ZoeyGive, CSS prefix gv-)
+
+   The second game on the shortlist in docs/COUNTING-GAMES.md, and the one that file recommends
+   most: *"counting out a quantity - the hardest of the five and the one that stays useful."*
+
+   WHY IT IS HARDER THAN COUNTING A PILE, which is the whole reason it is here. "זואי סופרת" asks
+   how many there are, and "סופרים ביחד" has her point at each one in turn. Both of those end when
+   the things run out. This one has no things to run out: the spinosaurus asks for three fish and
+   she has to GIVE three and then STOP. Stopping is the part. A child who counts to ten beautifully
+   will hand over seven fish, because counting out needs her to hold the target in mind while she
+   is busy doing something else - and that is a different skill from either of the other two.
+
+   HOW IT PLAYS. A sign over his head says how many he wants, as a numeral AND as the same dots the
+   counting game uses, and the voice says it out loud. Blue, yellow and red all do one thing - give
+   him one fish - which is the shape she already knows from "סופרים ביחד", and each fish is counted
+   out loud as it goes. Green means "that is all".
+
+   AND NOTHING SHE CAN DO IS WRONG.
+     - Too few: he waits, hopeful, and says so. She carries on. The round does not end.
+     - Too many: he laughs and gives one back, and keeps giving them back until it is right. A
+       three-year-old who gave seven watches four fish come back one at a time, counted down, which
+       is the most useful thing that could possibly happen at that moment.
+     - Exactly right: he eats them, she gets the cheer, and the next number is a little harder.
+   There is no buzzer in here and no way to lose a round.
+
+   THE NUMBER CLIMBS AND IS REMEMBERED (`zoey-give`), the same max(stored, reached) rule the
+   spinosaurus's growth and the arithmetic game's levels use: she opens on the number after the
+   highest she has got right, so "give me one" is something she passes through once.
+
+   RECORDING SCRIPT - the PH keys this game adds (key : text, full nikud)
+     gv_start  : בּוֹאִי נַאֲכִיל אֶת סְפִּינוֹ!
+     gv_more   : עוֹד! הוּא רוֹצֶה עוֹד.
+     gv_many   : וַוּ, יוֹתֵר מִדַּי! הוּא מַחֲזִיר לָךְ.
+     gv_done   : לַחֲצִי עַל הַיָּרֹק כְּשֶׁסִּיַּמְתְּ.
+     gv_press  : תְּנִי לוֹ דָּג!
+     gv_want_1 : סְפִּינוֹ רוֹצֶה דָּג אֶחָד!
+     gv_want_2 : סְפִּינוֹ רוֹצֶה שְׁנֵי דָּגִים!
+     gv_want_3 : סְפִּינוֹ רוֹצֶה שְׁלוֹשָׁה דָּגִים!
+     gv_want_4 : סְפִּינוֹ רוֹצֶה אַרְבָּעָה דָּגִים!
+     gv_want_5 : סְפִּינוֹ רוֹצֶה חֲמִשָּׁה דָּגִים!
+     gv_want_6 : סְפִּינוֹ רוֹצֶה שִׁשָּׁה דָּגִים!
+     gv_want_7 : סְפִּינוֹ רוֹצֶה שִׁבְעָה דָּגִים!
+     gv_want_8 : סְפִּינוֹ רוֹצֶה שְׁמוֹנָה דָּגִים!
+     gv_want_9 : סְפִּינוֹ רוֹצֶה תִּשְׁעָה דָּגִים!
+     gv_want_10: סְפִּינוֹ רוֹצֶה עֲשָׂרָה דָּגִים!
+   The ten "wants" are their own recordings and not assembled from count_1..count_10, because those
+   are the FEMININE forms - אַחַת, שְׁתַּיִם - and דָּגִים is masculine: שְׁנֵי דָּגִים, not שְׁתַּיִם דָּגִים.
+   Getting that wrong is the kind of thing a three-year-old learns by heart and says for years.
+   The counting of each fish as it goes IS count_1..count_10, which is correct: there she is
+   reciting numbers, and reciting is feminine.
+   ===================================================================== */
+window.ZoeyGive = (function () {
+  const KEYMAP = { KeyS: 0, KeyG: 1, KeyK: 2, Quote: 3 };
+  const NOTE = [392, 440, 494, 587];
+  const SAVE = 'zoey-give';
+  const LAST = 10;
+
+  PH.gv_start = 'בּוֹאִי נַאֲכִיל אֶת סְפִּינוֹ!';
+  PH.gv_more = 'עוֹד! הוּא רוֹצֶה עוֹד.';
+  PH.gv_many = 'וַוּ, יוֹתֵר מִדַּי! הוּא מַחֲזִיר לָךְ.';
+  PH.gv_done = 'לַחֲצִי עַל הַיָּרֹק כְּשֶׁסִּיַּמְתְּ.';
+  PH.gv_press = 'תְּנִי לוֹ דָּג!';
+  const MASC = { 1: 'דָּג אֶחָד', 2: 'שְׁנֵי דָּגִים', 3: 'שְׁלוֹשָׁה דָּגִים', 4: 'אַרְבָּעָה דָּגִים', 5: 'חֲמִשָּׁה דָּגִים',
+    6: 'שִׁשָּׁה דָּגִים', 7: 'שִׁבְעָה דָּגִים', 8: 'שְׁמוֹנָה דָּגִים', 9: 'תִּשְׁעָה דָּגִים', 10: 'עֲשָׂרָה דָּגִים' };
+  for (let i = 1; i <= LAST; i++) PH['gv_want_' + i] = 'סְפִּינוֹ רוֹצֶה ' + MASC[i] + '!';
+
+  /* ---------- state ---------- */
+  let alive = false, paused = false;
+  let round = 0, phase = 'give';          /* give | back | won */
+  let want = 1, given = 0, best = 0, lastPress = 0, speechSeq = 0;
+  let timers = [], deferred = [], nudgeT = null;
+  let els = null;
+
+  function readBest() {
+    try { const o = JSON.parse(window.localStorage.getItem(SAVE) || 'null'); const b = o && +o.best;
+      return (b >= 1 && b <= LAST) ? Math.floor(b) : 0; } catch (e) { return 0; }
+  }
+  function noteBest(v) {
+    try { window.localStorage.setItem(SAVE, JSON.stringify({ best: Math.max(readBest(), Math.min(LAST, v)) })); } catch (e) { /* ignore */ }
+  }
+
+  /* ---------- timers ---------- */
+  function arm(t) { t.due = performance.now() + t.left; t.h = setTimeout(t.run, t.left); }
+  function later(ms, fn, keep) {
+    const t = { left: ms, due: 0, h: 0, rd: round, keep: !!keep };
+    t.run = function () { timers = timers.filter(x => x !== t); if (!alive || (!t.keep && t.rd !== round)) return; fn(); };
+    timers.push(t); if (!paused) arm(t);
+    return t;
+  }
+  function cancel(t) { if (!t) return; clearTimeout(t.h); timers = timers.filter(x => x !== t); }
+  function clearTimers(all) { timers = timers.filter(t => { if (all || !t.keep) { clearTimeout(t.h); return false; } return true; }); }
+  function say(key, queue, then) {
+    const s = ++speechSeq, rd = round;
+    const fin = then ? function () {
+      if (!alive || rd !== round || s !== speechSeq) return;
+      if (paused) { deferred.push([rd, then]); return; }
+      then();
+    } : undefined;
+    if (!VOICE_CLIPS[key]) { if (fin) later(140, fin, true); return; }
+    speak(key, queue, fin);
+  }
+  function blip(el, cls, ms) {
+    if (!el) return;
+    el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+    later(ms, () => el.classList.remove(cls), true);
+  }
+
+  /* ---------- the sign, the fish, and him ---------- */
+  function dotsSVG(n) {
+    const P = { tl: [16, 16], tr: [44, 16], c: [30, 30], bl: [16, 44], br: [44, 44] };
+    const map = { 1: ['c'], 2: ['tl', 'br'], 3: ['tl', 'c', 'br'], 4: ['tl', 'tr', 'bl', 'br'], 5: ['tl', 'tr', 'c', 'bl', 'br'] };
+    if (n <= 5) return '<svg viewBox="0 0 60 60" aria-hidden="true" focusable="false">' +
+      (map[n] || []).map(k => '<circle class="gv-dot" cx="' + P[k][0] + '" cy="' + P[k][1] + '" r="7.5"/>').join('') + '</svg>';
+    let d = '';
+    for (let i = 0; i < 5; i++) d += '<circle class="gv-dot" cx="' + (8 + i * 11) + '" cy="11" r="5"/>';
+    for (let i = 0; i < n - 5; i++) d += '<circle class="gv-dot" cx="' + (8 + i * 11) + '" cy="27" r="5"/>';
+    return '<svg viewBox="0 0 60 38" aria-hidden="true" focusable="false">' + d + '</svg>';
+  }
+  const fishArt = (i) => '<svg viewBox="0 0 100 70" aria-hidden="true" focusable="false">' +
+    '<path class="gv-fin" d="M72 35 L97 16 L93 35 L97 54 Z"/>' +
+    '<ellipse class="gv-body" cx="44" cy="35" rx="40" ry="24" fill="' + ['#5bc8f5', '#8fd0e8', '#7ad3c0', '#9fc0ff'][i % 4] + '"/>' +
+    '<path class="gv-fin" d="M40 13 L52 2 L58 14 Z"/>' +
+    '<circle class="gv-eye" cx="20" cy="28" r="6"/><circle class="gv-pupil" cx="18.5" cy="28.5" r="3"/>' +
+    '<path class="gv-smile" d="M10 40 q8 7 17 3" fill="none"/></svg>';
+
+  function build(root) {
+    root.innerHTML =
+      '<div class="gv-stage">' +
+        '<div class="gv-scene" aria-hidden="true">' + sceneSVG('gv') + '</div>' +
+        '<div class="gv-sign"><span class="gv-num"></span><span class="gv-dots"></span></div>' +
+        '<div class="gv-board">' +
+          '<div class="gv-spino">' + dinoById('spino').draw() + '</div>' +
+          '<div class="gv-pile"></div>' +
+        '</div>' +
+        '<div class="gv-zoey">' + drawZoey() + '</div>' +
+        '<div class="gv-row" dir="ltr">' +
+          '<button type="button" class="gv-btn c-blue" data-i="0" aria-label="כחול"></button>' +
+          '<button type="button" class="gv-btn c-yellow" data-i="1" aria-label="צהוב"></button>' +
+          '<button type="button" class="gv-btn c-red" data-i="2" aria-label="אדום"></button>' +
+          '<button type="button" class="gv-btn gv-green c-green" data-i="3" aria-label="ירוק"></button>' +
+        '</div>' +
+      '</div>';
+    const q = (s) => root.querySelector(s);
+    return { stage: q('.gv-stage'), sign: q('.gv-sign'), num: q('.gv-num'), dots: q('.gv-dots'),
+      spino: q('.gv-spino'), pile: q('.gv-pile'), zoey: q('.gv-zoey'),
+      btns: Array.prototype.slice.call(root.querySelectorAll('.gv-btn')) };
+  }
+  function showWant() {
+    els.num.textContent = want;
+    els.dots.innerHTML = dotsSVG(want);
+    blip(els.sign, 'gv-pop', 520);
+    /* the three that give a fish wear one; the green one wears a tick, because it does not give */
+    els.btns.slice(0, 3).forEach((b) => { b.innerHTML = '<span class="gv-btnFish">' + fishArt(0) + '</span>'; });
+    els.btns[3].innerHTML = '<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">' +
+      '<path d="M22 52 L44 74 L80 28" fill="none" stroke="#fff" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  }
+  const fishes = () => Array.prototype.slice.call(els.pile.querySelectorAll('.gv-fish'));
+
+  /* ---------- she gives one ---------- */
+  function giveOne(idx) {
+    if (phase !== 'give') return;
+    const el = document.createElement('span');
+    el.className = 'gv-fish gv-in';
+    el.style.setProperty('--k', given);
+    el.innerHTML = fishArt(given);
+    els.pile.appendChild(el);
+    els.pile.className = 'gv-pile' + (given + 1 > 5 ? ' gv-wrap' : '');
+    given++;
+    tone(NOTE[idx], 0, 0.18, { type: 'triangle', g: 0.12 });
+    tone(392 + given * 40, 0.06, 0.26, { g: 0.07 });
+    say('count_' + Math.min(10, given), false);      /* counted out loud as it goes: that is the skill */
+    blip(els.spino, 'gv-munch', 520);
+    later(560, () => el.classList.remove('gv-in'), true);
+    if (given >= want) later(900, () => { if (phase === 'give') { blip(els.btns[3], 'gv-wave', 700); say('gv_done', false); } });
+    armNudge();
+  }
+
+  /* ---------- green: that is all ---------- */
+  function finish() {
+    if (phase !== 'give') return;
+    cancel(nudgeT);
+    if (given === want) { win(); return; }
+    if (given < want) {
+      blip(els.spino, 'gv-hope', 1400);
+      tone(330, 0, 0.22, { type: 'sine', g: 0.07 });
+      say('gv_more', false);
+      armNudge();
+      return;
+    }
+    /* too many: he hands them back, one at a time, counted down - which is the most useful thing
+       that could happen to a child who has just given seven */
+    phase = 'back';
+    say('gv_many', false);
+    giveBack();
+  }
+  function giveBack() {
+    if (phase !== 'back') return;
+    if (given <= want) { phase = 'give'; later(300, win); return; }
+    const list = fishes();
+    const el = list[list.length - 1];
+    given--;
+    if (el) {
+      el.classList.add('gv-out');
+      later(520, () => { if (el.parentNode) el.parentNode.removeChild(el); }, true);
+    }
+    tone(300 - given * 8, 0, 0.16, { type: 'sine', g: 0.08 });
+    say('count_' + Math.max(1, given), false);
+    blip(els.spino, 'gv-laugh', 600);
+    later(760, giveBack);
+  }
+  function win() {
+    phase = 'won';
+    cancel(nudgeT);
+    noteBest(want);
+    blip(els.spino, 'gv-happy', 2200);
+    zoeyDo('cheer', 2200);
+    fishes().forEach((f, i) => later(i * 120, () => blip(f, 'gv-eaten', 560), true));
+    [523, 659, 784, 1047].forEach((f, i) => later(i * 110, () => tone(f, 0, 0.34, { g: 0.1 })));
+    const r = els.spino.getBoundingClientRect();
+    burst(r.left + r.width / 2, r.top + r.height * 0.4, ['#ffd400', '#2a62ff', '#e8242b', '#1fb34a', '#ffffff'], reduce ? 14 : 38);
+    say('gv_want_' + want, false, () => say(cheerKey(), true));
+    later(2800, nextRound);
+  }
+  function nextRound() {
+    if (!alive) return;
+    round++; clearTimers(false); cancel(nudgeT);
+    /* up to ten and then back to a floor that rises with her, the way the counting game does */
+    want = want >= LAST ? Math.max(2, Math.min(6, readBest() - 3)) : want + 1;
+    given = 0; phase = 'give';
+    els.pile.className = 'gv-pile';
+    els.pile.innerHTML = '';
+    showWant();
+    say('gv_want_' + want, false);
+    armNudge();
+  }
+
+  function zoeyDo(cls, ms) { blip(els.zoey, cls, ms); }
+  function armNudge() {
+    cancel(nudgeT);
+    nudgeT = later(8000, () => {
+      if (phase !== 'give') return;
+      if (given >= want) { blip(els.btns[3], 'gv-wave', 700); say('gv_done', false); }
+      else { [0, 1, 2].forEach((i) => later(i * 150, () => blip(els.btns[i], 'gv-wave', 460), true)); say('gv_press', false); }
+      armNudge();
+    });
+  }
+
+  /* ---------- module API ---------- */
+  function start() {
+    const root = document.getElementById('gv-root');
+    if (!root) return;
+    if (alive) stop();
+    root.hidden = false;
+    els = build(root);
+    alive = true; paused = false; deferred = []; round++;
+    best = readBest();
+    want = best ? Math.min(LAST, best + 1) : 1;      /* the number after the highest she got right */
+    given = 0; phase = 'give';
+    showWant();
+    say('gv_start', false, () => say('gv_want_' + want, true));
+    armNudge();
+  }
+  function stop() {
+    const was = alive;
+    alive = false; paused = false; phase = 'give'; round++;
+    clearTimers(true); deferred = []; nudgeT = null; speechSeq++;
+    if (was) { try { stopSpeech(); } catch (e) { /* ignore */ } try { stopMusic(); } catch (e) { /* ignore */ } try { clearFx(); } catch (e) { /* ignore */ } }
+    const root = document.getElementById('gv-root');
+    if (root) root.innerHTML = '';
+    els = null;
+  }
+  function pause() {
+    if (!alive || paused) return false;
+    paused = true;
+    const now = performance.now();
+    timers.forEach(t => { clearTimeout(t.h); t.left = Math.max(0, t.due - now); });
+    try { stopSpeech(); } catch (e) { /* ignore */ }
+    if (els) els.stage.classList.add('gv-paused');
+    return true;
+  }
+  function resume() {
+    if (!alive || !paused) return;
+    paused = false;
+    if (els) els.stage.classList.remove('gv-paused');
+    timers.forEach(arm);
+    const d = deferred; deferred = [];
+    d.forEach(p => { if (alive && p[0] === round) p[1](); });
+  }
+  function keydown(e) {
+    if (!alive) return;
+    if (e.code === 'Escape') return;
+    const i = KEYMAP[e.code];
+    if (i === undefined || e.ctrlKey || e.metaKey || e.altKey) return;
+    e.preventDefault();
+    if (e.repeat) return;
+    const now = performance.now();
+    if (now - lastPress < 150) return;
+    lastPress = now;
+    ensureAudio();
+    if (paused || !els) return;
+    cancel(nudgeT);
+    if (i === 3) finish(); else giveOne(i);
+  }
+  function keyup(e) { if (alive && KEYMAP[e.code] !== undefined) e.preventDefault(); }
+
+  return { start: start, stop: stop, pause: pause, resume: resume, keydown: keydown, keyup: keyup,
+    _: { LAST: LAST, SAVE: SAVE, phase: () => phase, want: () => want, given: () => given,
+      readBest: readBest, setWant: (n) => { want = n; given = 0; phase = 'give'; if (els) { els.pile.innerHTML = ''; showWant(); } },
+      give: giveOne, finish: finish } };
+})();
+</script>
+<!-- <<< give:js -->
 <!-- >>> countwrite:js - folded in by tools/fold-countwrite.js; edit games/countwrite/game.js and re-run the tool, never this block -->
 <script>
 /* ===== סופרים וכותבים - games/countwrite/game.js, folded in verbatim ===== */
@@ -15481,6 +16646,47 @@ if (window.DinoAnim) DinoAnim.auto(document);
     return '<span class="pk-duo">' + prop(COUNTWRITE) + dinoPic('maia') + '</span>';
   }
 /* <<< countwrite:card */
+/* >>> give:card - tools/fold-give.js */
+  /* three fish and the number he is asking for */
+  const GIVEPIC = '<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">' +
+    '<g stroke="#2b6c86" stroke-width="4" stroke-linejoin="round">' +
+    '<path d="M34 20 L48 10 L46 20 L48 30 Z" fill="#ff9a3c" stroke="#c76a16"/>' +
+    '<ellipse cx="16" cy="20" rx="19" ry="11" fill="#5bc8f5"/>' +
+    '<path d="M84 20 L98 10 L96 20 L98 30 Z" fill="#ff9a3c" stroke="#c76a16"/>' +
+    '<ellipse cx="66" cy="20" rx="19" ry="11" fill="#7ad3c0"/></g>' +
+    '<text x="50" y="68" font-size="44" font-weight="700" fill="#2a62ff" text-anchor="middle" dominant-baseline="central">3</text>' +
+    '<g fill="#2a62ff" opacity=".85"><circle cx="26" cy="90" r="6"/><circle cx="50" cy="90" r="6"/><circle cx="74" cy="90" r="6"/></g></svg>';
+  function artGive() { /* fish, and how many he wants */
+    return '<span class="pk-duo">' + prop(GIVEPIC) + dinoPic('spino') + '</span>';
+  }
+/* <<< give:card */
+/* >>> gone:card - tools/fold-gone.js */
+  /* three places and an empty one, which is the whole question */
+  const GONEPIC = '<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">' +
+    '<g fill="#7ad3c0" stroke="#2b6c86" stroke-width="4">' +
+    '<ellipse cx="18" cy="56" rx="14" ry="20"/><ellipse cx="50" cy="56" rx="14" ry="20"/></g>' +
+    '<ellipse cx="82" cy="56" rx="14" ry="20" fill="none" stroke="#9aa3ab" stroke-width="4" stroke-dasharray="6 7"/>' +
+    '<text x="82" y="58" font-size="30" font-weight="700" fill="#9aa3ab" text-anchor="middle" dominant-baseline="central">?</text>' +
+    '<ellipse cx="50" cy="88" rx="42" ry="6" fill="rgba(0,0,0,.12)"/></svg>';
+  function artGone() { /* two there, one gone */
+    return '<span class="pk-duo">' + prop(GONEPIC) + dinoPic('trike') + '</span>';
+  }
+/* <<< gone:card */
+/* >>> pop:card - tools/fold-pop.js */
+  /* four burrows in the keypad's own colours, and somebody up out of one of them */
+  const POPPIC = '<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">' +
+    '<g stroke="#fff" stroke-width="3">' +
+    '<ellipse cx="16" cy="78" rx="15" ry="11" fill="var(--blue)"/>' +
+    '<ellipse cx="39" cy="78" rx="15" ry="11" fill="var(--yellow)"/>' +
+    '<ellipse cx="62" cy="78" rx="15" ry="11" fill="var(--red)"/>' +
+    '<ellipse cx="85" cy="78" rx="15" ry="11" fill="var(--green)"/></g>' +
+    '<path d="M50 60 L58 40 L66 60 Z" fill="#ff9a3c"/>' +
+    '<circle cx="62" cy="34" r="16" fill="#7ad3c0" stroke="#2b6c86" stroke-width="4"/>' +
+    '<circle cx="57" cy="31" r="3" fill="#22303a"/><circle cx="67" cy="31" r="3" fill="#22303a"/></svg>';
+  function artPop() { /* four burrows, one dinosaur */
+    return '<span class="pk-duo">' + prop(POPPIC) + dinoPic('compsy') + '</span>';
+  }
+/* <<< pop:card */
 
   /* ---------- the fifteen games ----------
      id      the name launch()/gameOf() use and the localStorage "recently played" key
@@ -15514,6 +16720,12 @@ if (window.DinoAnim) DinoAnim.auto(document);
     { id: 'fling', global: 'ZoeyFling', root: 'fl-root', titleHe: 'הקלע של ספינו', card: artFling }/* <<< fling:row */
     /* >>> countwrite:row - tools/fold-countwrite.js */,
     { id: 'countwrite', global: 'ZoeyCountWrite', root: 'cw-root', titleHe: 'סופרים וכותבים', card: artCountWrite, touchOnly: true }/* <<< countwrite:row */
+    /* >>> give:row - tools/fold-give.js */,
+    { id: 'give', global: 'ZoeyGive', root: 'gv-root', titleHe: 'תן לספינו שלוש', card: artGive }/* <<< give:row */
+    /* >>> gone:row - tools/fold-gone.js */,
+    { id: 'gone', global: 'ZoeyGone', root: 'gn-root', titleHe: 'מי נעלם?', card: artGone }/* <<< gone:row */
+    /* >>> pop:row - tools/fold-pop.js */,
+    { id: 'pop', global: 'ZoeyPop', root: 'pp-root', titleHe: 'מי קופץ?', card: artPop }/* <<< pop:row */
   ];
   const entryOf = (id) => { for (let i = 0; i < GAMES.length; i++) { if (GAMES[i].id === id) return GAMES[i]; } return null; };
   const gameOf = (which) => { const e = entryOf(which); return e ? (window[e.global] || null) : null; };
@@ -15813,7 +17025,13 @@ if (window.DinoAnim) DinoAnim.auto(document);
     /* the games the picker can actually reach in the mode it is in - a touchOnly card is not
        there with the keypad in charge, and a test that paged through every screen and then
        asked "did I see them all" would be asking about a card the picker deliberately hid */
-    ids: () => orderedGames().map(g => g.id), all: () => GAMES.map(g => g.id), screen: () => pageGames().map(g => g.id)
+    ids: () => orderedGames().map(g => g.id), all: () => GAMES.map(g => g.id), screen: () => pageGames().map(g => g.id),
+    /* Where each game's root lives, read off the one list that knows. tests/hub-integration.js used
+       to carry its own hand-written copy of this map, and on 2026-11-03 three games were folded in
+       and the map was not updated: the test reported "never appeared on any screen" and "renders"
+       failures for games that were in fact fine. A map that has to be kept in step by hand is a
+       second source of truth; this is the first one. */
+    roots: () => GAMES.reduce((o, g) => { o[g.id] = g.root; return o; }, {})
   };
 })();
 </script>
