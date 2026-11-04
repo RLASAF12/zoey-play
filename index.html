@@ -552,6 +552,10 @@ button:focus-visible { outline: 5px solid var(--focus); outline-offset: 4px; bor
    be found rather than merely to be hittable. */
 [data-touch="on"] .exitBtn { min-height: 60px; min-width: 104px; padding: 10px 20px; font-size: 21px; border-radius: 16px; }
 [data-touch="on"] .toggle { min-height: 44px; }   /* the voice switch, two pixels short of a finger */
+/* "להתחיל אוסף חדש" in the album, at 38px. It is the parent's button and a destructive one, so it
+   stays quiet and stays armed by two presses - but a target a finger cannot hit is a target a
+   finger stabs at twice, which on this one button is the wrong thing to make her do. */
+[data-touch="on"] .linkBtn { min-height: 44px; }
 .overlay { position: fixed; inset: 0; z-index: 40; display: none; align-items: center; justify-content: center; background: var(--overlay); padding: 16px; }
 .overlay.on { display: flex; }
 .overlayCard { background: var(--panel-line); border-radius: 28px; padding: 24px 32px; text-align: center; display: flex; flex-direction: column; gap: 14px; align-items: center; }
@@ -5916,7 +5920,34 @@ function showParty() {
 
 /* ---------- events: keys are attached by the shell only while this game is active ---------- */
 function onKeyDown(e) {
-  if (mode === 'album') { if (e.code === 'Escape') ZG.toPicker(); return; }
+  if (mode === 'album') {
+    /* There is no screen in this app on which the four buttons do nothing - the rule the
+       spinosaurus's shelf states in games/spino/game.js ("while it is up, all four wake him").
+       The album had only Esc, which a keypad does not have, so she could be shown her own
+       collection and not be able to leave it.
+       GREEN is what green is everywhere: the next screen. Here that is the next rows of the album
+       - it really does scroll, by 35px on her own iPad and by 135 on a laptop, so without this
+       the bottom row is simply unreachable - and after the last of them it wraps home, exactly as
+       the picker's green wraps to screen one.
+       ANY OF THE OTHER THREE is the "חזרה" button already drawn at the top of the screen. So
+       whatever she presses she gets out, which is the no-fail-state rule applied to a dead end. */
+    if (e.code === 'Escape') { ZG.toPicker(); return; }
+    if (e.repeat) return;
+    const grid = $('#albumGrid');
+    if (e.code === 'Quote') {
+      e.preventDefault();
+      const room = grid ? grid.scrollHeight - grid.clientHeight : 0;
+      if (room <= 2 || grid.scrollTop >= room - 2) { ZG.toPicker(); return; }
+      /* a soft tick, and deliberately none of the named sounds: sndChime() is the EMPTY bush in
+         this very game, which is the confusion Harel heard on 2026-10-30 (CLAUDE.md task 11) */
+      tone(880, 0, 0.07, { type: 'triangle', g: 0.04 });
+      const to = Math.min(room, grid.scrollTop + Math.max(90, Math.round(grid.clientHeight * 0.8)));
+      if (grid.scrollTo) grid.scrollTo({ top: to, behavior: reduce ? 'auto' : 'smooth' }); else grid.scrollTop = to;
+      return;
+    }
+    if (KEYMAP[e.code]) { e.preventDefault(); ZG.toPicker(); }
+    return;
+  }
   if (mode === 'off') return;
   if (e.repeat) { if (e.code !== 'Escape') e.preventDefault(); return; }
   if (e.code === 'Escape') { ZG.toPicker(); return; }
@@ -16494,6 +16525,18 @@ if (window.DinoAnim) DinoAnim.auto(document);
     '<circle cx="27" cy="51" r="13" fill="var(--green)" stroke="var(--green-dark)" stroke-width="4"/>' +
     '<circle cx="73" cy="51" r="13" fill="var(--yellow)" stroke="var(--yellow-dark)" stroke-width="4"/></g></svg>';
 
+  /* The album's own card. Same prop-and-figure idiom as every other card, and what has to carry
+     it to someone who cannot read is the ONE EMPTY PANE: a book with a gap in it is a thing you
+     fill, which is exactly what the album is. */
+  const BOOK = '<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><g transform="rotate(-4 50 52)">' +
+    '<rect x="4" y="15" width="92" height="70" rx="9" fill="#fffdf3" stroke="#c9a46a" stroke-width="5"/>' +
+    '<path d="M50 18 V82" stroke="#d9c79a" stroke-width="4" stroke-linecap="round"/>' +
+    '<rect x="11" y="23" width="31" height="24" rx="5" fill="var(--yellow)" stroke="#c9a46a" stroke-width="3"/>' +
+    '<rect x="58" y="23" width="31" height="24" rx="5" fill="var(--blue)" stroke="#c9a46a" stroke-width="3"/>' +
+    '<rect x="11" y="53" width="31" height="24" rx="5" fill="var(--green)" stroke="#c9a46a" stroke-width="3"/>' +
+    '<rect x="58" y="53" width="31" height="24" rx="5" fill="#f3ecdb" stroke="#c9a46a" stroke-width="3" stroke-dasharray="5 4"/>' +
+    '<text x="73.5" y="72" text-anchor="middle" font-size="22" font-weight="700" fill="#b08d55">?</text></g></svg>';
+  function artAlbum() { return '<span class="pk-duo">' + prop(BOOK) + dinoPic('trike') + '</span>'; }
   function artDino() { /* the bush with a tail poking out - unchanged from the old picker */
     return '<span class="bushArea"><span class="tailPoke">' + tailSVG(dinoById('spino').color) + '</span>' +
       '<span class="bushSvgHost">' + bushSVG() + '</span></span>';
@@ -16771,8 +16814,24 @@ if (window.DinoAnim) DinoAnim.auto(document);
      this block. PER itself stays 3: it is how many games are remembered as recently played, which
      is about screen ONE and not about how many fit. */
   const perScreen = () => (touchOn ? 9 : PER);
-  const pageCount = () => Math.max(1, Math.ceil(order.length / perScreen()));
+  /* ---------- the album is the last screen of the cycle ----------
+     Her dinosaur album had a button and no keypad binding at all: with a finger it opened, with
+     the four buttons it did not exist, and since the button moved into the parent's panel there
+     were TWO steps she could not take. The fix is not a fifth button, because there is no fifth
+     button. Green already means exactly one thing on every screen - "the next screen, wrapping
+     round from the last" - so the album becomes one more screen in that same cycle: keep pressing
+     green and you arrive at it, press green once more and you are back at screen one. Nothing new
+     to learn, and unlike a card it cannot wander, because the three most recently played are
+     pulled onto screen one and this is not a game.
+     EXTRAS is a list, so a second such screen needs no arithmetic changed anywhere - the tests
+     read it off here rather than counting pages by hand (ZoeyGames.extras). */
+  const ALBUM = { id: 'album', titleHe: 'האלבום של זואי', card: artAlbum };
+  const EXTRAS = [ALBUM];
+  const gamePages = () => Math.max(1, Math.ceil(order.length / perScreen()));
+  const pageCount = () => gamePages() + EXTRAS.length;
   const pageGames = () => { const n = perScreen(); return order.slice(page * n, page * n + n); };
+  /* what is on this screen: this page of games, or the extra screen the paging has reached */
+  const pageItems = () => (page < gamePages() ? pageGames() : [EXTRAS[page - gamePages()]]);
   function cardHTML(g, i) {
     /* only the first three can be launched by a button, so only those three wear a button's colour
        and its marker. The rest are plain cards in a colour no button has. */
@@ -16783,7 +16842,7 @@ if (window.DinoAnim) DinoAnim.auto(document);
       (keyed ? '<span class="pk-marker" aria-hidden="true"></span>' : '') + '</button>';
   }
   function renderPage(animate) {
-    const list = pageGames();
+    const list = pageItems();
     slot.innerHTML = list.map(cardHTML).join('');
     slot.classList.toggle('pk-grid', list.length > CCLASS.length);
     slot.classList.remove('pk-slide');
@@ -16813,7 +16872,7 @@ if (window.DinoAnim) DinoAnim.auto(document);
     const idx = e.code === 'KeyS' ? 0 : e.code === 'KeyG' ? 1 : e.code === 'KeyK' ? 2 : -1;
     if (idx < 0) return;
     e.preventDefault();
-    const list = pageGames();
+    const list = pageItems();
     if (!list[idx]) { Array.prototype.forEach.call(slot.children, c => blip(c, 'wig', 520)); return; }
     blip(slot.children[idx], 'lit', 250);
     launch(list[idx].id);
@@ -16883,6 +16942,11 @@ if (window.DinoAnim) DinoAnim.auto(document);
   }
   function launch(which) {
     if (where !== 'picker') return;
+    /* The album rides the picker's own card and key path, so it gets the gesture work a game gets:
+       the audio unlock (iOS blesses the one <audio> element on a touch, and this may well be the
+       first thing she touches) and fullscreen. It is not a game, so it is never noted as recently
+       played and so can never pull itself onto screen one. */
+    if (which === ALBUM.id) { closeSettings(); ensureAudio(); enterFs(); hadFs = false; stopSpeech(); openAlbum(); return; }
     const e = entryOf(which); if (!e) return;
     const g = window[e.global]; if (!g) return;
     stopIdle();
@@ -17025,7 +17089,10 @@ if (window.DinoAnim) DinoAnim.auto(document);
     /* the games the picker can actually reach in the mode it is in - a touchOnly card is not
        there with the keypad in charge, and a test that paged through every screen and then
        asked "did I see them all" would be asking about a card the picker deliberately hid */
-    ids: () => orderedGames().map(g => g.id), all: () => GAMES.map(g => g.id), screen: () => pageGames().map(g => g.id),
+    ids: () => orderedGames().map(g => g.id), all: () => GAMES.map(g => g.id), screen: () => pageItems().map(g => g.id),
+    /* the screens in the green cycle that are not games, so a test derives the shape of the picker
+       instead of counting its pages by hand */
+    extras: () => EXTRAS.map(e => e.id),
     /* Where each game's root lives, read off the one list that knows. tests/hub-integration.js used
        to carry its own hand-written copy of this map, and on 2026-11-03 three games were folded in
        and the map was not updated: the test reported "never appeared on any screen" and "renders"

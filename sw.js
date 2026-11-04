@@ -31,7 +31,7 @@
    name every deploy cost her the whole thing again.
 
    One user, no tabs to coordinate: skipWaiting and clients.claim. */
-const CACHE = 'zoey-games-195e662b034e';
+const CACHE = 'zoey-games-4469bdeba8f2';
 const VCACHE = 'zoey-voice-5e2326d2d07a';
 const SHELL = ["./","manifest.webmanifest","icon-192.png","icon-512.png","icon-maskable-512.png","apple-touch-icon.png"];
 const VOICE = [
