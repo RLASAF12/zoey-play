@@ -31,8 +31,8 @@
    name every deploy cost her the whole thing again.
 
    One user, no tabs to coordinate: skipWaiting and clients.claim. */
-const CACHE = 'zoey-games-ff088cca5f9d';
-const VCACHE = 'zoey-voice-f227d70bda4a';
+const CACHE = 'zoey-games-43f84f468eb5';
+const VCACHE = 'zoey-voice-846797e2a2a3';
 const SHELL = ["./","manifest.webmanifest","icon-192.png","icon-512.png","icon-maskable-512.png","apple-touch-icon.png"];
 const VOICE = [
   "voice/chars/bib_found.mp3", "voice/chars/bib_oops.mp3", "voice/chars/bib_peek.mp3", "voice/chars/bib_shh.mp3", "voice/games/bnd_conduct.mp3", "voice/games/bnd_finale.mp3", "voice/games/bnd_free.mp3", "voice/games/bnd_hello.mp3",
@@ -44,7 +44,12 @@ const VOICE = [
   "voice/games/col_done.mp3", "voice/color/col_forest.mp3", "voice/color/col_gold.mp3", "voice/games/col_green.mp3", "voice/color/col_grey.mp3", "voice/color/col_lemon.mp3", "voice/color/col_lilac.mp3", "voice/color/col_maroon.mp3",
   "voice/color/col_mint.mp3", "voice/color/col_more.mp3", "voice/color/col_navy.mp3", "voice/color/col_orange.mp3", "voice/color/col_peach.mp3", "voice/color/col_pink.mp3", "voice/color/col_plum.mp3", "voice/games/col_prompt.mp3",
   "voice/color/col_purple.mp3", "voice/games/col_red.mp3", "voice/color/col_rose.mp3", "voice/color/col_silver.mp3", "voice/color/col_sky.mp3", "voice/games/col_start.mp3", "voice/color/col_tan.mp3", "voice/color/col_turq.mp3",
-  "voice/color/col_white.mp3", "voice/games/col_yellow.mp3", "voice/hub/count_1.mp3", "voice/more/count_10.mp3", "voice/hub/count_2.mp3", "voice/hub/count_3.mp3", "voice/hub/count_4.mp3", "voice/hub/count_5.mp3",
+  "voice/color/col_white.mp3", "voice/games/col_yellow.mp3", "voice/hub/count_1.mp3", "voice/more/count_10.mp3", "voice/numbers/count_11.mp3", "voice/numbers/count_12.mp3", "voice/numbers/count_13.mp3", "voice/numbers/count_14.mp3",
+  "voice/numbers/count_15.mp3", "voice/numbers/count_16.mp3", "voice/numbers/count_17.mp3", "voice/numbers/count_18.mp3", "voice/numbers/count_19.mp3", "voice/hub/count_2.mp3", "voice/numbers/count_20.mp3", "voice/numbers/count_21.mp3",
+  "voice/numbers/count_22.mp3", "voice/numbers/count_23.mp3", "voice/numbers/count_24.mp3", "voice/numbers/count_25.mp3", "voice/numbers/count_26.mp3", "voice/numbers/count_27.mp3", "voice/numbers/count_28.mp3", "voice/numbers/count_29.mp3",
+  "voice/hub/count_3.mp3", "voice/numbers/count_30.mp3", "voice/numbers/count_31.mp3", "voice/numbers/count_32.mp3", "voice/numbers/count_33.mp3", "voice/numbers/count_34.mp3", "voice/numbers/count_35.mp3", "voice/numbers/count_36.mp3",
+  "voice/numbers/count_37.mp3", "voice/numbers/count_38.mp3", "voice/numbers/count_39.mp3", "voice/hub/count_4.mp3", "voice/numbers/count_40.mp3", "voice/numbers/count_41.mp3", "voice/numbers/count_42.mp3", "voice/numbers/count_43.mp3",
+  "voice/numbers/count_44.mp3", "voice/numbers/count_45.mp3", "voice/numbers/count_46.mp3", "voice/numbers/count_47.mp3", "voice/numbers/count_48.mp3", "voice/numbers/count_49.mp3", "voice/hub/count_5.mp3", "voice/numbers/count_50.mp3",
   "voice/more/count_6.mp3", "voice/more/count_7.mp3", "voice/more/count_8.mp3", "voice/more/count_9.mp3", "voice/countwrite/cw_count.mp3", "voice/countwrite/cw_done.mp3", "voice/countwrite/cw_dot.mp3", "voice/countwrite/cw_next.mp3",
   "voice/countwrite/cw_start.mp3", "voice/countwrite/cw_write.mp3", "voice/memdom/dom_built.mp3", "voice/memdom/dom_find_anky.mp3", "voice/memdom/dom_find_archaeo.mp3", "voice/memdom/dom_find_bronto.mp3", "voice/memdom/dom_find_carno.mp3", "voice/memdom/dom_find_compsy.mp3",
   "voice/memdom/dom_find_dimetro.mp3", "voice/memdom/dom_find_diplo.mp3", "voice/memdom/dom_find_igua.mp3", "voice/memdom/dom_find_maia.mp3", "voice/memdom/dom_find_pachy.mp3", "voice/memdom/dom_find_para.mp3", "voice/memdom/dom_find_plesio.mp3", "voice/memdom/dom_find_ptero.mp3",
@@ -67,7 +72,8 @@ const VOICE = [
   "voice/give/gv_want_6.mp3", "voice/give/gv_want_7.mp3", "voice/give/gv_want_8.mp3", "voice/give/gv_want_9.mp3", "voice/hub/hello.mp3", "voice/hub/intro.mp3", "voice/games/jmp_again.mp3", "voice/games/jmp_caught_a.mp3",
   "voice/games/jmp_caught_b.mp3", "voice/games/jmp_five.mp3", "voice/games/jmp_hello.mp3", "voice/games/jmp_nudge.mp3", "voice/hub/levelup.mp3", "voice/memdom/mem_big.mp3", "voice/memdom/mem_look.mp3", "voice/memdom/mem_nopair.mp3",
   "voice/memdom/mem_pair.mp3", "voice/memdom/mem_round.mp3", "voice/memdom/mem_where.mp3", "voice/math/mth_ate.mp3", "voice/math/mth_came.mp3", "voice/math/mth_left.mp3", "voice/math/mth_press.mp3", "voice/math/mth_start.mp3",
-  "voice/math/mth_up.mp3", "voice/games/odd_q_color.mp3", "voice/games/odd_q_kind.mp3", "voice/games/odd_q_obj.mp3", "voice/games/odd_try.mp3", "voice/hub/oops_0.mp3", "voice/hub/oops_1.mp3", "voice/more/oops_10.mp3",
+  "voice/math/mth_up.mp3", "voice/numbers/nf_start.mp3", "voice/numbers/nf_where.mp3", "voice/numbers/np_end.mp3", "voice/numbers/np_jump.mp3", "voice/numbers/np_longer.mp3", "voice/numbers/np_more.mp3", "voice/numbers/np_press.mp3",
+  "voice/numbers/np_start.mp3", "voice/games/odd_q_color.mp3", "voice/games/odd_q_kind.mp3", "voice/games/odd_q_obj.mp3", "voice/games/odd_try.mp3", "voice/hub/oops_0.mp3", "voice/hub/oops_1.mp3", "voice/more/oops_10.mp3",
   "voice/more/oops_11.mp3", "voice/more/oops_12.mp3", "voice/more/oops_2.mp3", "voice/more/oops_3.mp3", "voice/more/oops_4.mp3", "voice/more/oops_5.mp3", "voice/more/oops_6.mp3", "voice/more/oops_7.mp3",
   "voice/more/oops_8.mp3", "voice/more/oops_9.mp3", "voice/games/pk_more.mp3", "voice/piano/pno_done.mp3", "voice/piano/pno_follow.mp3", "voice/piano/pno_pick.mp3", "voice/piano/pno_s_birthday.mp3", "voice/piano/pno_s_farm.mp3",
   "voice/piano/pno_s_jacob.mp3", "voice/piano/pno_s_joy.mp3", "voice/piano/pno_s_mary.mp3", "voice/piano/pno_s_star.mp3", "voice/piano/pno_s_warm.mp3", "voice/piano/pno_s_yonatan.mp3", "voice/pop/pp_fast.mp3", "voice/pop/pp_got.mp3",

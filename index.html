@@ -3636,6 +3636,182 @@ button:focus-visible { outline: 5px solid var(--focus); outline-offset: 4px; bor
   .pp-hole.pp-up .pp-dino { opacity: 1; }
 }
 /* <<< pop:css */
+
+/* >>> numpath:css - games/numpath/game.css, folded in verbatim by tools/fold-numpath.js; edit the module and re-run the tool, never this block */
+/* ---------- numpath (ZoeyNumPath, .np-) ---------- */
+/* The shell hides a game that is not the active one, and the rule that does it is a list of
+   root ids up at "the ten game containers". This game's line is here instead, inside its own
+   region, so that folding it in or taking it out is one tool and one block - the alternative
+   is a sixth anchor in the middle of a selector, which is a worse thing to own. */
+#np-root:not([data-on]) { display: none; }
+/* "שביל המספרים" - every selector starts with .np- */
+.np-stage { position: fixed; inset: 0; z-index: 5; overflow: hidden; display: flex; flex-direction: column; align-items: center;
+  --np-btn: min(13vh, 17vw); --np-st: min(8vw, 12vh); -webkit-user-select: none; user-select: none; }
+.np-stage.np-paused * { animation-play-state: paused !important; }
+.np-stage [data-c="blue"]   { --c: #2a62ff; --cd: #1233b8; --cl: #9ab6ff; }
+.np-stage [data-c="yellow"] { --c: #ffd400; --cd: #a88200; --cl: #fff08a; }
+.np-stage [data-c="red"]    { --c: #e8242b; --cd: #9c1018; --cl: #ff9d9a; }
+.np-stage [data-c="green"]  { --c: #1fb34a; --cd: #0d7430; --cl: #92e8a8; }
+
+.np-scene { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.np-scene svg { width: 100%; height: 100%; display: block; }
+
+/* the strip of decade flags: one per ten, lit as she passes them (not dir=ltr: with four of them it would look like her four buttons) */
+.np-flags { position: relative; z-index: 3; flex: none; display: flex; direction: ltr; gap: 2vw; margin-top: 2.5vh; pointer-events: none; }
+.np-fl { display: flex; align-items: center; gap: 0.3em; padding: 0.2em 0.7em 0.2em 0.3em; border-radius: 999px; background: rgba(255, 255, 255, 0.55);
+  font-size: clamp(16px, 3.4vh, 30px); font-weight: 700; color: #4a3b32; opacity: 0.6; }
+.np-fl .np-fsvg { height: 1.5em; width: auto; }
+.np-fl.np-got { opacity: 1; background: #fff6bf; box-shadow: 0 0 0 0.12em #ffd400; }
+
+/* ----- the ten stones of this decade ----- */
+.np-path { position: relative; z-index: 2; flex: none; display: grid; grid-template-columns: repeat(10, var(--np-st)); gap: calc(var(--np-st) * 0.16);
+  margin-top: calc(var(--np-st) * 2.2); justify-content: center; }
+.np-stone { position: relative; width: var(--np-st); height: calc(var(--np-st) * 0.78); border-radius: 50%; background: #cfc6b8;
+  box-shadow: 0 calc(var(--np-st) * 0.08) 0 #9d9386, 0 calc(var(--np-st) * 0.14) calc(var(--np-st) * 0.12) rgba(0, 0, 0, 0.25);
+  display: flex; align-items: center; justify-content: center; }
+.np-sn { font-size: calc(var(--np-st) * 0.42); font-weight: 700; color: #6c6155; line-height: 1; }
+.np-stone.np-lit { background: #ffe27a; box-shadow: 0 calc(var(--np-st) * 0.08) 0 #c99a14, 0 0 calc(var(--np-st) * 0.3) rgba(255, 212, 0, 0.7); }
+.np-stone.np-lit .np-sn { color: #7a5200; }
+.np-flagstone .np-pole { position: absolute; left: 50%; bottom: 62%; width: 62%; transform: translateX(-30%); pointer-events: none; }
+.np-flagstone .np-pole svg { width: 100%; height: auto; display: block; }
+.np-stone.np-hop { animation: npHop 0.52s cubic-bezier(0.3, 1.3, 0.5, 1); }
+.np-spino { position: absolute; left: 50%; bottom: 68%; width: calc(var(--np-st) * 2.3); transform: translateX(-50%); z-index: 3; pointer-events: none; }
+.np-spino svg { width: 100%; height: auto; display: block; overflow: visible; }
+/* the first and last stones sit near the edges: lean him over the stones so his tail and his snout stay on the screen (and the path starts low enough that his head clears the parent's exit button) */
+.np-stone:nth-child(1) .np-spino { transform: translateX(-30%); }
+.np-stone:nth-child(10) .np-spino { transform: translateX(-64%); }
+
+/* ----- the number as a numeral and as a quantity ----- */
+.np-info { position: relative; z-index: 2; flex: 1 1 0; min-height: 0; width: min(94vw, 150vh); display: flex; align-items: center; justify-content: center;
+  gap: 5vw; direction: ltr; }
+.np-num { font-size: min(30vh, 22vw); font-weight: 700; line-height: 1; color: #fff; -webkit-text-stroke: 0.05em #4a3b32; text-shadow: 0 0.06em 0 rgba(0, 0, 0, 0.25);
+  min-width: 1.2em; text-align: center; }
+.np-num.np-pop { animation: npPop 0.38s cubic-bezier(0.3, 1.6, 0.5, 1); }
+.np-pic { width: min(44vw, 52vh); background: rgba(255, 255, 255, 0.7); border-radius: 2vh; padding: 1.4vh 1.6vw; }
+.np-pic svg { width: 100%; height: auto; display: block; }
+
+/* ----- the four buttons, in keypad order (dir=ltr: three that step, then the flag) ----- */
+.np-row { position: relative; z-index: 4; flex: none; display: flex; gap: min(4vw, 4vh); justify-content: center; padding: 0 2vw 2.5vh; }
+.np-btn { width: var(--np-btn); aspect-ratio: 1; border-radius: 50%; border: calc(var(--np-btn) * 0.05) solid rgba(255, 255, 255, 0.95);
+  background: radial-gradient(circle at 35% 30%, var(--cl) 0 14%, var(--c) 48%, var(--cd) 100%);
+  box-shadow: 0 calc(var(--np-btn) * 0.1) 0 var(--cd), 0 calc(var(--np-btn) * 0.18) calc(var(--np-btn) * 0.14) rgba(0, 0, 0, 0.3);
+  display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.np-btn svg { width: 64%; height: 64%; display: block; }
+[data-touch="on"] .np-btn { min-width: 44px; min-height: 44px; }
+.np-btn.np-down { animation: npDown 0.19s ease-out; }
+.np-btn.np-wave { animation: npWave 0.45s ease-in-out; }
+.np-stage.np-done .np-num { animation: npPop 0.6s cubic-bezier(0.3, 1.6, 0.5, 1) infinite alternate; }
+
+@keyframes npHop { 0%, 100% { transform: none; } 35% { transform: translateY(-14%) scale(1.06, 0.96); } 70% { transform: translateY(0) scale(0.98, 1.03); } }
+@keyframes npPop { 0% { transform: scale(0.7); } 100% { transform: scale(1); } }
+@keyframes npDown { 0% { transform: translateY(0); } 40% { transform: translateY(calc(var(--np-btn) * 0.07)) scale(0.93); box-shadow: 0 calc(var(--np-btn) * 0.03) 0 var(--cd), 0 0 0 calc(var(--np-btn) * 0.06) #fff, 0 0 calc(var(--np-btn) * 0.4) calc(var(--np-btn) * 0.12) var(--cl); } 100% { transform: translateY(0); } }
+@keyframes npWave { 0%, 100% { transform: none; } 50% { transform: translateY(-14%) scale(1.1); box-shadow: 0 calc(var(--np-btn) * 0.1) 0 var(--cd), 0 0 0 calc(var(--np-btn) * 0.05) #fff, 0 0 calc(var(--np-btn) * 0.4) calc(var(--np-btn) * 0.1) var(--cl); } }
+
+/* Upright (a phone, or an iPad held the tall way): five stones to a row, and the numeral and the picture stack
+   above the buttons. Five things are stacked here - the flags, two rows of stones with Spino above one of them, the
+   numeral, the picture, the buttons - so every size is taken from the HEIGHT as well as the width; sized by the
+   width alone, an iPad upright put the numeral over the second row of stones and the picture under the buttons, and
+   a phone did the same from 37 on (five rows of dots).
+   - The stones are at most 6.6vh, and Spino and the gaps around him are in stones.
+   - The flag strip starts below the parent's exit button (60px tall at a finger's size, 8px from the top) and its
+     flags shrink with the width and wrap rather than run off: five of them were 506px wide on a 430px phone.
+   - The numeral and the picture share what is left: .np-info is a size container, the numeral takes a third of its
+     height and the picture is sized so that its tallest form (five rows of dots, 40..50, 123 x 78 in its viewBox)
+     fits the rest. */
+@media (max-aspect-ratio: 5/4) {
+  .np-stage { --np-st: min(14vw, 6.6vh); --np-btn: min(11vh, 17vw); }
+  .np-flags { margin-top: calc(max(8px, var(--sa-t, 0px)) + 64px); flex-wrap: wrap; justify-content: center; max-width: calc(100vw - 16px); gap: 1.4vw; row-gap: 6px; }
+  .np-fl { font-size: clamp(12px, min(3.2vh, 3.6vw), 28px); }
+  .np-path { grid-template-columns: repeat(5, var(--np-st)); row-gap: calc(var(--np-st) * 1.3); margin-top: calc(var(--np-st) * 1.35); }
+  /* smaller, so that on the second row he stands under the first row and does not cover its numerals (5 above 10) */
+  .np-spino { width: calc(var(--np-st) * 1.5); }
+  .np-stone:nth-child(1) .np-spino, .np-stone:nth-child(10) .np-spino { transform: translateX(-50%); }
+  /* cq units below are .np-info's own content box (its children's container); its own gap is in vh */
+  .np-info { container-type: size; width: 100%; flex-direction: column; gap: 1.2vh; }
+  .np-num { font-size: min(30cqh, 34cqw); min-width: 0; }
+  /* border-box, so the width holds the padding: (width - 6cqw) * 78/123 + 4cqh must fit in the 70cqh - 1.2vh the
+     numeral leaves; 60cqh instead of 66cqh keeps a margin for the numeral's outline and shadow */
+  .np-pic { padding: 2cqh 3cqw; border-radius: 3cqh; width: min(88cqw, calc((60cqh - 1.2vh) * 123 / 78 + 6cqw)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .np-stone.np-hop, .np-num.np-pop, .np-btn.np-down, .np-btn.np-wave, .np-stage.np-done .np-num { animation: none; }
+}
+/* <<< numpath:css */
+
+/* >>> numfind:css - games/numfind/game.css, folded in verbatim by tools/fold-numfind.js; edit the module and re-run the tool, never this block */
+/* ---------- numfind (ZoeyNumFind, .nf-) ---------- */
+/* The shell hides a game that is not the active one, and the rule that does it is a list of
+   root ids up at "the ten game containers". This game's line is here instead, inside its own
+   region, so that folding it in or taking it out is one tool and one block - the alternative
+   is a sixth anchor in the middle of a selector, which is a worse thing to own. */
+#nf-root:not([data-on]) { display: none; }
+/* "איפה המספר?" - every selector starts with .nf- */
+.nf-stage { position: fixed; inset: 0; z-index: 5; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+  --nf-st: min(21vw, 30vh); -webkit-user-select: none; user-select: none; touch-action: manipulation; }
+.nf-stage.nf-paused * { animation-play-state: paused !important; }
+.nf-stage [data-c="blue"]   { --c: #2a62ff; --cd: #1233b8; --cl: #9ab6ff; }
+.nf-stage [data-c="yellow"] { --c: #ffd400; --cd: #a88200; --cl: #fff08a; }
+.nf-stage [data-c="red"]    { --c: #e8242b; --cd: #9c1018; --cl: #ff9d9a; }
+.nf-stage [data-c="green"]  { --c: #1fb34a; --cd: #0d7430; --cl: #92e8a8; }
+
+.nf-scene { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.nf-scene svg { width: 100%; height: 100%; display: block; }
+
+/* Spino listening, with a speaking bubble: nothing here is read, it only says "listen" */
+.nf-ask { position: relative; z-index: 2; flex: 1 1 0; min-height: 0; width: 100%; display: flex; align-items: center; justify-content: center;
+  gap: 3vw; direction: ltr; pointer-events: none; margin-top: calc(max(8px, var(--sa-t, 0px)) + 56px); }
+.nf-spino { height: min(36vh, 40vw); aspect-ratio: 1.15; }
+.nf-spino svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.nf-bubble { width: min(18vh, 20vw); }
+.nf-bubble svg { width: 100%; height: auto; display: block; overflow: visible; animation: nfListen 1.6s ease-in-out infinite alternate; }
+/* a press while the opening line plays: there are no stones yet, so the bubble answers it */
+.nf-bubble.nf-poke { animation: nfPoke 0.3s cubic-bezier(0.3, 1.6, 0.5, 1); }
+
+/* the four stones, in keypad order (dir=ltr): the number line, left to right */
+.nf-row { position: relative; z-index: 3; flex: none; display: flex; gap: min(3vw, 3vh); justify-content: center; padding: 0 2vw 4vh; }
+.nf-stone { position: relative; width: var(--nf-st); height: var(--nf-st); border-radius: 50%; border: calc(var(--nf-st) * 0.05) solid rgba(255, 255, 255, 0.95);
+  background: radial-gradient(circle at 35% 30%, var(--cl) 0 14%, var(--c) 48%, var(--cd) 100%);
+  box-shadow: 0 calc(var(--nf-st) * 0.08) 0 var(--cd), 0 calc(var(--nf-st) * 0.16) calc(var(--nf-st) * 0.12) rgba(0, 0, 0, 0.3);
+  display: flex; align-items: center; justify-content: center; }
+.nf-sn { font-size: calc(var(--nf-st) * 0.5); font-weight: 700; line-height: 1; color: #fff; -webkit-text-stroke: calc(var(--nf-st) * 0.09) rgba(40, 30, 25, 0.9); paint-order: stroke fill;
+  text-shadow: 0 calc(var(--nf-st) * 0.03) 0 rgba(0, 0, 0, 0.25); letter-spacing: -0.02em; direction: ltr; }
+.nf-stage [data-c="yellow"] .nf-sn { color: #fff; }
+[data-touch="on"] .nf-stone { min-width: 44px; min-height: 44px; }
+
+.nf-stone.nf-down { animation: nfDown 0.19s ease-out; }
+.nf-stone.nf-wob { animation: nfWob 0.6s ease-in-out; }
+.nf-stone.nf-hint { animation: nfHint 0.9s ease-in-out infinite alternate; }
+.nf-stone.nf-hop { animation: nfHop 0.56s cubic-bezier(0.3, 1.3, 0.5, 1); }
+.nf-stage.nf-won .nf-stone:not(:has(.nf-pic)) { opacity: 0.72; }
+
+/* the quantity rises over the stone she got right; the outer stones keep it on the screen */
+.nf-pic { position: absolute; bottom: 104%; left: 50%; width: calc(var(--nf-st) * 1.9); transform: translateX(-50%); background: rgba(255, 255, 255, 0.88);
+  border-radius: calc(var(--nf-st) * 0.14); padding: calc(var(--nf-st) * 0.1); pointer-events: none; animation: nfRise 0.45s cubic-bezier(0.3, 1.4, 0.5, 1) both; transform-origin: 50% 100%; }
+.nf-pic svg { width: 100%; height: auto; display: block; }
+.nf-pic.nf-pos0 { left: 0; transform: none; transform-origin: 0 100%; }
+.nf-pic.nf-pos3 { left: auto; right: 0; transform: none; transform-origin: 100% 100%; }
+.nf-pic.nf-pos0, .nf-pic.nf-pos3 { animation-name: nfRiseEdge; }
+
+@keyframes nfDown { 0% { transform: none; } 40% { transform: translateY(calc(var(--nf-st) * 0.05)) scale(0.94); } 100% { transform: none; } }
+@keyframes nfWob { 0%, 100% { transform: none; } 20% { transform: rotate(-7deg); } 55% { transform: rotate(7deg); } }
+@keyframes nfHint { from { transform: scale(1); filter: brightness(1); } to { transform: scale(1.07); filter: brightness(1.3); } }
+@keyframes nfHop { 0%, 100% { transform: none; } 35% { transform: translateY(-14%) scale(1.06, 0.96); } 70% { transform: translateY(0) scale(0.98, 1.03); } }
+@keyframes nfRise { from { opacity: 0; transform: translateX(-50%) translateY(30%) scale(0.6); } to { opacity: 1; transform: translateX(-50%); } }
+@keyframes nfRiseEdge { from { opacity: 0; transform: translateY(30%) scale(0.6); } to { opacity: 1; transform: none; } }
+@keyframes nfListen { from { transform: scale(0.94); } to { transform: scale(1.06); } }
+@keyframes nfPoke { 0%, 100% { transform: none; } 40% { transform: scale(1.18) rotate(-6deg); } }
+
+/* a phone held upright: the strip above the stones is tall, so Spino and the bubble can be a little smaller and the stones fill the width */
+@media (max-aspect-ratio: 4/5) { .nf-stage { --nf-st: 21.5vw; } .nf-row { gap: 2vw; padding-bottom: 6vh; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .nf-stone.nf-wob, .nf-stone.nf-hint, .nf-stone.nf-hop, .nf-stone.nf-down, .nf-bubble svg, .nf-bubble.nf-poke { animation: none; }
+  .nf-bubble.nf-poke { filter: brightness(1.3); }
+  .nf-pic { animation: none; }
+  .nf-stone.nf-hint { box-shadow: 0 calc(var(--nf-st) * 0.08) 0 var(--cd), 0 0 0 calc(var(--nf-st) * 0.07) #fff, 0 0 calc(var(--nf-st) * 0.35) calc(var(--nf-st) * 0.1) var(--cl); }
+  .nf-stone.nf-wob { filter: brightness(0.8); }
+}
+/* <<< numfind:css */
 </style>
 
 <div id="zg" dir="rtl" lang="he">
@@ -3794,6 +3970,12 @@ button:focus-visible { outline: 5px solid var(--focus); outline-offset: 4px; bor
   <!-- >>> pop:root - tools/fold-pop.js -->
   <div id="pp-root" dir="rtl" lang="he"></div>
   <!-- <<< pop:root -->
+  <!-- >>> numpath:root - tools/fold-numpath.js -->
+  <div id="np-root" dir="rtl" lang="he"></div>
+  <!-- <<< numpath:root -->
+  <!-- >>> numfind:root - tools/fold-numfind.js -->
+  <div id="nf-root" dir="rtl" lang="he"></div>
+  <!-- <<< numfind:root -->
 
   <button type="button" id="btnExit" class="exitBtn">יציאה</button>
 
@@ -4761,6 +4943,56 @@ const VOICE_CLIPS = {
   pno_s_warm: "voice/piano/pno_s_warm.mp3",
   pno_s_yonatan: "voice/piano/pno_s_yonatan.mp3",
   /* <<< piano:clips */
+  /* >>> numbers:clips - assets/voice/numbers/*.mp3, folded in by tools/fold-more-voice.js; never edit this block, re-run the tool */
+  count_11: "voice/numbers/count_11.mp3",
+  count_12: "voice/numbers/count_12.mp3",
+  count_13: "voice/numbers/count_13.mp3",
+  count_14: "voice/numbers/count_14.mp3",
+  count_15: "voice/numbers/count_15.mp3",
+  count_16: "voice/numbers/count_16.mp3",
+  count_17: "voice/numbers/count_17.mp3",
+  count_18: "voice/numbers/count_18.mp3",
+  count_19: "voice/numbers/count_19.mp3",
+  count_20: "voice/numbers/count_20.mp3",
+  count_21: "voice/numbers/count_21.mp3",
+  count_22: "voice/numbers/count_22.mp3",
+  count_23: "voice/numbers/count_23.mp3",
+  count_24: "voice/numbers/count_24.mp3",
+  count_25: "voice/numbers/count_25.mp3",
+  count_26: "voice/numbers/count_26.mp3",
+  count_27: "voice/numbers/count_27.mp3",
+  count_28: "voice/numbers/count_28.mp3",
+  count_29: "voice/numbers/count_29.mp3",
+  count_30: "voice/numbers/count_30.mp3",
+  count_31: "voice/numbers/count_31.mp3",
+  count_32: "voice/numbers/count_32.mp3",
+  count_33: "voice/numbers/count_33.mp3",
+  count_34: "voice/numbers/count_34.mp3",
+  count_35: "voice/numbers/count_35.mp3",
+  count_36: "voice/numbers/count_36.mp3",
+  count_37: "voice/numbers/count_37.mp3",
+  count_38: "voice/numbers/count_38.mp3",
+  count_39: "voice/numbers/count_39.mp3",
+  count_40: "voice/numbers/count_40.mp3",
+  count_41: "voice/numbers/count_41.mp3",
+  count_42: "voice/numbers/count_42.mp3",
+  count_43: "voice/numbers/count_43.mp3",
+  count_44: "voice/numbers/count_44.mp3",
+  count_45: "voice/numbers/count_45.mp3",
+  count_46: "voice/numbers/count_46.mp3",
+  count_47: "voice/numbers/count_47.mp3",
+  count_48: "voice/numbers/count_48.mp3",
+  count_49: "voice/numbers/count_49.mp3",
+  count_50: "voice/numbers/count_50.mp3",
+  nf_start: "voice/numbers/nf_start.mp3",
+  nf_where: "voice/numbers/nf_where.mp3",
+  np_end: "voice/numbers/np_end.mp3",
+  np_jump: "voice/numbers/np_jump.mp3",
+  np_longer: "voice/numbers/np_longer.mp3",
+  np_more: "voice/numbers/np_more.mp3",
+  np_press: "voice/numbers/np_press.mp3",
+  np_start: "voice/numbers/np_start.mp3",
+  /* <<< numbers:clips */
   pk_more: "voice/games/pk_more.mp3",
   where: "voice/hub/where.mp3",
   wow: "voice/hub/wow.mp3",
@@ -5805,6 +6037,94 @@ function exitFs() {
 }
 /* shell hooks (filled in by the last script) */
 const ZG = { toPicker: function () {} };
+/* >>> abc:core - games/_shared/zoey-abc.js, folded in by tools/fold-abc.js; never edit this block, re-run the tool */
+/* =====================================================================
+   games/_shared/zoey-abc.js - the shared data of the letters-and-numbers work.
+
+   It is folded into the hub's core script by tools/fold-abc.js (region abc:core, right after the
+   voice block), and a module's own page loads it after zoey-core.js. So everything here may
+   use the core's PH and SCENES, and nothing here may run anything: a function is declared, a table
+   is data, and the only side effects are the two SCENES entries at the end, which are plain data too.
+
+   Numbers 1..50 as she RECITES them, which is the feminine form (אַחַת, שְׁתַּיִם) - the same
+   forms the core records as count_1..count_10. 11..19 use the feminine "עֶשְׂרֵה" and never the
+   masculine "עָשָׂר"; after a ten the units take a vav ("עֶשְׂרִים וְאַחַת", and "וּשְׁתַּיִם" /
+   "וּשְׁמוֹנֶה", where the vav becomes a shuruk before a shva or a labial).
+   ===================================================================== */
+const TEENS_F = ['אַחַת עֶשְׂרֵה', 'שְׁתֵּים עֶשְׂרֵה', 'שְׁלוֹשׁ עֶשְׂרֵה', 'אַרְבַּע עֶשְׂרֵה', 'חֲמֵשׁ עֶשְׂרֵה', 'שֵׁשׁ עֶשְׂרֵה', 'שְׁבַע עֶשְׂרֵה', 'שְׁמוֹנֶה עֶשְׂרֵה', 'תְּשַׁע עֶשְׂרֵה']; /* 11..19 */
+const TENS = ['עֶשְׂרִים', 'שְׁלוֹשִׁים', 'אַרְבָּעִים', 'חֲמִשִּׁים'];                                                                                  /* 20, 30, 40, 50 */
+const AND_F = ['וְאַחַת', 'וּשְׁתַּיִם', 'וְשָׁלוֹשׁ', 'וְאַרְבַּע', 'וְחָמֵשׁ', 'וְשֵׁשׁ', 'וְשֶׁבַע', 'וּשְׁמוֹנֶה', 'וְתֵשַׁע'];                           /* +1..+9 after a ten */
+
+/* The pointed recited form of n, 1..50. 1..10 are the core's own forms (PH.count_n, built from its NUM_S), so a number is spelled
+   one way everywhere. */
+function numSpokenF(n) {
+  n = Math.round(n);
+  if (n < 1 || n > 50) return '';
+  if (n <= 10) return PH['count_' + n]; /* the core's NUM_S lives inside a closure, PH.count_n is its public face */
+  if (n < 20) return TEENS_F[n - 11];
+  const t = Math.floor(n / 10), u = n % 10;
+  return u === 0 ? TENS[t - 2] : TENS[t - 2] + ' ' + AND_F[u - 1];
+}
+
+/* Sets PH.count_11 .. PH.count_50. Idempotent. CALLED BY THE MODULES, never by this file: folding
+   the file must not make a phrase key live that has no recording yet. */
+function registerNumberPhrases() {
+  for (let n = 11; n <= 50; n++) PH['count_' + n] = numSpokenF(n);
+}
+
+/* A quantity as tens and ones: every full ten is a <g class="tp-ten"> of ten circles, five, a
+   visible gap, five - the arrangement the dots on the stones already use - and one
+   <g class="tp-ones"> holds the n % 10 loose ones. Colours are fill attributes so the picture needs
+   no stylesheet and survives being dropped into any page. */
+function tensPictureSVG(n) {
+  n = Math.max(0, Math.min(50, Math.round(n)));
+  const tens = Math.floor(n / 10), ones = n % 10;
+  const STEP = 11, GAP = 8, R = 5, ROW = 14, W = 8 + 9 * STEP + GAP + 8;
+  const circ = (k, y, cls, fill) => '<circle' + (cls ? ' class="' + cls + '"' : '') + ' cx="' + (8 + k * STEP + (k >= 5 ? GAP : 0)) +
+    '" cy="' + y + '" r="' + R + '" fill="' + fill + '"/>';
+  let s = '';
+  for (let i = 0; i < tens; i++) {
+    s += '<g class="tp-ten">';
+    for (let k = 0; k < 10; k++) s += circ(k, 8 + i * ROW, '', '#2a62ff');
+    s += '</g>';
+  }
+  s += '<g class="tp-ones">';
+  for (let k = 0; k < ones; k++) s += circ(k, 8 + tens * ROW, 'tp-one', '#ff9a3c');
+  s += '</g>';
+  const H = 8 + (tens + (ones ? 1 : 0)) * ROW;
+  return '<svg class="tp" viewBox="0 0 ' + W + ' ' + Math.max(H, 16) + '" aria-hidden="true" focusable="false">' + s + '</svg>';
+}
+
+/* The numbers she has HEARD said on the number path, from that game's save object (zoey-numpath):
+   a sorted array of distinct whole numbers 1..50. The path writes it and the finder reads it, so the
+   one reading lives here and the two cannot disagree about it.
+   A number is heard when its count_N was said to her: a stone she stepped onto, or the flag she
+   jumped to. The numbers a jump goes past are NOT heard, and neither is the 1 she starts on.
+   An old save, from before `heard` existed, kept only `seen` - the furthest stone, which a jump
+   raised as well - so it is trusted only as far as ten: heard = 1..min(seen, 10). */
+function numPathHeard(o) {
+  const out = [];
+  if (o && typeof o === 'object' && Array.isArray(o.heard)) {
+    o.heard.forEach((x) => { const n = +x; if (Number.isInteger(n) && n >= 1 && n <= 50 && out.indexOf(n) < 0) out.push(n); });
+  } else {
+    const seen = o && typeof o === 'object' ? Math.floor(+o.seen) : 0;
+    for (let n = 1; n <= Math.min(seen >= 0 ? seen : 0, 10); n++) out.push(n);
+  }
+  return out.sort((a, b) => a - b);
+}
+
+/* Where each of the new games stands. np (numbers to fifty, the picture) goes on the volcano: the
+   only countable things on screen must be the ones she is counting, and the volcano has nothing
+   else to count but the herd on the skyline, which is the very herd the shore had - the shore is
+   where it stood first, for the reason cnt and mth are there. It moved because the shore belongs to
+   "מי קופץ?" right before it in the picker and the lake to the finder right after it, and
+   neighbours in the picker never share a place; the meadow (butterflies, spores), the jungle
+   (butterflies, falling leaves) and dusk (stars) would each give her something else to count.
+   nf goes on the lake, the calm place cw and gv already use for a game whose work is to hold one
+   thing in mind. */
+SCENES.np = 'volcano';
+SCENES.nf = 'lake';
+/* <<< abc:core */
 
 </script>
 <script>
@@ -11621,6 +11941,685 @@ window.ZoeyDomino = (function () {
 
 
 
+
+
+<!-- >>> numfind:js - folded in by tools/fold-numfind.js; edit games/numfind/game.js and re-run the tool, never this block -->
+<script>
+/* ===== איפה המספר? - games/numfind/game.js, folded in verbatim ===== */
+'use strict';
+/* =====================================================================
+   "איפה המספר?" - find the number  (slug numfind, global ZoeyNumFind, CSS prefix nf-)
+
+   WHAT IT IS FOR. Saying a number and knowing its written face are two different things. The voice says
+   a number, four stones each wear a numeral, and she presses the one that was said.
+
+   ONLY WHAT SHE HAS HEARD. Past ten, the numbers asked are ONLY ones she has heard said on the number
+   path (zoey-numpath.heard: a stone she stepped onto, or a flag she jumped to - never the stones a jump
+   went past). There are two ranges:
+     1..10   always hers: spec 5.1 says so, every walk on the path starts there, and the counting games
+             teach them. A child who never opened the path is asked these, so one who walked four
+             stones must not be asked fewer.
+     11..50  only once she has heard at least five of 11..19, so the teens are no longer strangers; then
+             the number asked is one she heard (heard within 11..50). The other three stones may be any
+             of [11, top] - seeing that 37 is NOT 23 does not need 37 to have been heard.
+
+   WHAT MAKES IT HARDER, in three steps that she is moved up through (8 first-try finds per step, and
+   the step is remembered and never goes down). Each range has its OWN step: eight easy finds in 1..10
+   say nothing about 11..50, where she starts again far apart. A round counts as first-try only if she
+   answered before any help: a wrong press, or the idle glow that shows her the right stone after seven
+   seconds, both make it a round she was helped with.
+     level 0  the four stones are as far apart as the range allows (3 and 27 cannot be mistaken)
+     level 1  one of them is the neighbour of the answer (23 beside 24 or 22)
+     level 2  in half of the rounds the digit reversal is there too (23 beside 32) - the classic mix-up
+
+   NO FAIL STATE. A wrong press wobbles the stone she pressed, the right one glows, and the number is
+   said again - that is all. The round does not end on a mistake, and a round she needed help with simply
+   does not count towards the next level. When she is right the quantity rises over the stone as tens
+   and ones (the same picture the number path draws), the number is said and a cheer follows.
+
+   RECORDING SCRIPT - the PH keys this game adds (key : text, full nikud)
+     nf_start : בּוֹאִי נִמְצָא מִסְפָּרִים!
+     nf_where : אֵיפֹה הַמִּסְפָּר
+   The number itself is count_N, which the number path's batch records (count_11..50 are recorded,
+   2026-11-07, like these two lines). say() still speaks a key only once its clip exists - the male
+   machine voice must never fill in.
+   ===================================================================== */
+window.ZoeyNumFind = (function () {
+  const KEYMAP = { KeyS: 0, KeyG: 1, KeyK: 2, Quote: 3 };      /* blue, yellow, red, green: left -> right */
+  const NOTE = [392, 440, 494, 587];
+  const SAVE = 'zoey-numfind', PATHSAVE = 'zoey-numpath', LEVEL_UP = 8, MAXLEVEL = 2;
+  /* WON_PAUSE is the least time the picture stays up after a right press; the round itself waits for the cheer to end.
+     WON_SAFETY is longer than the longest number and cheer together (1.49 + 1.88 s) with their caps. */
+  const WON_PAUSE = 2000, WON_SAFETY = 7000, IDLE = 7000;
+
+  registerNumberPhrases();
+  PH.nf_start = 'בּוֹאִי נִמְצָא מִסְפָּרִים!';
+  PH.nf_where = 'אֵיפֹה הַמִּסְפָּר';
+
+  /* ---------- what she has heard (read-only: this game never writes the number path's save) ---------- */
+  function readHeard() {
+    let o = null;
+    try { o = JSON.parse(window.localStorage.getItem(PATHSAVE) || 'null'); } catch (e) { o = null; }
+    return numPathHeard(o);
+  }
+  const TEENS_TO_OPEN = 5;
+  /* key: which range's level applies. targets: what may be ASKED. [lo, top]: where the other three stones come from. */
+  function rangesFor(heard) {
+    const teens = heard.filter((n) => n >= 11 && n <= 19).length;
+    if (teens >= TEENS_TO_OPEN) {
+      const targets = heard.filter((n) => n >= 11);
+      const hi = targets[targets.length - 1];
+      return { key: '11', lo: 11, hi: hi, top: Math.max(hi, 20), targets: targets };
+    }
+    return { key: '1', lo: 1, hi: 10, top: 10, targets: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] };
+  }
+
+  /* ---------- the save: { levels: {"1": n, "11": n}, firsts: {"1": n, "11": n} }; a level never goes down ----------
+     An old save, from before each range had a level of its own, is { level, firsts }: that was earned in 1..10, so
+     it is read as range "1" - and range "11" starts at 0. */
+  const KEYS = ['1', '11'];
+  const clampLevel = (n) => { n = Math.floor(+n); return n >= 0 ? Math.min(MAXLEVEL, n) : 0; };
+  const clampFirsts = (n) => { n = Math.floor(+n); return n >= 0 ? Math.min(LEVEL_UP - 1, n) : 0; };
+  function readSave() {
+    let o = null;
+    try { o = JSON.parse(window.localStorage.getItem(SAVE) || 'null'); } catch (e) { o = null; }
+    if (!o || typeof o !== 'object') o = {};
+    const lv = o.levels && typeof o.levels === 'object' ? o.levels : {}, fs = o.firsts && typeof o.firsts === 'object' ? o.firsts : {};
+    const out = { levels: {}, firsts: {} };
+    KEYS.forEach((k) => { out.levels[k] = clampLevel(lv[k]); out.firsts[k] = clampFirsts(fs[k]); });
+    if (o.level !== undefined) out.levels['1'] = Math.max(out.levels['1'], clampLevel(o.level));
+    if (typeof o.firsts === 'number' || typeof o.firsts === 'string') out.firsts['1'] = clampFirsts(o.firsts);
+    return out;
+  }
+  function writeSave(lv, fs) {
+    const s = readSave(), out = { levels: {}, firsts: {} };
+    KEYS.forEach((k) => { out.levels[k] = Math.max(s.levels[k], clampLevel(lv[k])); out.firsts[k] = clampFirsts(fs[k]); });
+    try { window.localStorage.setItem(SAVE, JSON.stringify(out)); } catch (e) { /* ignore */ }
+  }
+
+  /* ---------- the options ---------- */
+  /* Every way to pick the other three, pairwise at least g apart together with t. Small ranges only (<= 50 numbers). */
+  function farSets(t, lo, top, g) {
+    const nums = []; for (let i = lo; i <= top; i++) if (i !== t) nums.push(i);
+    const out = [];
+    for (let a = 0; a < nums.length; a++) for (let b = a + 1; b < nums.length; b++) for (let c = b + 1; c < nums.length; c++) {
+      const s = [t, nums[a], nums[b], nums[c]].sort((x, y) => x - y);
+      if (s[1] - s[0] >= g && s[2] - s[1] >= g && s[3] - s[2] >= g) out.push(s);
+    }
+    return out;
+  }
+  function reversalOf(t) {
+    if (t < 10 || t % 10 === 0) return 0;                    /* 30 would be "03", which is no numeral */
+    return (t % 10) * 10 + Math.floor(t / 10);
+  }
+  /* four distinct numbers of [lo, top], sorted ascending, holding t (the number line, left to right) */
+  function optionsFor(t, lo, top, level, rnd) {
+    rnd = rnd || Math.random;
+    const pick = (a) => a[Math.floor(rnd() * a.length)];
+    const fill = (set) => {                                  /* top the set up to four from anywhere in range */
+      const pool = []; for (let i = lo; i <= top; i++) if (set.indexOf(i) < 0) pool.push(i);
+      while (set.length < 4 && pool.length) set.push(pool.splice(Math.floor(rnd() * pool.length), 1)[0]);
+      return set.sort((x, y) => x - y);
+    };
+    if (level <= 0) {
+      for (let g = 6; g >= 2; g--) { const all = farSets(t, lo, top, g); if (all.length) return pick(all); }
+      return fill([t]);
+    }
+    const set = [t];
+    const rev = reversalOf(t);
+    if (level >= 2 && rev && rev !== t && rev >= lo && rev <= top && rnd() < 0.5) set.push(rev);
+    const nb = [t - 1, t + 1].filter((n) => n >= lo && n <= top && set.indexOf(n) < 0);
+    if (nb.length && !set.some((n) => Math.abs(n - t) === 1)) set.push(pick(nb));
+    return fill(set);
+  }
+
+  /* ---------- state ---------- */
+  let alive = false, paused = false;
+  let round = 0, phase = 'intro';
+  let levels = { '1': 0, '11': 0 }, firsts = { '1': 0, '11': 0 }, rg = rangesFor([]);
+  const level = () => levels[rg.key];
+  let target = 0, prevTarget = 0, options = [], missed = false, lastPress = 0, speechSeq = 0;
+  let timers = [], deferred = [], nudgeT = null, log = [];
+  let els = null;
+
+  /* ---------- timers: one array, round-scoped, pausable, all cleared by stop() ---------- */
+  function arm(t) { t.due = performance.now() + t.left; t.h = setTimeout(t.run, t.left); }
+  function later(ms, fn, keep) {
+    const t = { left: ms, due: 0, h: 0, rd: round, keep: !!keep };
+    t.run = function () {
+      timers = timers.filter(x => x !== t);
+      if (!alive || (!t.keep && t.rd !== round)) return;
+      fn();
+    };
+    timers.push(t); if (!paused) arm(t);
+    return t;
+  }
+  function cancel(t) { if (!t) return; clearTimeout(t.h); timers = timers.filter(x => x !== t); }
+  function clearTimers(all) {
+    timers = timers.filter(t => { if (all || !t.keep) { clearTimeout(t.h); return false; } return true; });
+  }
+  /* Every line is logged (the check reads the log), but only a recorded one is spoken: speak() falls
+     through to speechSynthesis for a key with no clip, which on Windows is the male voice. An unqueued
+     unrecorded line still CUTS what is playing, so an old number never talks over the one asked now. */
+  function say(key, queue, then) {
+    const s = ++speechSeq, rd = round;
+    log.push({ k: key, q: !!queue });
+    const fin = then ? function () {
+      if (!alive || rd !== round || s !== speechSeq) return;
+      if (paused) { deferred.push([rd, then]); return; }
+      then();
+    } : undefined;
+    if (!VOICE_CLIPS[key]) { if (!queue) { try { stopSpeech(); } catch (e) { /* ignore */ } } if (fin) later(120, fin, true); return; }
+    speak(key, queue, fin);
+  }
+  function blip(el, cls, ms) {
+    if (!el) return;
+    el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+    later(ms, () => el.classList.remove(cls), true);
+  }
+
+  /* ---------- DOM ---------- */
+  const COLORS = ['blue', 'yellow', 'red', 'green'];
+  function build(root) {
+    root.innerHTML =
+      '<div class="nf-stage">' +
+        '<div class="nf-scene" aria-hidden="true">' + sceneSVG('nf') + '</div>' +
+        '<div class="nf-ask" aria-hidden="true"><div class="nf-spino"></div>' +
+          '<div class="nf-bubble"><svg viewBox="0 0 100 100" focusable="false"><path d="M18 50 Q18 30 36 30 H44 L62 18 V30 H64 Q82 30 82 50 Q82 70 64 70 H62 V82 L44 70 H36 Q18 70 18 50Z" fill="#ff9a3c"/>' +
+          '<path d="M76 38 Q88 50 76 62 M86 28 Q104 50 86 72" stroke="#ff9a3c" stroke-width="5" fill="none" stroke-linecap="round" opacity="0.7"/></svg></div></div>' +
+        '<div class="nf-row" dir="ltr"></div>' +
+      '</div>';
+    const sp = root.querySelector('.nf-spino');
+    sp.innerHTML = dinoById('spino').draw();
+    return { stage: root.querySelector('.nf-stage'), row: root.querySelector('.nf-row'), bubble: root.querySelector('.nf-bubble'), stones: [] };
+  }
+  function paintStones() {
+    let h = '';
+    for (let i = 0; i < 4; i++) {
+      h += '<div class="nf-stone" data-c="' + COLORS[i] + '" data-i="' + i + '" data-n="' + options[i] + '"><span class="nf-sn">' + options[i] + '</span></div>';
+    }
+    els.row.innerHTML = h;
+    els.stones = Array.prototype.slice.call(els.row.children);
+  }
+
+  /* ---------- a round ---------- */
+  function drawTarget() {
+    const ts = rg.targets.length > 1 ? rg.targets.filter((n) => n !== prevTarget) : rg.targets;
+    return ts[Math.floor(Math.random() * ts.length)];
+  }
+  /* New round: state only plus the stones. Returns what was drawn (the check uses it without waiting for audio). */
+  function nextRound() {
+    round++; clearTimers(false); cancel(nudgeT);
+    rg = rangesFor(readHeard());
+    target = drawTarget(); prevTarget = target;
+    options = optionsFor(target, rg.lo, rg.top, level(), Math.random);
+    missed = false; phase = 'ask';
+    if (els) { paintStones(); els.stage.classList.remove('nf-won'); }
+    return { target: target, options: options.slice() };
+  }
+  function ask() {
+    say('nf_where', false);
+    say('count_' + target, true);
+    armNudge();
+  }
+  function newRound() { nextRound(); tone(523, 0, 0.18, { f1: 784, g: 0.06 }); ask(); }
+  function rightStone() { return els && els.stones[options.indexOf(target)]; }
+
+  function won(idx) {
+    phase = 'won';
+    cancel(nudgeT);
+    const st = els.stones[idx];
+    st.classList.remove('nf-hint');
+    els.stones.forEach((s) => s.classList.remove('nf-hint'));
+    blip(st, 'nf-hop', 560);
+    const pic = document.createElement('div');
+    pic.className = 'nf-pic nf-pos' + idx;
+    pic.innerHTML = tensPictureSVG(target);
+    st.appendChild(pic);
+    els.stage.classList.add('nf-won');
+    try { sndYes(); } catch (e) { /* ignore */ }
+    /* The next round follows the END of the cheer, like math's: the number and a cheer run 1.5 to 3.4 s, and
+       the next question is said unqueued, so a fixed pause cut the cheer mid-word in almost every round. Two
+       things must both be true before it comes - the cheer has ended (and 400 ms more), and WON_PAUSE has
+       passed, so a short number and a short cheer still leave her two seconds with the picture. A safety timer
+       moves on if the voice never reports an end; the latch makes sure only one of them starts the round. */
+    let voiceDone = false, floorDone = false, moved = false;
+    const go = (force) => {
+      if (moved || phase !== 'won' || !(force || (voiceDone && floorDone))) return;
+      moved = true;
+      newRound();
+    };
+    say('count_' + target, false, () => say(cheerKey(), true, () => later(400, () => { voiceDone = true; go(); })));
+    later(WON_PAUSE, () => { floorDone = true; go(); });
+    later(WON_SAFETY, () => go(true));
+    const r = st.getBoundingClientRect();
+    burst(r.left + r.width / 2, r.top, ['#ffd400', '#2a62ff', '#e8242b', '#1fb34a', '#ffffff'], reduce ? 10 : 28);
+    if (!missed) {
+      const k = rg.key;
+      firsts[k]++;
+      if (firsts[k] >= LEVEL_UP && levels[k] < MAXLEVEL) { levels[k]++; firsts[k] = 0; }
+      writeSave(levels, firsts);
+    }
+  }
+  function wrong(idx) {
+    missed = true;
+    blip(els.stones[idx], 'nf-wob', 600);
+    tone(262, 0, 0.18, { type: 'triangle', g: 0.07 });
+    const r = rightStone();
+    if (r) r.classList.add('nf-hint');
+    say('count_' + target, false);
+    armNudge();
+  }
+  function press(idx) {
+    /* while the opening line plays there are no stones yet, so the bubble answers the press instead */
+    if (els.stones[idx]) blip(els.stones[idx], 'nf-down', 190); else blip(els.bubble, 'nf-poke', 300);
+    /* intro, or the won pause: nothing to answer yet - but the press still gets a sound as well as a picture, within 100 ms like every press */
+    if (phase !== 'ask') { tone(NOTE[idx], 0, 0.12, { type: 'sine', g: 0.04 }); return; }
+    if (options[idx] === target) won(idx);
+    else wrong(idx);
+  }
+  function armNudge() {
+    cancel(nudgeT);
+    nudgeT = later(IDLE, () => {
+      if (phase !== 'ask') return;
+      missed = true;                               /* she has been shown the answer: this round is not first-try any more */
+      const r = rightStone();
+      if (r) r.classList.add('nf-hint');
+      say('nf_where', false);
+      say('count_' + target, true);
+      armNudge();
+    });
+  }
+
+  /* ---------- module API ---------- */
+  function start() {
+    const root = document.getElementById('nf-root');
+    if (!root) return;
+    if (alive) stop();
+    root.hidden = false;
+    const s = readSave();
+    levels = s.levels; firsts = s.firsts; prevTarget = 0;
+    rg = rangesFor(readHeard());
+    alive = true; paused = false; lastPress = 0; deferred = []; round++; log = []; phase = 'intro';
+    els = build(root);
+    options = []; target = 0;
+    say('nf_start', false, newRound);
+  }
+  function stop() {
+    const was = alive;
+    alive = false; paused = false; round++;
+    clearTimers(true); deferred = []; nudgeT = null; speechSeq++;
+    if (was) { try { stopSpeech(); } catch (e) { /* ignore */ } try { stopMusic(); } catch (e) { /* ignore */ } try { clearFx(); } catch (e) { /* ignore */ } }
+    const root = document.getElementById('nf-root');
+    if (root) root.innerHTML = '';
+    els = null;
+  }
+  function pause() {
+    if (!alive || paused) return false;
+    paused = true;
+    const now = performance.now();
+    timers.forEach(t => { clearTimeout(t.h); t.left = Math.max(0, t.due - now); });
+    try { stopSpeech(); } catch (e) { /* ignore */ }
+    if (els) els.stage.classList.add('nf-paused');
+    return true;
+  }
+  function resume() {
+    if (!alive || !paused) return;
+    paused = false;
+    if (els) els.stage.classList.remove('nf-paused');
+    timers.forEach(arm);
+    const d = deferred; deferred = [];
+    d.forEach(p => { if (alive && p[0] === round) p[1](); });
+  }
+  function keydown(e) {
+    if (!alive) return;
+    if (e.code === 'Escape') return;                 /* the hub owns Esc; never prevented here */
+    const idx = KEYMAP[e.code];
+    if (idx === undefined || e.ctrlKey || e.metaKey || e.altKey) return;
+    e.preventDefault();
+    if (e.repeat) return;
+    const now = performance.now();
+    if (now - lastPress < 150) return;               /* throttle */
+    lastPress = now;
+    ensureAudio();
+    if (paused || !els) return;
+    press(idx);
+  }
+  function keyup(e) { if (alive && KEYMAP[e.code] !== undefined) e.preventDefault(); }
+
+  return { start: start, stop: stop, pause: pause, resume: resume, keydown: keydown, keyup: keyup,
+    _: { SAVE: SAVE, LEVEL_UP: LEVEL_UP, level: level, firsts: () => firsts[rg.key], levels: () => Object.assign({}, levels),
+         target: () => target, options: () => options.slice(), phase: () => phase, said: () => log.map(x => ({ k: x.k, q: x.q })),
+         ranges: () => ({ key: rg.key, lo: rg.lo, hi: rg.hi, top: rg.top, targets: rg.targets.slice() }),
+         optionsFor: optionsFor, nextRound: nextRound, setLevel: (n) => { levels[rg.key] = clampLevel(n); } } };
+})();
+</script>
+<!-- <<< numfind:js -->
+<!-- >>> numpath:js - folded in by tools/fold-numpath.js; edit games/numpath/game.js and re-run the tool, never this block -->
+<script>
+/* ===== שביל המספרים - games/numpath/game.js, folded in verbatim ===== */
+'use strict';
+/* =====================================================================
+   "שביל המספרים" - the number path  (slug numpath, global ZoeyNumPath, CSS prefix np-)
+
+   WHAT IT IS FOR. Counting to ten is a ladder she has; counting to fifty is the same ladder with a
+   thing she has not met: after ten the numbers keep going, and they go in tens. Spino walks a row
+   of stepping stones from 1. The screen shows one decade (ten stones) at a time, a big numeral and
+   the numeral drawn as a quantity - full tens and loose ones - so "twenty-three" is seen as two
+   tens and three. Every multiple of ten is a flag.
+
+   HOW IT PLAYS. Blue, yellow and red all do the same thing: step one stone on, and the number is
+   said. Green jumps to the next flag and says the flag's number. At the end of the path any press
+   finishes the walk, and the path grows by ten (up to fifty) for the next time. Nothing is ever
+   lost: the length of the path, the furthest she has been and the numbers she has HEARD are saved
+   and only ever grow.
+
+   HEARD IS WHAT THE FINDER MAY ASK. "איפה המספר?" asks only numbers she has met, and the furthest
+   stone is not that: a jump from 13 to 20 goes past 14..19 without a word. So the save keeps
+   `heard`, the numbers whose count_N was said to her - a stone she stepped onto, or the flag she
+   jumped to (numPathHeard() in zoey-abc.js reads it, for both games).
+
+   NUMBERS NEVER QUEUE. The clip she hears belongs to the stone that is lit NOW. Twelve fast
+   presses give twelve highlights and a voice that says the latest number, never a queue of old ones.
+
+   RECORDING SCRIPT - the PH keys this game adds (key : text, full nikud)
+     np_start  : בּוֹאִי נֵלֵךְ בִּשְׁבִיל הַמִּסְפָּרִים!
+     np_press  : לַחֲצִי כְּדֵי לָלֶכֶת!
+     np_more   : עֶשֶׂר, וְעוֹד!
+     np_jump   : קוֹפְצִים לַדֶּגֶל הַבָּא!
+     np_end    : הִגַּעְנוּ לְסוֹף הַשְּׁבִיל!
+     np_longer : הַשְּׁבִיל גָּדַל!
+   The numbers are count_1 ... count_50: 1..10 are recorded, 11..50 come from zoey-abc.js and are
+   recorded with this game's batch (all of them are, 2026-11-07). say() still speaks a key only
+   once its clip exists - the male machine voice must never fill in.
+   ===================================================================== */
+window.ZoeyNumPath = (function () {
+  const KEYMAP = { KeyS: 0, KeyG: 1, KeyK: 2, Quote: 3 };      /* blue, yellow, red, green: left -> right */
+  const NOTE = [392, 440, 494, 587];
+  const SAVE = 'zoey-numpath', MINLEN = 20, MAXLEN = 50;
+
+  registerNumberPhrases();
+  PH.np_start = 'בּוֹאִי נֵלֵךְ בִּשְׁבִיל הַמִּסְפָּרִים!';
+  PH.np_press = 'לַחֲצִי כְּדֵי לָלֶכֶת!';
+  PH.np_more = 'עֶשֶׂר, וְעוֹד!';
+  PH.np_jump = 'קוֹפְצִים לַדֶּגֶל הַבָּא!';
+  PH.np_end = 'הִגַּעְנוּ לְסוֹף הַשְּׁבִיל!';
+  PH.np_longer = 'הַשְּׁבִיל גָּדַל!';
+
+  /* ---------- the save: { len, seen, heard }, all three only ever grow ---------- */
+  function clampLen(n) {
+    n = Math.floor(+n / 10) * 10;
+    if (!(n >= MINLEN)) return MINLEN;
+    return Math.min(MAXLEN, n);
+  }
+  function clampSeen(n) { n = Math.floor(+n); return n >= 0 ? Math.min(50, n) : 0; }
+  function readSave() {
+    let o = null;
+    try { o = JSON.parse(window.localStorage.getItem(SAVE) || 'null'); } catch (e) { o = null; }
+    if (!o || typeof o !== 'object') o = {};
+    return { len: clampLen(o.len), seen: clampSeen(o.seen), heard: numPathHeard(o) };
+  }
+  /* every write merges toward MORE: the longer path, the further stone, and every number heard here or in the stored
+     save. Returns what is stored, so the game's own copy can never be behind the save. */
+  function writeSave(len, seen, heardNow) {
+    const s = readSave();
+    const h = numPathHeard({ heard: s.heard.concat(heardNow || []) });
+    try { window.localStorage.setItem(SAVE, JSON.stringify({ len: Math.max(s.len, clampLen(len)), seen: Math.max(s.seen, clampSeen(seen)), heard: h })); } catch (e) { /* ignore */ }
+    return h;
+  }
+
+  /* ---------- state ---------- */
+  let alive = false, paused = false;
+  let round = 0, phase = 'walk';
+  let at = 1, len = MINLEN, seen = 0, heard = [], moreSaid = false, jumpSaid = false, lastPress = 0, speechSeq = 0, shownDecade = 0;
+  let timers = [], deferred = [], nudgeT = null, log = [];
+  let els = null;
+
+  /* ---------- timers: one array, round-scoped, pausable, all cleared by stop() ---------- */
+  function arm(t) { t.due = performance.now() + t.left; t.h = setTimeout(t.run, t.left); }
+  function later(ms, fn, keep) {
+    const t = { left: ms, due: 0, h: 0, rd: round, keep: !!keep };
+    t.run = function () {
+      timers = timers.filter(x => x !== t);
+      if (!alive || (!t.keep && t.rd !== round)) return;
+      fn();
+    };
+    timers.push(t); if (!paused) arm(t);
+    return t;
+  }
+  function cancel(t) { if (!t) return; clearTimeout(t.h); timers = timers.filter(x => x !== t); }
+  function clearTimers(all) {
+    timers = timers.filter(t => { if (all || !t.keep) { clearTimeout(t.h); return false; } return true; });
+  }
+  /* Every line is logged (the check reads the log), but only a recorded one is spoken: speak() falls
+     through to speechSynthesis for a key with no clip, which on Windows is the male voice. */
+  function say(key, queue, then) {
+    const s = ++speechSeq, rd = round;
+    log.push({ k: key, q: !!queue });
+    const fin = then ? function () {
+      if (!alive || rd !== round || s !== speechSeq) return;
+      if (paused) { deferred.push([rd, then]); return; }
+      then();
+    } : undefined;
+    /* an unrecorded line is silent, but a line that is not queued still CUTS what is playing: stepping from 10 to 11 must not leave count_10 talking over stone 11 */
+    if (!VOICE_CLIPS[key]) { if (!queue) { try { stopSpeech(); } catch (e) { /* ignore */ } } if (fin) later(120, fin, true); return; }
+    speak(key, queue, fin);
+  }
+  function blip(el, cls, ms) {
+    if (!el) return;
+    el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+    later(ms, () => el.classList.remove(cls), true);
+  }
+
+  /* ---------- DOM ---------- */
+  /* Three footprints (a step) and a flag (jump to the next one). The three are deliberately alike:
+     on the keypad blue, yellow and red all step, so on the screen they must all look like stepping. */
+  const footSVG =
+    '<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">' +
+      '<ellipse cx="50" cy="66" rx="19" ry="22" fill="#fff" opacity="0.95"/>' +
+      '<circle cx="28" cy="34" r="8" fill="#fff" opacity="0.95"/><circle cx="50" cy="26" r="9" fill="#fff" opacity="0.95"/><circle cx="72" cy="34" r="8" fill="#fff" opacity="0.95"/>' +
+    '</svg>';
+  const flagSVG =
+    '<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">' +
+      '<rect x="28" y="16" width="9" height="70" rx="4" fill="#fff"/><path d="M37 18 L78 34 L37 52 Z" fill="#fff"/>' +
+    '</svg>';
+  const miniFlag =
+    '<svg class="np-fsvg" viewBox="0 0 40 50" aria-hidden="true" focusable="false"><rect x="8" y="4" width="4" height="42" rx="2" fill="#6b4a2f"/><path d="M12 5 L34 14 L12 24 Z" fill="#e8242b"/></svg>';
+
+  function flagStrip() {
+    let flags = '';
+    for (let i = 1; i <= len / 10; i++) flags += '<div class="np-fl" data-d="' + i + '">' + miniFlag + '<b>' + (i * 10) + '</b></div>';
+    return flags;
+  }
+  function build(root) {
+    root.innerHTML =
+      '<div class="np-stage">' +
+        '<div class="np-scene" aria-hidden="true">' + sceneSVG('np') + '</div>' +
+        '<div class="np-flags" aria-hidden="true">' + flagStrip() + '</div>' +
+        '<div class="np-path" dir="ltr"></div>' +
+        '<div class="np-info" aria-hidden="true">' +
+          '<div class="np-num"></div>' +
+          '<div class="np-pic"></div>' +
+        '</div>' +
+        '<div class="np-row" dir="ltr">' +
+          '<div class="np-btn" data-c="blue">' + footSVG + '</div>' +
+          '<div class="np-btn" data-c="yellow">' + footSVG + '</div>' +
+          '<div class="np-btn" data-c="red">' + footSVG + '</div>' +
+          '<div class="np-btn np-jump" data-c="green">' + flagSVG + '</div>' +
+        '</div>' +
+      '</div>';
+    const q = (s) => root.querySelector(s);
+    const spino = document.createElement('div');
+    spino.className = 'np-spino';
+    spino.innerHTML = dinoById('spino').draw();
+    return { stage: q('.np-stage'), path: q('.np-path'), num: q('.np-num'), pic: q('.np-pic'), flags: q('.np-flags'),
+      spino: spino, btns: Array.prototype.slice.call(root.querySelectorAll('.np-btn')) };
+  }
+  const decadeOf = (n) => Math.ceil(n / 10);
+
+  /* The ten stones of the decade she is standing in. Rebuilt only when the decade changes. */
+  function buildStones(d) {
+    shownDecade = d;
+    let h = '';
+    for (let i = 1; i <= 10; i++) {
+      const n = (d - 1) * 10 + i;
+      h += '<div class="np-stone' + (i === 10 ? ' np-flagstone' : '') + '" data-n="' + n + '">' +
+        (i === 10 ? '<span class="np-pole">' + miniFlag + '</span>' : '') + '<span class="np-sn">' + n + '</span></div>';
+    }
+    els.path.innerHTML = h;
+  }
+  function paint() {
+    if (decadeOf(at) !== shownDecade) buildStones(decadeOf(at));
+    Array.prototype.forEach.call(els.path.children, (s) => {
+      const n = +s.getAttribute('data-n');
+      s.classList.toggle('np-lit', n <= at);
+      s.classList.toggle('np-here', n === at);
+      if (n === at) s.appendChild(els.spino);
+    });
+    els.num.textContent = String(at);
+    els.pic.innerHTML = tensPictureSVG(at);
+    Array.prototype.forEach.call(els.flags.children, (f) => f.classList.toggle('np-got', +f.getAttribute('data-d') * 10 <= at));
+  }
+
+  /* ---------- the walk ---------- */
+  /* `at` is said to her right after this (a step says its number, a jump its flag's), so it is heard */
+  function moved(idx) {
+    seen = Math.max(seen, at);
+    heard = writeSave(len, seen, heard.concat([at]));
+    paint();
+    blip(els.num, 'np-pop', 380);
+    const here = els.path.querySelector('.np-here');
+    if (here) blip(here, 'np-hop', 520);
+    tone(NOTE[idx] * (1 + (at % 10) * 0.04), 0, 0.2, { type: 'triangle', g: 0.13 });
+    tone(392 + (at % 10) * 44, 0.05, 0.3, { g: 0.06 });
+  }
+  function step(idx) {
+    at++;
+    moved(idx);
+    say('count_' + at, false);                    /* never queued: the clip belongs to the stone lit NOW */
+    if (at === 11 && !moreSaid) { moreSaid = true; say('np_more', true); }
+  }
+  /* The flag's number is the fresh line, never queued: it is where she has landed, and a second green inside a
+     queued line used to drop it - fast greens then never once said a number. "To the next flag!" follows it only
+     on the first jump of a walk, where it teaches what green does. */
+  function jump(idx) {
+    const to = (Math.floor(at / 10) + 1) * 10;
+    at = Math.min(to, len);
+    moved(idx);
+    say('count_' + at, false);
+    if (!jumpSaid) { jumpSaid = true; say('np_jump', true); }
+  }
+  function endWalk(idx) {
+    phase = 'end';
+    cancel(nudgeT);
+    const grew = len < MAXLEN;
+    tone(NOTE[idx], 0, 0.2, { type: 'triangle', g: 0.13 });
+    say('np_end', false);
+    if (grew) { len += 10; heard = writeSave(len, seen, heard); }
+    say(cheerKey(), true);
+    if (grew) say('np_longer', true);
+    const r = els.path.getBoundingClientRect();
+    burst(r.left + r.width / 2, r.top + r.height * 0.4, ['#ffd400', '#2a62ff', '#e8242b', '#1fb34a', '#ffffff'], reduce ? 14 : 36);
+    [523, 659, 784, 1047].forEach((f, i) => later(i * 110, () => tone(f, 0, 0.34, { g: 0.09 })));
+    els.stage.classList.add('np-done');
+    later(2500, restart);
+  }
+  function restart() {
+    if (!alive) return;
+    round++; clearTimers(false); cancel(nudgeT);
+    phase = 'walk'; at = 1; moreSaid = false; jumpSaid = false; shownDecade = 0;
+    els.stage.classList.remove('np-done');
+    els.flags.innerHTML = flagStrip();                /* the path may be longer now */
+    paint();
+    tone(523, 0, 0.2, { f1: 784, g: 0.07 });
+    armNudge();
+  }
+
+  function press(idx) {
+    blip(els.btns[idx], 'np-down', 190);
+    /* the walk is finishing and needs no help - but the press still gets a sound as well as the dip, within 100 ms like every press */
+    if (phase !== 'walk') { tone(NOTE[idx], 0, 0.12, { type: 'sine', g: 0.04 }); return; }
+    cancel(nudgeT);
+    if (at >= len) endWalk(idx);
+    else if (idx === 3) jump(idx);
+    else step(idx);
+    armNudge();
+  }
+  function wave() { els.btns.forEach((b, i) => later(i * 150, () => { tone(NOTE[i], 0, 0.2, { type: 'sine', g: 0.06 }); blip(b, 'np-wave', 450); })); }
+  function armNudge() {
+    cancel(nudgeT);
+    nudgeT = later(9000, () => {
+      if (phase !== 'walk') return;
+      say('np_press', false);
+      wave();
+      armNudge();
+    });
+  }
+
+  /* ---------- module API ---------- */
+  function start() {
+    const root = document.getElementById('np-root');
+    if (!root) return;
+    if (alive) stop();
+    root.hidden = false;
+    const s = readSave();
+    len = s.len; seen = s.seen; heard = s.heard;
+    alive = true; paused = false; lastPress = 0; deferred = []; round++; log = [];
+    phase = 'walk'; at = 1; moreSaid = false; jumpSaid = false; shownDecade = 0;
+    els = build(root);
+    paint();
+    say('np_start', false);
+    later(900, wave);
+    armNudge();
+  }
+  function stop() {
+    const was = alive;
+    alive = false; paused = false; round++;
+    clearTimers(true); deferred = []; nudgeT = null; speechSeq++;
+    if (was) { try { stopSpeech(); } catch (e) { /* ignore */ } try { stopMusic(); } catch (e) { /* ignore */ } try { clearFx(); } catch (e) { /* ignore */ } }
+    const root = document.getElementById('np-root');
+    if (root) root.innerHTML = '';
+    els = null;
+  }
+  function pause() {
+    if (!alive || paused) return false;
+    paused = true;
+    const now = performance.now();
+    timers.forEach(t => { clearTimeout(t.h); t.left = Math.max(0, t.due - now); });
+    try { stopSpeech(); } catch (e) { /* ignore */ }
+    if (els) els.stage.classList.add('np-paused');
+    return true;
+  }
+  function resume() {
+    if (!alive || !paused) return;
+    paused = false;
+    if (els) els.stage.classList.remove('np-paused');
+    timers.forEach(arm);
+    const d = deferred; deferred = [];
+    d.forEach(p => { if (alive && p[0] === round) p[1](); });
+  }
+  function keydown(e) {
+    if (!alive) return;
+    if (e.code === 'Escape') return;                 /* the hub owns Esc; never prevented here */
+    const idx = KEYMAP[e.code];
+    if (idx === undefined || e.ctrlKey || e.metaKey || e.altKey) return;
+    e.preventDefault();
+    if (e.repeat) return;
+    const now = performance.now();
+    if (now - lastPress < 150) return;               /* throttle */
+    lastPress = now;
+    ensureAudio();
+    if (paused || !els) return;
+    press(idx);
+  }
+  function keyup(e) { if (alive && KEYMAP[e.code] !== undefined) e.preventDefault(); }
+
+  return { start: start, stop: stop, pause: pause, resume: resume, keydown: keydown, keyup: keyup,
+    _: { SAVE: SAVE, at: () => at, len: () => len, seen: () => seen, heard: () => heard.slice(), phase: () => phase,
+         said: () => log.map(x => ({ k: x.k, q: x.q })), readSave: readSave } };
+})();
+</script>
+<!-- <<< numpath:js -->
 <!-- >>> pop:js - folded in by tools/fold-pop.js; edit games/pop/game.js and re-run the tool, never this block -->
 <script>
 /* ===== מי קופץ? - games/pop/game.js, folded in verbatim ===== */
@@ -17513,6 +18512,35 @@ if (window.DinoAnim) DinoAnim.auto(document);
     return '<span class="pk-duo">' + prop(POPPIC) + dinoPic('compsy') + '</span>';
   }
 /* <<< pop:card */
+/* >>> numpath:card - tools/fold-numpath.js */
+  /* three stepping stones reading 18, 19, 20 - and a flag on the last, because a multiple of ten is a flag */
+  const NPPIC = '<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">' +
+    '<g stroke="#fff" stroke-width="3">' +
+    '<ellipse cx="17" cy="84" rx="16" ry="13" fill="#7a8fa6"/>' +
+    '<ellipse cx="50" cy="66" rx="16" ry="13" fill="#7a8fa6"/>' +
+    '<ellipse cx="83" cy="48" rx="16" ry="13" fill="#ff9a3c"/></g>' +
+    '<g font-size="18" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">' +
+    '<text x="17" y="85">18</text><text x="50" y="67">19</text><text x="83" y="49">20</text></g>' +
+    '<path d="M83 36 L83 6" stroke="#5b4636" stroke-width="4" stroke-linecap="round"/>' +
+    '<path d="M85 6 L99 12 L85 18 Z" fill="#e5484d"/></svg>';
+  function artNumPath() { /* a walk along stones, and a flag at the end */
+    return '<span class="pk-duo">' + prop(NPPIC) + dinoPic('spino') + '</span>';
+  }
+/* <<< numpath:card */
+/* >>> numfind:card - tools/fold-numfind.js */
+  /* four stones in the keypad's colours wearing 12, 23, 32 and 40 - find the one she was asked for */
+  const NFPIC = '<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">' +
+    '<g stroke="#fff" stroke-width="3">' +
+    '<ellipse cx="27" cy="30" rx="22" ry="16" fill="var(--blue)"/>' +
+    '<ellipse cx="73" cy="30" rx="22" ry="16" fill="var(--yellow)"/>' +
+    '<ellipse cx="27" cy="68" rx="22" ry="16" fill="var(--red)"/>' +
+    '<ellipse cx="73" cy="68" rx="22" ry="16" fill="var(--green)"/></g>' +
+    '<g font-size="20" font-weight="700" fill="#fff" stroke="#22303a" stroke-width="3" paint-order="stroke" text-anchor="middle" dominant-baseline="central">' +
+    '<text x="27" y="31">12</text><text x="73" y="31">23</text><text x="27" y="69">32</text><text x="73" y="69">40</text></g></svg>';
+  function artNumFind() { /* four numerals, one of them is the one */
+    return '<span class="pk-duo">' + prop(NFPIC) + dinoPic('spino') + '</span>';
+  }
+/* <<< numfind:card */
 
   /* ---------- the fifteen games ----------
      id      the name launch()/gameOf() use and the localStorage "recently played" key
@@ -17552,6 +18580,10 @@ if (window.DinoAnim) DinoAnim.auto(document);
     { id: 'gone', global: 'ZoeyGone', root: 'gn-root', titleHe: 'מי נעלם?', card: artGone }/* <<< gone:row */
     /* >>> pop:row - tools/fold-pop.js */,
     { id: 'pop', global: 'ZoeyPop', root: 'pp-root', titleHe: 'מי קופץ?', card: artPop }/* <<< pop:row */
+    /* >>> numpath:row - tools/fold-numpath.js */,
+    { id: 'numpath', global: 'ZoeyNumPath', root: 'np-root', titleHe: 'שביל המספרים', card: artNumPath }/* <<< numpath:row */
+    /* >>> numfind:row - tools/fold-numfind.js */,
+    { id: 'numfind', global: 'ZoeyNumFind', root: 'nf-root', titleHe: 'איפה המספר?', card: artNumFind }/* <<< numfind:row */
   ];
   const entryOf = (id) => { for (let i = 0; i < GAMES.length; i++) { if (GAMES[i].id === id) return GAMES[i]; } return null; };
   const gameOf = (which) => { const e = entryOf(which); return e ? (window[e.global] || null) : null; };
