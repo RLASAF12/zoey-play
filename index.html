@@ -7075,15 +7075,18 @@ window.__zn = { play: function (lv) { level = lv || 1; stars = 0; setMode('play'
    and changes nothing else - no buzzer, and the light waits. A keypad button still advances it.
    THE LADDER picks between the two when a song is chosen: follow iff the screen is the control
    (data-touch="on"), she has finished this song at least once, and it uses no more keys than her
-   level. Finishing a follow song that uses as many keys as her level moves the level up a rung of
-   LEVELS. Kept in localStorage 'zoey-piano' = { v: 1, done: { <songId>: times }, level }, and the
-   level only ever goes up.
-   THE APPLAUSE: after the last note she is cheered and the whole song plays back to her, every
-   dinosaur hopping on its own note; then the shelf. For GRACE ms after the last note a press only
-   sings a soft note (she is still pressing by momentum, and must still hear her song); after that
-   any press - a button or a finger - skips it straight to the shelf, silences the cheer and starts
-   nothing, so a child still pressing cannot start the card under her button. While a song plays its keys are tuned by the song (the birthday
-   song's pink key is B flat); in every other phase they are KEYS, so a retune never outlives it.
+   level - the stored level alone. Finishing a follow song that uses as many keys as her level
+   moves the level up ONE rung of LEVELS (3, 4, 5, 6, 8); every song above it stays magic. Kept in
+   localStorage 'zoey-piano' = { v: 1, done: { <songId>: times }, level }, and the level only ever
+   goes up.
+   THE APPLAUSE: after the last note she is cheered (the praise line), and then the whole song plays
+   back to her, every dinosaur hopping on its own note; then the shelf. Through the praise line and
+   for GRACE ms after the playback's first note a press only sings a soft note (she is still
+   pressing by momentum, and must still hear her song); after that any press - a button or a
+   finger - skips it straight to the shelf, silences the narrator and starts nothing, so a child
+   still pressing cannot start the card under her button.
+   While a song plays its keys are tuned by the song (the birthday song's pink key is B flat); in
+   every other phase they are KEYS, so a retune never outlives it.
 
    The tap layer in the core turns a finger on the SHELF into the keypress (a dir="ltr" row of
    four), and declines a finger on the KEYS (a row of eight), so the keys' own pointerdown runs.
@@ -7143,7 +7146,7 @@ window.__zn = { play: function (lv) { level = lv || 1; stars = 0; setMode('play'
   const IDLE = 10000;            /* ms of nothing before a nudge */
   const FOLLOW_IDLE = 8000;      /* ms of nothing in a follow song before the lit key sings by itself */
   const CHEER_GAP = 900;         /* ms the cheer rings before the applause may begin, if the line is shorter */
-  const GRACE = 1500;            /* ms after her last note when a press cannot skip the applause: a three-year-old keeps pressing by momentum, and she should still hear her song played back */
+  const GRACE = 1500;            /* ms after the playback's FIRST note in which a press still cannot skip the applause (from her last note to that first note it cannot either): a three-year-old keeps pressing by momentum, and she should still hear her song played back */
   const PER_PAGE = 3;            /* cards on a page; the fourth slot is the green arrow */
   const IDLE_RUN = [0, 1, 2, 4]; /* touch mode, idle on the shelf: C D E G sing softly by themselves */
   const KEY_FREQ = KEYS.map((k) => SB.freqOf(k.note));
@@ -7218,6 +7221,7 @@ window.__zn = { play: function (lv) { level = lv || 1; stars = 0; setMode('play'
   let songFreq = null;           /* the eight keys as THIS song tunes them, only while phase is song */
   let apTok = 0;                 /* bumped to cancel an applause: everything it scheduled checks it */
   let graceUntil = 0;            /* game-clock time until which a press in the applause only sings softly */
+  let playAt = -1;               /* game-clock time the applause's playback sang its first note; -1 until it has */
   let introSaid = {}, freeSaid = false, followSaid = false;   /* once a session, once a session, once a song */
   let picked = null;             /* what useSongs() was given: null | 'all' | an array */
   let shelfSongs = [];           /* the song records on the shelf, in order */
@@ -7357,12 +7361,14 @@ window.__zn = { play: function (lv) { level = lv || 1; stars = 0; setMode('play'
     }
     try { window.localStorage.setItem(SAVE, JSON.stringify({ v: 1, done: done, level: level })); } catch (e) { /* ignore */ }
   }
-  /* how many keys she can follow: her level, or more if she has already finished a song that uses
-     more (the fewest keys among the shelf songs she has finished) */
+  /* How many keys she can follow: her level, and nothing else. It only ever goes up (save() merges
+     toward more), one rung of LEVELS per follow song finished at it (finish()), so a song above it
+     stays magic however often she has finished it - magic is the safe way to be wrong.
+     WAS: max(level, the fewest keys among the shelf songs she had finished), so one magic finish of
+     the eight-key birthday song opened follow-the-light on all eight keys and its follow finish set
+     the level 3 -> 8; and finishing a smaller song afterwards could take it away again. */
   function effLevel() {
-    let low = Infinity;
-    shelfSongs.forEach((s) => { if ((done[s.id] || 0) >= 1) low = Math.min(low, SB.keysOf(s)); });
-    return low === Infinity ? level : Math.max(level, low);
+    return Math.min(TOP, Math.max(LEVELS[0], level));
   }
   /* the mode a song gets when none is asked for. The keypad always gets magic: four buttons cannot
      be eight keys, and with the keypad in charge the screen is not a control at all. */
@@ -7451,12 +7457,14 @@ window.__zn = { play: function (lv) { level = lv || 1; stars = 0; setMode('play'
     else setLit();
   }
   /* The last note: counted, saved, the ladder climbed if it was earned - and from this moment the
-     phase is applause, so a press by momentum skips to the shelf instead of starting a card. The
-     cheer comes once the last note has been heard; the playback once the line is over and the cheer
-     has rung (CHEER_GAP), whichever is later. */
+     phase is applause, so a press by momentum cannot start a card. The cheer comes once the last
+     note has been heard; the playback once the line is over and the cheer has rung (CHEER_GAP),
+     whichever is later. Until GRACE after the playback's first note a press only sings softly. */
   function finish() {
     const s = song;
     done[s.id] = (done[s.id] || 0) + 1;
+    /* a follow song at (or, forced, above) her level climbs exactly ONE rung - the next entry of
+       LEVELS above the level she is on - and a song below her level climbs nothing */
     if (mode === 'follow') {
       const eff = effLevel();
       if (parsed.keys.length >= eff) {
@@ -7466,7 +7474,12 @@ window.__zn = { play: function (lv) { level = lv || 1; stars = 0; setMode('play'
     }
     save();
     phase = 'applause';
-    graceUntil = gt() + GRACE;
+    /* WAS: gt() + GRACE, from her last note - but the praise line comes first, and once it was
+       recorded the playback began ~2.4 s after her last note, so the grace was over before the
+       song she was waiting for, a press by momentum skipped it, and the next press started the
+       card under her button. NOW the praise line is all grace; playBack() starts the count. */
+    graceUntil = Infinity;
+    playAt = -1;
     clearHint(); setLit();
     const tok = ++apTok, line = done[s.id] === 1 ? 'bnd_tune' : 'pno_done';
     let wait = 2;
@@ -7479,7 +7492,8 @@ window.__zn = { play: function (lv) { level = lv || 1; stars = 0; setMode('play'
     }, 320);
   }
   /* the applause: the whole song again at BEAT_MS a beat, each note's dinosaur hopping, the bar
-     refilling; then a cheer (the orchestra's own line after a song she followed), then the shelf */
+     refilling; then a cheer (the orchestra's own line after a song she followed), then the shelf.
+     The grace runs out GRACE after its first note: from then on a press skips. */
   function playBack(tok) {
     const notes = parsed.notes, n = notes.length;
     progEl.style.width = '0%';
@@ -7487,6 +7501,7 @@ window.__zn = { play: function (lv) { level = lv || 1; stars = 0; setMode('play'
     notes.forEach((note, i) => {
       later(() => {
         if (tok !== apTok) return;
+        if (i === 0) { playAt = gt(); graceUntil = playAt + GRACE; }
         sing(note.key, false, note.freq);
         progEl.style.width = ((i + 1) / n * 100) + '%';
         blip(nowPicEl, 'bnd-beat', 260);
@@ -7498,9 +7513,10 @@ window.__zn = { play: function (lv) { level = lv || 1; stars = 0; setMode('play'
       say(mode === 'follow' ? 'bnd_finale' : cheerKey(), false, () => { if (tok === apTok) home(); });
     }, at);
   }
-  /* A press during the applause. Within GRACE of her last note it sings key k (a finger's own key; for
-     a button or the sky, the song's last note) softly and changes nothing else. After it: straight to
-     the shelf, the cheer silenced so it does not talk over the shelf, and the press chooses nothing. */
+  /* A press during the applause. Within the grace - the praise line, and GRACE after the playback's
+     first note - it sings key k (a finger's own key; for a button or the sky, the song's last note)
+     softly and changes nothing else. After it: straight to the shelf, the narrator silenced so she
+     does not talk over the shelf, and the press chooses nothing. */
   function applausePress(t, k) {
     if (t < graceUntil) { sing(k >= 0 ? k : parsed.notes[parsed.notes.length - 1].key, true); return; }
     apTok++;
@@ -7709,6 +7725,10 @@ window.__zn = { play: function (lv) { level = lv || 1; stars = 0; setMode('play'
     _: {
       state: state, choose: choose, tap: tap, useSongs: useSongs, pic: pic, scheduleSong: scheduleSong,
       shelf: () => shelfSongs.map((s) => s.id),
+      /* the game clock, and when this applause's playback sang its first note (-1 until it has):
+         the grace is counted from that note, so a check waits on it rather than on a fixed sleep */
+      now: gt,
+      playbackAt: () => (phase === 'applause' ? playAt : -1),
       lastSung: () => (sungRec ? { key: sungRec.key, freq: sungRec.freq, soft: sungRec.soft } : null)
     }
   };
