@@ -3812,6 +3812,108 @@ button:focus-visible { outline: 5px solid var(--focus); outline-offset: 4px; bor
   .nf-stone.nf-wob { filter: brightness(0.8); }
 }
 /* <<< numfind:css */
+/* >>> letters:css - games/letters/game.css, folded in verbatim by tools/fold-letters.js; edit the module and re-run the tool, never this block */
+/* ---------- letters (ZoeyHoops, ZoeyFirst, ZoeyNames, .lt-) ---------- */
+/* The shell hides a game that is not the active one with a rule per root id; these three lines live inside
+   this region so that folding the engine in or taking it out is one tool and one block. */
+#lh-root:not([data-on]) { display: none; }
+#lf-root:not([data-on]) { display: none; }
+#ln-root:not([data-on]) { display: none; }
+/* The letters engine (hoops, first, names) - every selector starts with .lt- */
+.lt-stage { position: fixed; inset: 0; z-index: 5; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+  --lt-h: min(19vw, 26vh); --lt-ink: #2b2118; -webkit-user-select: none; user-select: none; touch-action: manipulation; }
+.lt-stage.lt-paused * { animation-play-state: paused !important; }
+.lt-stage [data-c="blue"]   { --c: #2a62ff; --cd: #1233b8; --cl: #9ab6ff; }
+.lt-stage [data-c="yellow"] { --c: #ffd400; --cd: #a88200; --cl: #fff08a; }
+.lt-stage [data-c="red"]    { --c: #e8242b; --cd: #9c1018; --cl: #ff9d9a; }
+.lt-stage [data-c="green"]  { --c: #1fb34a; --cd: #0d7430; --cl: #92e8a8; }
+
+.lt-scene { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.lt-scene svg { width: 100%; height: 100%; display: block; }
+
+/* Everything above the hoops - Spino listening, the picture, the letter, the name. It starts below the parent's
+   exit button (top left, up to 68 px tall on a tablet) and nothing in it is a target. */
+.lt-top { position: relative; z-index: 2; flex: 1 1 0; min-height: 0; width: 100%; box-sizing: border-box; display: flex; align-items: center; justify-content: center;
+  pointer-events: none; margin-top: calc(max(8px, var(--sa-t, 0px)) + 64px); padding: 0 4vw 2vh; }
+/* a press while the opening line plays: there are no hoops yet, so this answers it */
+.lt-top.lt-poke > * { animation: ltPoke 0.3s cubic-bezier(0.3, 1.6, 0.5, 1); }
+
+/* hoops: Spino listening, with a speaking bubble - nothing here is read, it only says "listen" */
+.lt-ask { display: flex; align-items: center; justify-content: center; gap: 3vw; direction: ltr; }
+.lt-spino { height: min(34vh, 38vw); aspect-ratio: 1.15; }
+.lt-spino svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.lt-bubble { width: min(16vh, 18vw); }
+.lt-bubble svg { width: 100%; height: auto; display: block; overflow: visible; animation: ltListen 1.6s ease-in-out infinite alternate; }
+
+/* the picture and, once found, its letter: side by side, the picture on the left and the letter on the right where a
+   Hebrew reader starts; one above the other on a screen held upright */
+.lt-show { display: flex; align-items: center; justify-content: center; gap: 4vw; direction: ltr; max-width: 100%; }
+.lt-show.lt-rise { animation: ltRise 0.45s cubic-bezier(0.3, 1.4, 0.5, 1) both; }
+.lt-pic { flex: none; width: min(40vh, 34vw); height: min(40vh, 34vw); display: flex; align-items: center; justify-content: center; }
+.lt-pic svg, .lt-pic .lt-img { width: 100%; height: 100%; display: block; object-fit: contain; overflow: visible; }
+.lt-pic .lt-img.lt-broken { display: none; }
+
+/* a letter is TEXT in the app's own font, never a picture: crisp at every size and cannot be misspelled */
+.lt-ch, .lt-big, .lt-name { font-family: var(--font, "Varela Round", "Arial Rounded MT Bold", Arial, sans-serif); font-weight: 400; line-height: 1; color: var(--lt-ink); }
+.lt-big { flex: none; box-sizing: border-box; font-size: min(26vh, 22vw); padding: 0.12em 0.22em 0.16em; border-radius: 0.2em; background: #fff;
+  border: 0.06em solid var(--c, #ff9a3c); box-shadow: 0 0.05em 0 var(--cd, #b8621b), 0 0.1em 0.12em rgba(0, 0, 0, 0.25); animation: ltPop 0.5s cubic-bezier(0.3, 1.5, 0.5, 1) both; }
+
+/* names: the name as one letter per span (dir=rtl, so the first letter is on the right), the missing one a dashed box */
+.lt-name { flex: none; display: flex; align-items: center; gap: 0.06em; font-size: min(15vh, 10vw); padding: 0.14em 0.24em; border-radius: 0.2em; background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 0.06em 0.12em rgba(0, 0, 0, 0.22); }
+.lt-name > span { display: inline-flex; align-items: center; justify-content: center; min-width: 0.5em; height: 1.1em; }
+.lt-name > .lt-gap { box-sizing: border-box; width: 0.68em; height: 1.06em; border: 0.05em dashed #ff9a3c; border-radius: 0.14em; background: rgba(255, 154, 60, 0.12);
+  animation: ltWait 1.2s ease-in-out infinite alternate; }
+.lt-name > .lt-gap.lt-filled { border-style: solid; background: #fff4e6; animation: ltPop 0.5s cubic-bezier(0.3, 1.5, 0.5, 1) both; }
+
+/* the four hoops, in keypad order (dir=ltr): a ring in the button's colour, the letter inside */
+.lt-row { position: relative; z-index: 3; flex: none; display: flex; gap: min(3vw, 3vh); justify-content: center; padding: 0 2vw max(4vh, calc(var(--sa-b, 0px) + 12px)); }
+.lt-hoop { position: relative; box-sizing: border-box; width: var(--lt-h); height: var(--lt-h); border-radius: 50%; border: calc(var(--lt-h) * 0.12) solid var(--c);
+  background: radial-gradient(circle at 38% 32%, #fff 0 46%, #f3ede4 100%);
+  box-shadow: inset 0 0 0 calc(var(--lt-h) * 0.022) var(--cd), 0 0 0 calc(var(--lt-h) * 0.022) var(--cd), 0 calc(var(--lt-h) * 0.07) 0 var(--cd),
+    0 calc(var(--lt-h) * 0.14) calc(var(--lt-h) * 0.11) rgba(0, 0, 0, 0.3);
+  display: flex; align-items: center; justify-content: center; }
+.lt-ch { font-size: calc(var(--lt-h) * 0.52); }
+[data-touch="on"] .lt-hoop { min-width: 44px; min-height: 44px; }
+
+.lt-hoop.lt-down { animation: ltDown 0.19s ease-out; }
+.lt-hoop.lt-wob { animation: ltWob 0.6s ease-in-out; }
+.lt-hoop.lt-hint { animation: ltHint 0.9s ease-in-out infinite alternate; }
+.lt-hoop.lt-jump { animation: ltJump 0.6s cubic-bezier(0.3, 1.3, 0.5, 1); }
+/* the other three step back - paler, not see-through, so the scenery does not show through a hoop */
+.lt-stage.lt-won .lt-hoop:not(.lt-jump) { filter: saturate(0.35) brightness(1.08); transform: scale(0.92); transition: transform 0.25s, filter 0.25s; }
+
+@keyframes ltDown { 0% { transform: none; } 40% { transform: translateY(calc(var(--lt-h) * 0.05)) scale(0.94); } 100% { transform: none; } }
+@keyframes ltWob { 0%, 100% { transform: none; } 20% { transform: rotate(-8deg); } 55% { transform: rotate(8deg); } }
+@keyframes ltHint { from { transform: scale(1); filter: brightness(1); } to { transform: scale(1.08); filter: brightness(1.25); } }
+@keyframes ltJump { 0%, 100% { transform: none; } 35% { transform: translateY(-22%) scale(1.08, 0.95); } 70% { transform: translateY(0) scale(0.97, 1.04); } }
+@keyframes ltRise { from { opacity: 0; transform: translateY(18%) scale(0.7); } to { opacity: 1; transform: none; } }
+@keyframes ltPop { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: none; } }
+@keyframes ltListen { from { transform: scale(0.94); } to { transform: scale(1.06); } }
+@keyframes ltPoke { 0%, 100% { transform: none; } 40% { transform: scale(1.12) rotate(-4deg); } }
+@keyframes ltWait { from { opacity: 0.55; } to { opacity: 1; } }
+
+/* held upright (a phone, an iPad on its side): the picture goes above the letter or the name, and the hoops fill the width */
+@media (max-aspect-ratio: 4/5) {
+  .lt-stage { --lt-h: 21.5vw; }
+  .lt-row { gap: 2vw; padding-bottom: max(6vh, calc(var(--sa-b, 0px) + 12px)); }
+  .lt-show { flex-direction: column; gap: 2.5vh; }
+  .lt-pic { width: min(30vh, 62vw); height: min(30vh, 62vw); }
+  .lt-big { font-size: min(17vh, 34vw); }
+  .lt-name { font-size: min(10vh, 15vw); }
+  .lt-spino { height: min(26vh, 50vw); }
+  .lt-bubble { width: min(12vh, 22vw); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lt-hoop.lt-wob, .lt-hoop.lt-hint, .lt-hoop.lt-jump, .lt-hoop.lt-down, .lt-bubble svg, .lt-top.lt-poke > *, .lt-show.lt-rise,
+  .lt-big, .lt-name > .lt-gap, .lt-name > .lt-gap.lt-filled { animation: none; }
+  .lt-top.lt-poke > * { filter: brightness(1.25); }
+  .lt-hoop.lt-hint { box-shadow: 0 calc(var(--lt-h) * 0.07) 0 var(--cd), 0 0 0 calc(var(--lt-h) * 0.07) #fff, 0 0 calc(var(--lt-h) * 0.35) calc(var(--lt-h) * 0.1) var(--cl); }
+  .lt-hoop.lt-wob { filter: brightness(0.8); }
+  .lt-hoop.lt-jump { transform: translateY(-8%); }
+}
+/* <<< letters:css */
 </style>
 
 <div id="zg" dir="rtl" lang="he">
@@ -3976,6 +4078,11 @@ button:focus-visible { outline: 5px solid var(--focus); outline-offset: 4px; bor
   <!-- >>> numfind:root - tools/fold-numfind.js -->
   <div id="nf-root" dir="rtl" lang="he"></div>
   <!-- <<< numfind:root -->
+  <!-- >>> letters:root - tools/fold-letters.js -->
+  <div id="lh-root" dir="rtl" lang="he"></div>
+  <div id="lf-root" dir="rtl" lang="he"></div>
+  <div id="ln-root" dir="rtl" lang="he"></div>
+  <!-- <<< letters:root -->
 
   <button type="button" id="btnExit" class="exitBtn">יציאה</button>
 
@@ -4993,6 +5100,73 @@ const VOICE_CLIPS = {
   np_press: "voice/numbers/np_press.mp3",
   np_start: "voice/numbers/np_start.mp3",
   /* <<< numbers:clips */
+  /* >>> letters:clips - assets/voice/letters/*.mp3, folded in by tools/fold-more-voice.js; never edit this block, re-run the tool */
+  he_n_alef: "voice/letters/he_n_alef.mp3",
+  he_n_ayin: "voice/letters/he_n_ayin.mp3",
+  he_n_bet: "voice/letters/he_n_bet.mp3",
+  he_n_dalet: "voice/letters/he_n_dalet.mp3",
+  he_n_gimel: "voice/letters/he_n_gimel.mp3",
+  he_n_he: "voice/letters/he_n_he.mp3",
+  he_n_het: "voice/letters/he_n_het.mp3",
+  he_n_kaf: "voice/letters/he_n_kaf.mp3",
+  he_n_kaf_f: "voice/letters/he_n_kaf_f.mp3",
+  he_n_lamed: "voice/letters/he_n_lamed.mp3",
+  he_n_mem: "voice/letters/he_n_mem.mp3",
+  he_n_mem_f: "voice/letters/he_n_mem_f.mp3",
+  he_n_nun: "voice/letters/he_n_nun.mp3",
+  he_n_nun_f: "voice/letters/he_n_nun_f.mp3",
+  he_n_pe: "voice/letters/he_n_pe.mp3",
+  he_n_pe_f: "voice/letters/he_n_pe_f.mp3",
+  he_n_qof: "voice/letters/he_n_qof.mp3",
+  he_n_resh: "voice/letters/he_n_resh.mp3",
+  he_n_samekh: "voice/letters/he_n_samekh.mp3",
+  he_n_shin: "voice/letters/he_n_shin.mp3",
+  he_n_tav: "voice/letters/he_n_tav.mp3",
+  he_n_tet: "voice/letters/he_n_tet.mp3",
+  he_n_tsadi: "voice/letters/he_n_tsadi.mp3",
+  he_n_tsadi_f: "voice/letters/he_n_tsadi_f.mp3",
+  he_n_vav: "voice/letters/he_n_vav.mp3",
+  he_n_yod: "voice/letters/he_n_yod.mp3",
+  he_n_zayin: "voice/letters/he_n_zayin.mp3",
+  he_w_alef: "voice/letters/he_w_alef.mp3",
+  he_w_ayin: "voice/letters/he_w_ayin.mp3",
+  he_w_bet: "voice/letters/he_w_bet.mp3",
+  he_w_dalet: "voice/letters/he_w_dalet.mp3",
+  he_w_gimel: "voice/letters/he_w_gimel.mp3",
+  he_w_he: "voice/letters/he_w_he.mp3",
+  he_w_het: "voice/letters/he_w_het.mp3",
+  he_w_kaf: "voice/letters/he_w_kaf.mp3",
+  he_w_kaf_f: "voice/letters/he_w_kaf_f.mp3",
+  he_w_lamed: "voice/letters/he_w_lamed.mp3",
+  he_w_mem: "voice/letters/he_w_mem.mp3",
+  he_w_mem_f: "voice/letters/he_w_mem_f.mp3",
+  he_w_nun: "voice/letters/he_w_nun.mp3",
+  he_w_nun_f: "voice/letters/he_w_nun_f.mp3",
+  he_w_pe: "voice/letters/he_w_pe.mp3",
+  he_w_pe_f: "voice/letters/he_w_pe_f.mp3",
+  he_w_qof: "voice/letters/he_w_qof.mp3",
+  he_w_resh: "voice/letters/he_w_resh.mp3",
+  he_w_samekh: "voice/letters/he_w_samekh.mp3",
+  he_w_shin: "voice/letters/he_w_shin.mp3",
+  he_w_tav: "voice/letters/he_w_tav.mp3",
+  he_w_tet: "voice/letters/he_w_tet.mp3",
+  he_w_tsadi: "voice/letters/he_w_tsadi.mp3",
+  he_w_tsadi_f: "voice/letters/he_w_tsadi_f.mp3",
+  he_w_vav: "voice/letters/he_w_vav.mp3",
+  he_w_yod: "voice/letters/he_w_yod.mp3",
+  he_w_zayin: "voice/letters/he_w_zayin.mp3",
+  lf_ask: "voice/letters/lf_ask.mp3",
+  lf_start: "voice/letters/lf_start.mp3",
+  lf_starts: "voice/letters/lf_starts.mp3",
+  ln_ask: "voice/letters/ln_ask.mp3",
+  ln_start: "voice/letters/ln_start.mp3",
+  lt_new: "voice/letters/lt_new.mp3",
+  lt_start: "voice/letters/lt_start.mp3",
+  lt_where: "voice/letters/lt_where.mp3",
+  nm_bibi: "voice/letters/nm_bibi.mp3",
+  nm_spino: "voice/letters/nm_spino.mp3",
+  nm_zoey: "voice/letters/nm_zoey.mp3",
+  /* <<< letters:clips */
   pk_more: "voice/games/pk_more.mp3",
   where: "voice/hub/where.mp3",
   wow: "voice/hub/wow.mp3",
@@ -6113,6 +6287,171 @@ function numPathHeard(o) {
   return out.sort((a, b) => a - b);
 }
 
+/* ---------------------------------------------------------------------
+   THE HEBREW ALPHABET (phase 2). Pure data and helpers: nothing here makes a phrase key live.
+   Names and words are the research table "Example words - Hebrew, 27" in docs/LETTERS-AND-NUMBERS.md,
+   copied from it by a script, with Harel's school forms (זַיִן, פֵּא, כָּף). A non-final's word
+   STARTS with its letter and a final's word ENDS with it. The finals' names are "<name> סוֹפִית".
+   nk / wk are the phrase keys of the name clip and the word clip; registerLetterPhrases() makes them
+   live and is called by the MODULES only. pic is a word-art id, or 'dino:spino' for the dalet.
+   --------------------------------------------------------------------- */
+const HE_LETTERS = [
+  { id: 'alef', ch: 'א', name: 'אָלֶף', word: 'אַרְנָב', nk: 'he_n_alef', wk: 'he_w_alef', pic: 'rabbit' },
+  { id: 'bet', ch: 'ב', name: 'בֵּית', word: 'בַּלּוֹן', nk: 'he_n_bet', wk: 'he_w_bet', pic: 'balloon' },
+  { id: 'gimel', ch: 'ג', name: 'גִּימֶל', word: 'גְּלִידָה', nk: 'he_n_gimel', wk: 'he_w_gimel', pic: 'icecream' },
+  { id: 'dalet', ch: 'ד', name: 'דָּלֶת', word: 'דִּינוֹזָאוּר', nk: 'he_n_dalet', wk: 'he_w_dalet', pic: 'dino:spino' },
+  { id: 'he', ch: 'ה', name: 'הֵא', word: 'הִיפּוֹפּוֹטָם', nk: 'he_n_he', wk: 'he_w_he', pic: 'hippo' },
+  { id: 'vav', ch: 'ו', name: 'וָו', word: 'וָרֶד', nk: 'he_n_vav', wk: 'he_w_vav', pic: 'rose' },
+  { id: 'zayin', ch: 'ז', name: 'זַיִן', word: 'זֶבְּרָה', nk: 'he_n_zayin', wk: 'he_w_zayin', pic: 'zebra' },
+  { id: 'het', ch: 'ח', name: 'חֵית', word: 'חָתוּל', nk: 'he_n_het', wk: 'he_w_het', pic: 'cat' },
+  { id: 'tet', ch: 'ט', name: 'טֵית', word: 'טְרַקְטוֹר', nk: 'he_n_tet', wk: 'he_w_tet', pic: 'tractor' },
+  { id: 'yod', ch: 'י', name: 'יוֹד', word: 'יָד', nk: 'he_n_yod', wk: 'he_w_yod', pic: 'hand' },
+  { id: 'kaf', ch: 'כ', name: 'כָּף', word: 'כֶּלֶב', nk: 'he_n_kaf', wk: 'he_w_kaf', pic: 'dog' },
+  { id: 'lamed', ch: 'ל', name: 'לָמֶד', word: 'לֵב', nk: 'he_n_lamed', wk: 'he_w_lamed', pic: 'heart' },
+  { id: 'mem', ch: 'מ', name: 'מֵם', word: 'מְכוֹנִית', nk: 'he_n_mem', wk: 'he_w_mem', pic: 'car' },
+  { id: 'nun', ch: 'נ', name: 'נוּן', word: 'נָחָשׁ', nk: 'he_n_nun', wk: 'he_w_nun', pic: 'snake' },
+  { id: 'samekh', ch: 'ס', name: 'סָמֶךְ', word: 'סוּס', nk: 'he_n_samekh', wk: 'he_w_samekh', pic: 'horse' },
+  { id: 'ayin', ch: 'ע', name: 'עַיִן', word: 'עַכְבָּר', nk: 'he_n_ayin', wk: 'he_w_ayin', pic: 'mouse' },
+  { id: 'pe', ch: 'פ', name: 'פֵּא', word: 'פִּיל', nk: 'he_n_pe', wk: 'he_w_pe', pic: 'elephant' },
+  { id: 'tsadi', ch: 'צ', name: 'צָדִי', word: 'צִפּוֹר', nk: 'he_n_tsadi', wk: 'he_w_tsadi', pic: 'bird' },
+  { id: 'qof', ch: 'ק', name: 'קוּף', word: 'קוֹף', nk: 'he_n_qof', wk: 'he_w_qof', pic: 'monkey' },
+  { id: 'resh', ch: 'ר', name: 'רֵישׁ', word: 'רַכֶּבֶת', nk: 'he_n_resh', wk: 'he_w_resh', pic: 'train' },
+  { id: 'shin', ch: 'ש', name: 'שִׁין', word: 'שֶׁמֶשׁ', nk: 'he_n_shin', wk: 'he_w_shin', pic: 'sun' },
+  { id: 'tav', ch: 'ת', name: 'תָּו', word: 'תַּפּוּחַ', nk: 'he_n_tav', wk: 'he_w_tav', pic: 'apple' },
+  { id: 'kaf_f', ch: 'ך', name: 'כָּף סוֹפִית', word: 'מֶלֶךְ', nk: 'he_n_kaf_f', wk: 'he_w_kaf_f', pic: 'king', final: true },
+  { id: 'mem_f', ch: 'ם', name: 'מֵם סוֹפִית', word: 'יָם', nk: 'he_n_mem_f', wk: 'he_w_mem_f', pic: 'sea', final: true },
+  { id: 'nun_f', ch: 'ן', name: 'נוּן סוֹפִית', word: 'גַּן', nk: 'he_n_nun_f', wk: 'he_w_nun_f', pic: 'garden', final: true },
+  { id: 'pe_f', ch: 'ף', name: 'פֵּא סוֹפִית', word: 'כַּף', nk: 'he_n_pe_f', wk: 'he_w_pe_f', pic: 'spoon', final: true },
+  { id: 'tsadi_f', ch: 'ץ', name: 'צָדִי סוֹפִית', word: 'עֵץ', nk: 'he_n_tsadi_f', wk: 'he_w_tsadi_f', pic: 'tree', final: true },
+];
+
+const ALPHABETS = {
+  he: {
+    id: 'he',
+    save: 'zoey-letters-he',
+    letters: HE_LETTERS,
+    /* four at a time, because the keypad is four buttons; the finals last */
+    groups: [
+      ['zayin', 'vav', 'alef', 'yod'], ['shin', 'mem', 'lamed', 'bet'], ['dalet', 'qof', 'pe', 'het'], ['nun', 'samekh', 'kaf', 'tav'],
+      ['he', 'tsadi', 'ayin', 'gimel'], ['tet', 'resh'], ['mem_f', 'nun_f', 'kaf_f', 'pe_f', 'tsadi_f']
+    ],
+    /* shapes that are easy to mistake for one another. yod is not in the verticals: the spec's own example puts zayin and yod in one round */
+    lookalike: [
+      ['vav', 'zayin', 'nun_f'], ['gimel', 'nun'], ['he', 'het', 'tav'], ['dalet', 'resh', 'kaf_f'], ['bet', 'kaf'], ['samekh', 'mem_f', 'mem'], ['ayin', 'tsadi']
+    ],
+    /* names that sound alike, plus the same-name pairs: two hoops both answering to "כָּף" are a round with no right answer */
+    soundalike: [
+      ['alef', 'ayin'], ['tet', 'tav'], ['kaf', 'het'], ['kaf', 'qof'],
+      ['kaf', 'kaf_f'], ['mem', 'mem_f'], ['nun', 'nun_f'], ['pe', 'pe_f'], ['tsadi', 'tsadi_f']
+    ],
+    /* the name game; the family's names are added later as rows here */
+    names: [
+      { id: 'zoey', text: 'זואי', key: 'nm_zoey', spoken: 'זוֹאִי', pic: 'zoey' },
+      { id: 'bibi', text: 'ביבי', key: 'nm_bibi', spoken: 'בִּיבִּי', pic: 'bibi' },
+      { id: 'spino', text: 'ספינו', key: 'nm_spino', spoken: 'סְפִּינוֹ', pic: 'dino:spino' }
+    ]
+  }
+};
+
+function abcLetter(alpha, id) {
+  const a = typeof alpha === 'string' ? ALPHABETS[alpha] : alpha;
+  if (!a) return null;
+  for (let i = 0; i < a.letters.length; i++) if (a.letters[i].id === id) return a.letters[i];
+  return null;
+}
+const abcAlpha = (alpha) => (typeof alpha === 'string' ? ALPHABETS[alpha] : alpha) || null;
+
+/* A letter is secure once she has found it first, unaided, at least twice AND more often than she has missed it. A miss is a
+   hoops round that asked the letter and ended after a wrong press made once its name had been heard (misses only ever rise), so a
+   child who answers at random after hearing the name never secures a letter, and one who slips now and then still does. */
+function abcSecure(st, id) {
+  if (!st || !st.firsts) return false;
+  const f = st.firsts[id] || 0;
+  return f >= 2 && f > ((st.misses && st.misses[id]) || 0);
+}
+
+/* One more miss of this letter, in memory (the caller saves). */
+function abcRecordMiss(st, id) {
+  if (!st.misses) st.misses = {};
+  st.misses[id] = (st.misses[id] || 0) + 1;
+}
+
+/* One more first-try find of this letter, in memory (the caller saves); the next group opens once every letter of the
+   newest one is secure. Returns true when it did, so the caller can say so in the next round. */
+function abcRecordFind(alpha, st, id) {
+  const a = abcAlpha(alpha);
+  if (!st.firsts) st.firsts = {};
+  st.firsts[id] = (st.firsts[id] || 0) + 1;
+  const n = Math.max(1, Math.min(a.groups.length, Math.floor(+st.open) || 1));
+  if (n < a.groups.length && a.groups[n - 1].every((x) => abcSecure(st, x))) { st.open = n + 1; return true; }
+  return false;
+}
+
+/* the ids of every open group, in group order */
+function abcOpenIds(alpha, st) {
+  const a = abcAlpha(alpha), out = [];
+  if (!a) return out;
+  const open = Math.max(1, Math.min(a.groups.length, Math.floor(+(st && st.open)) || 1));
+  for (let g = 0; g < open; g++) a.groups[g].forEach((id) => out.push(id));
+  return out;
+}
+
+/* May a and b be in one round? Never the same letter, never two that sound alike, and two that look
+   alike only once both are open and both are secure. */
+function abcCompatible(alpha, a, b, st) {
+  const al = abcAlpha(alpha);
+  if (!al || a === b) return false;
+  const pair = (list) => list.some((p) => p.indexOf(a) >= 0 && p.indexOf(b) >= 0);
+  if (pair(al.soundalike)) return false;
+  if (pair(al.lookalike)) {
+    const open = abcOpenIds(al, st);
+    return open.indexOf(a) >= 0 && open.indexOf(b) >= 0 && abcSecure(st, a) && abcSecure(st, b);
+  }
+  return true;
+}
+
+/* the save: {open: 1..groups.length, firsts: {id: int > 0}, misses: {id: int > 0}}; garbage becomes the empty save, and a save
+   from before misses existed reads with none */
+function abcReadSave(alpha) {
+  const a = abcAlpha(alpha), st = { open: 1, firsts: {}, misses: {} };
+  if (!a) return st;
+  let o = null;
+  try { o = JSON.parse(localStorage.getItem(a.save)); } catch (e) { o = null; }
+  if (!o || typeof o !== 'object') return st;
+  const n = Math.floor(+o.open);
+  st.open = Math.max(1, Math.min(a.groups.length, n >= 1 ? n : 1));
+  if (o.firsts && typeof o.firsts === 'object') {
+    a.letters.forEach((l) => { const v = Math.floor(+o.firsts[l.id]); if (v > 0) st.firsts[l.id] = v; });
+  }
+  if (o.misses && typeof o.misses === 'object') {
+    a.letters.forEach((l) => { const v = Math.floor(+o.misses[l.id]); if (v > 0) st.misses[l.id] = v; });
+  }
+  return st;
+}
+
+/* never lowers: merges with what is stored, taking the larger of each */
+function abcWriteSave(alpha, st) {
+  const a = abcAlpha(alpha);
+  if (!a) return;
+  const was = abcReadSave(a), out = { open: was.open, firsts: Object.assign({}, was.firsts), misses: Object.assign({}, was.misses) };
+  const n = Math.floor(+(st && st.open));
+  if (n > out.open) out.open = Math.min(a.groups.length, n);
+  const f = (st && st.firsts) || {};
+  a.letters.forEach((l) => { const v = Math.floor(+f[l.id]); if (v > (out.firsts[l.id] || 0)) out.firsts[l.id] = v; });
+  const m = (st && st.misses) || {};
+  a.letters.forEach((l) => { const v = Math.floor(+m[l.id]); if (v > (out.misses[l.id] || 0)) out.misses[l.id] = v; });
+  try { localStorage.setItem(a.save, JSON.stringify(out)); } catch (e) { /* no storage: she plays on, nothing is kept */ }
+}
+
+/* Sets PH for every letter's name and word and for each name-game row. Idempotent. CALLED BY THE
+   MODULES, never by this file: folding the file must not make a phrase key live that has no recording yet. */
+function registerLetterPhrases(alpha) {
+  const a = abcAlpha(alpha);
+  if (!a) return;
+  a.letters.forEach((l) => { PH[l.nk] = l.name; PH[l.wk] = l.word; });
+  a.names.forEach((n) => { PH[n.key] = n.spoken; });
+}
+
 /* Where each of the new games stands. np (numbers to fifty, the picture) goes on the volcano: the
    only countable things on screen must be the ones she is counting, and the volcano has nothing
    else to count but the herd on the skyline, which is the very herd the shore had - the shore is
@@ -6124,6 +6463,14 @@ function numPathHeard(o) {
    thing in mind. */
 SCENES.np = 'volcano';
 SCENES.nf = 'lake';
+/* The letters. lh (the hoops) goes in the jungle, whose fronds frame four hoops and invite no counting; it
+   follows the finder, which is on the lake. lf (find the first letter) goes on the volcano, the bare
+   sky to throw a word up into, and ln (the name game) at dusk, where a name is said at the end of the day.
+   The three cards sit together in the picker (hoops, first, names), so the three places differ
+   from one another, and the first of them from the finder before it. */
+SCENES.lh = 'jungle';
+SCENES.lf = 'volcano';
+SCENES.ln = 'dusk';
 /* <<< abc:core */
 
 </script>
@@ -11943,6 +12290,527 @@ window.ZoeyDomino = (function () {
 
 
 
+
+<!-- >>> letters:art - assets/words/word-art.js, folded in verbatim by tools/fold-letters.js; edit nothing here, re-run pack-words and this tool -->
+<script>
+/* Generated by tools/pack-words.js from .kolbo/word-pictures.json and assets/words/cut/ - do not hand-edit; re-run it. */
+window.ZOEY_WORD_ART = {
+  rabbit: "art/words/rabbit.webp",
+  balloon: "art/words/balloon.webp",
+  icecream: "art/words/icecream.webp",
+  hippo: "art/words/hippo.webp",
+  rose: "art/words/rose.webp",
+  zebra: "art/words/zebra.webp",
+  cat: "art/words/cat.webp",
+  tractor: "art/words/tractor.webp",
+  hand: "art/words/hand.webp",
+  dog: "art/words/dog.webp",
+  heart: "art/words/heart.webp",
+  car: "art/words/car.webp",
+  snake: "art/words/snake.webp",
+  horse: "art/words/horse.webp",
+  mouse: "art/words/mouse.webp",
+  elephant: "art/words/elephant.webp",
+  bird: "art/words/bird.webp",
+  monkey: "art/words/monkey.webp",
+  train: "art/words/train.webp",
+  sun: "art/words/sun.webp",
+  apple: "art/words/apple.webp",
+  king: "art/words/king.webp",
+  sea: "art/words/sea.webp",
+  garden: "art/words/garden.webp",
+  spoon: "art/words/spoon.webp",
+  tree: "art/words/tree.webp",
+};
+</script>
+<!-- <<< letters:art -->
+
+<!-- >>> letters:js - folded in by tools/fold-letters.js; edit games/letters/game.js and re-run the tool, never this block -->
+<script>
+/* ===== אותיות - games/letters/game.js, folded in verbatim ===== */
+'use strict';
+/* =====================================================================
+   The letters engine  (slug letters, CSS prefix lt-)
+
+   ONE FACTORY, THREE CARDS. Spec 5.6 asks for one letters engine behind separate cards, so the alphabets
+   and the modes cannot drift apart in behaviour; this is the one module that assigns a global per card
+   (the deliberate deviation from GAME-MODULE-SPEC that the plan records).
+     window.ZoeyHoops  "אותיות בחישוקים"  root lh-root  - a letter is named; she finds it among four hoops
+     window.ZoeyFirst  "במה זה מתחיל?"     root lf-root  - a picture is shown and named; she finds the letter it starts with
+     window.ZoeyNames  "השם של זואי"       root ln-root  - a name with one letter missing; she finds it
+
+   NAME FIRST, AND THE PICTURE WORD CARRIES THE SOUND. A letter is introduced by its name (זַיִן) and by a word
+   that starts with it (זֶבְּרָה) - never as an isolated sound, which the voice cannot say and six pairs of
+   Hebrew letters share. That is why "first" exists: the word is said and drawn, and she finds its letter.
+
+   FOUR AT A TIME, AND ONLY HOOPS OPENS THEM. The letters open in the groups of ALPHABETS.he.groups (ז ו א י
+   first - her own name). A letter is secure once she has found it in hoops first time, unaided, at least twice AND
+   more often than she has missed it (a miss: a round that asked it and ended after a wrong press made once its
+   name had been heard; Ruling 15); when every letter of the newest group is secure the next group opens, the next round says so (lt_new) and asks
+   one of the new letters. "first" and "names" only READ that save: they play with what she already knows.
+
+   A ROUND, which settles the clash inside group one (ו and ז are both her name's letters AND look-alikes): the
+   asked letter plus three others. The others are open letters that are compatible with every letter already
+   in the round - not a look-alike until both are secure, never a sound-alike or a same-name pair
+   (abcCompatible). When the open letters cannot make four, the NEXT group's letters fill in - shown, never
+   asked - and after them any letter at all. So asking for ז with only group one open shows ז א י and a letter
+   of group two, never ז beside ו. "first" never offers or asks a final: a final never starts a word.
+
+   NO FAIL STATE. A wrong press wobbles the hoop she pressed, the right one glows, and the question is said
+   again. After seven quiet seconds the right one glows by itself - and a round she was shown the answer in,
+   like a round with a wrong press, is not a first try; nor is a press made before the letter's name began, which
+   is a guess (it still answers in full - it only does not count). When she is right the hoop jumps, the picture and the
+   letter come up, the word is said and a cheer follows; the next round waits for the END of the cheer, and
+   never comes sooner than two seconds after the press.
+
+   RECORDING SCRIPT - the PH keys this module adds (key : text, full nikud)
+     lt_start  : בּוֹאִי נְשַׂחֵק בְּאוֹתִיּוֹת!
+     lt_where  : אֵיפֹה הָאוֹת
+     lt_new    : אוֹתִיּוֹת חֲדָשׁוֹת!
+     lf_start  : בּוֹאִי נִמְצָא בְּמָה זֶה מַתְחִיל!
+     lf_ask    : בְּאֵיזוֹ אוֹת זֶה מַתְחִיל?
+     lf_starts : מַתְחִיל בָּאוֹת
+     ln_start  : בּוֹאִי נַשְׁלִים אֶת הַשֵּׁם!
+     ln_ask    : אֵיזוֹ אוֹת חֲסֵרָה?
+   and registerLetterPhrases('he') makes live the 27 names (he_n_<id>), the 27 words (he_w_<id>) and the three
+   names of the name game (nm_zoey, nm_bibi, nm_spino), whose texts are ALPHABETS.he in zoey-abc.js.
+   say() speaks a key only once its clip exists - the male machine voice must never fill in.
+   ===================================================================== */
+(function () {
+  const KEYMAP = { KeyS: 0, KeyG: 1, KeyK: 2, Quote: 3 };      /* blue, yellow, red, green: left -> right */
+  const NOTE = [392, 440, 494, 587];
+  const COLORS = ['blue', 'yellow', 'red', 'green'];
+  /* WON_PAUSE is the least time the picture stays up after a right press; the round itself waits for the cheer to end.
+     WON_SAFETY is longer than the longest win in "first" (the word, "starts with the letter", its name and a cheer). */
+  const WON_PAUSE = 2000, WON_SAFETY = 10000, IDLE = 7000;
+
+  PH.lt_start = 'בּוֹאִי נְשַׂחֵק בְּאוֹתִיּוֹת!';
+  PH.lt_where = 'אֵיפֹה הָאוֹת';
+  PH.lt_new = 'אוֹתִיּוֹת חֲדָשׁוֹת!';
+  PH.lf_start = 'בּוֹאִי נִמְצָא בְּמָה זֶה מַתְחִיל!';
+  PH.lf_ask = 'בְּאֵיזוֹ אוֹת זֶה מַתְחִיל?';
+  PH.lf_starts = 'מַתְחִיל בָּאוֹת';
+  PH.ln_start = 'בּוֹאִי נַשְׁלִים אֶת הַשֵּׁם!';
+  PH.ln_ask = 'אֵיזוֹ אוֹת חֲסֵרָה?';
+
+  /* ---------- small pure helpers, shared by every card ---------- */
+  function shuffled(a, rnd) {
+    a = a.slice();
+    for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+  }
+  const pickOne = (a, rnd) => a[Math.floor(rnd() * a.length)];
+  const openOf = (al, st) => Math.max(1, Math.min(al.groups.length, Math.floor(+(st && st.open)) || 1));
+  /* the save as held in memory only ever goes up: the larger open, and the larger count for each letter */
+  function mergeUp(al, a, b) {
+    const out = { open: Math.max(openOf(al, a), openOf(al, b)), firsts: Object.assign({}, (a && a.firsts) || {}), misses: Object.assign({}, (a && a.misses) || {}) };
+    ['firsts', 'misses'].forEach((f) => {
+      const bf = (b && b[f]) || {};
+      Object.keys(bf).forEach((k) => { if (bf[k] > (out[f][k] || 0)) out[f][k] = bf[k]; });
+    });
+    return out;
+  }
+  /* May this letter be in a round of this mode at all? "first" is "what does it START with": a final never starts
+     a word, and neither does a letter whose word only ENDS with it (an English X, phase 3). */
+  function inMode(al, mode, id) {
+    const l = abcLetter(al, id);
+    return !!l && !(mode === 'first' && (l.final || l.ends));
+  }
+  function idOfCh(al, ch) {
+    for (let i = 0; i < al.letters.length; i++) if (al.letters[i].ch === ch) return al.letters[i].id;
+    return null;
+  }
+  const IDS = new Map();                                       /* every letter's id, once per alphabet (ALPHABETS itself is not written to) */
+  const allIds = (al) => { if (!IDS.has(al)) IDS.set(al, al.letters.map((l) => l.id)); return IDS.get(al); };
+
+  /* ---------- the round builder ---------- */
+  /* The three letters beside `ask`, then all four shuffled into display order. Greedy: each pool is shuffled and a
+     letter joins only if it may share a round with EVERY letter already in it. Open letters first; then the next
+     group (shown, never asked); then anything. Every loop is bounded by the size of the alphabet. */
+  function fourWith(al, mode, ask, st, rnd) {
+    const chosen = [ask];
+    const fits = (id) => chosen.indexOf(id) < 0 && inMode(al, mode, id) && chosen.every((c) => abcCompatible(al, c, id, st));
+    const take = (pool) => { const s = shuffled(pool, rnd); for (let i = 0; i < s.length && chosen.length < 4; i++) if (fits(s[i])) chosen.push(s[i]); };
+    take(abcOpenIds(al, st));
+    if (chosen.length < 4) take(al.groups[openOf(al, st)] || []);
+    if (chosen.length < 4) take(allIds(al));
+    /* A last resort that the Hebrew alphabet never reaches (the check proves it over every open and every mode, and
+       reaches it with a made-up alphabet): four hoops on the screen matter more than the LOOK-alike rule, so that one
+       is dropped here - but never the SOUND-alike one, nor the same-name pairs that sit in the same list. Two hoops
+       that answer to one sound are a question with two right answers, and English (phase 3) runs this engine too.
+       Any alphabet with four letters that sound different fills it. */
+    if (chosen.length < 4) {
+      const heard = (a, b) => (al.soundalike || []).some((p) => p.indexOf(a) >= 0 && p.indexOf(b) >= 0);
+      shuffled(allIds(al), rnd).forEach((id) => {
+        if (chosen.length < 4 && chosen.indexOf(id) < 0 && inMode(al, mode, id) && !chosen.some((c) => heard(c, id))) chosen.push(id);
+      });
+    }
+    return shuffled(chosen, rnd);
+  }
+  /* hoops and first: 60% of the time one of the newest group's letters she has not yet made secure, otherwise any
+     open letter; never the letter asked last time */
+  function askFor(al, mode, st, prevAsk, rnd) {
+    const n = openOf(al, st);
+    const open = abcOpenIds(al, st).filter((id) => inMode(al, mode, id));
+    const newest = al.groups[n - 1].filter((id) => inMode(al, mode, id) && !abcSecure(st, id) && id !== prevAsk);
+    let pool = open.filter((id) => id !== prevAsk);
+    if (newest.length && rnd() < 0.6) pool = newest;
+    if (!pool.length) pool = open;
+    return pickOne(pool, rnd);
+  }
+  function makeRound(al, mode, st, prevAsk, rnd) {
+    rnd = rnd || Math.random;
+    const ask = askFor(al, mode, st, prevAsk, rnd);
+    return { ask: ask, options: fourWith(al, mode, ask, st, rnd) };
+  }
+  /* names: a name with at least one open letter in it (never the name of last time), one of those open letters
+     missing; `at` is its index in name.text */
+  function nameRound(al, st, name, rnd, only) {
+    const open = abcOpenIds(al, st), chars = Array.from(name.text), at = [];
+    chars.forEach((c, i) => { const id = idOfCh(al, c); if (id && open.indexOf(id) >= 0 && (!only || id === only)) at.push(i); });
+    if (!at.length) return null;
+    const i = pickOne(at, rnd), ask = idOfCh(al, chars[i]);
+    return { name: name.id, at: i, ask: ask, options: fourWith(al, 'names', ask, st, rnd) };
+  }
+  function makeNameRound(al, st, prevName, rnd) {
+    rnd = rnd || Math.random;
+    const open = abcOpenIds(al, st);
+    const fit = al.names.filter((n) => Array.from(n.text).some((c) => open.indexOf(idOfCh(al, c)) >= 0));
+    let pool = fit.filter((n) => n.id !== prevName);
+    if (!pool.length) pool = fit.length ? fit : al.names;
+    const r = nameRound(al, st, pickOne(pool, rnd), rnd);
+    if (r) return r;
+    /* no open letter in any name - never the case while group one is her own name's letters */
+    const n = al.names[0], ask = idOfCh(al, n.text[0]);
+    return { name: n.id, at: 0, ask: ask, options: fourWith(al, 'names', ask, st, rnd) };
+  }
+
+  /* ---------- a picture for a word ---------- */
+  /* 'dino:<id>' is a dinosaur of the cast, 'zoey' and 'bibi' are the art rig's own; anything else is a word picture
+     from ZOEY_WORD_ART (assets/words/word-art.js). A picture that fails to decode hides itself, and the letter
+     beside it stays. A word with no picture at all draws nothing rather than a broken image. */
+  function wordPicHTML(pic) {
+    if (/^dino:/.test(pic)) { const d = dinoById(pic.slice(5)); return d ? d.draw() : ''; }
+    if (pic === 'zoey') return drawZoey();
+    if (pic === 'bibi') {
+      const s = window.ArtRigSvg && ArtRigSvg.has && ArtRigSvg.has('bibi') ? ArtRigSvg.bibi() : '';
+      return s || dinoById('compsy').draw();
+    }
+    const src = window.ZOEY_WORD_ART && window.ZOEY_WORD_ART[pic];
+    if (!src) return '';
+    return '<img class="lt-img" src="' + src + '" alt="" draggable="false" onerror="this.classList.add(\'lt-broken\')">';
+  }
+  const LISTEN = '<div class="lt-ask"><div class="lt-spino"></div>' +
+    '<div class="lt-bubble"><svg viewBox="0 0 100 100" focusable="false"><path d="M18 50 Q18 30 36 30 H44 L62 18 V30 H64 Q82 30 82 50 Q82 70 64 70 H62 V82 L44 70 H36 Q18 70 18 50Z" fill="#ff9a3c"/>' +
+    '<path d="M76 38 Q88 50 76 62 M86 28 Q104 50 86 72" stroke="#ff9a3c" stroke-width="5" fill="none" stroke-linecap="round" opacity="0.7"/></svg></div></div>';
+
+  /* =====================================================================
+     makeLetters(cfg): one card. cfg = { alpha: 'he'|'en', mode: 'hoops'|'first'|'names', root, scene, intro }.
+     Each card has its own state, timers and voice log; stopping one never touches another's root.
+     ===================================================================== */
+  function makeLetters(cfg) {
+    const al = abcAlpha(cfg.alpha), mode = cfg.mode;
+    registerLetterPhrases(cfg.alpha);
+    const L = (id) => abcLetter(al, id);
+    const nameOf = (id) => al.names.filter((n) => n.id === id)[0] || null;
+
+    /* ---------- state ---------- */
+    let alive = false, paused = false;
+    let round = 0, phase = 'intro';
+    let st = { open: 1, firsts: {}, misses: {} }, cur = null, prevAsk = null, prevName = null;
+    let missed = false, missedHeard = false, opening = false, forced = null, lastPress = 0, speechSeq = 0;
+    let askedAt = 0, nameAt = 0;                       /* when this round's question began, and when the asked letter's name started (Ruling 13) */
+    let timers = [], deferred = [], nudgeT = null, log = [];
+    let els = null;
+
+    /* ---------- timers: one array, round-scoped, pausable, all cleared by stop() ---------- */
+    function arm(t) { t.due = performance.now() + t.left; t.h = setTimeout(t.run, t.left); }
+    function later(ms, fn, keep) {
+      const t = { left: ms, due: 0, h: 0, rd: round, keep: !!keep };
+      t.run = function () {
+        timers = timers.filter((x) => x !== t);
+        if (!alive || (!t.keep && t.rd !== round)) return;
+        fn();
+      };
+      timers.push(t); if (!paused) arm(t);
+      return t;
+    }
+    function cancel(t) { if (!t) return; clearTimeout(t.h); timers = timers.filter((x) => x !== t); }
+    function clearTimers(all) {
+      timers = timers.filter((t) => { if (all || !t.keep) { clearTimeout(t.h); return false; } return true; });
+    }
+    /* Every line is logged (the check reads the log), but only a recorded one is spoken: speak() falls through to
+       speechSynthesis for a key with no clip, which on Windows is the male voice. An unqueued unrecorded line still
+       CUTS what is playing, so an old name never talks over the one asked now. */
+    function say(key, queue, then) {
+      const s = ++speechSeq, rd = round;
+      log.push({ k: key, q: !!queue });
+      const fin = then ? function () {
+        if (!alive || rd !== round || s !== speechSeq) return;
+        if (paused) { deferred.push([rd, then]); return; }
+        then();
+      } : undefined;
+      if (!VOICE_CLIPS[key]) { if (!queue) { try { stopSpeech(); } catch (e) { /* ignore */ } } if (fin) later(120, fin, true); return; }
+      speak(key, queue, fin);
+    }
+    function blip(el, cls, ms) {
+      if (!el) return;
+      el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+      later(ms, () => el.classList.remove(cls), true);
+    }
+
+    /* ---------- DOM ---------- */
+    function build(root) {
+      root.innerHTML =
+        '<div class="lt-stage lt-m-' + mode + '">' +
+          '<div class="lt-scene" aria-hidden="true">' + sceneSVG(cfg.scene) + '</div>' +
+          '<div class="lt-top" aria-hidden="true">' + LISTEN + '</div>' +
+          '<div class="lt-row" dir="ltr"></div>' +
+        '</div>';
+      const e = { stage: root.querySelector('.lt-stage'), top: root.querySelector('.lt-top'), row: root.querySelector('.lt-row'), hoops: [] };
+      e.top.querySelector('.lt-spino').innerHTML = dinoById('spino').draw();
+      return e;
+    }
+    function paintHoops() {
+      let h = '';
+      for (let i = 0; i < 4; i++) {
+        const id = cur.options[i];
+        h += '<div class="lt-hoop" data-c="' + COLORS[i] + '" data-id="' + id + '"><span class="lt-ch">' + L(id).ch + '</span></div>';
+      }
+      els.row.innerHTML = h;
+      els.hoops = Array.prototype.slice.call(els.row.children);
+    }
+    /* above the hoops: hoops keeps Spino listening; first shows the word's picture; names the person and the name */
+    function paintTop() {
+      if (mode === 'first') {
+        els.top.innerHTML = '<div class="lt-show"><div class="lt-pic">' + wordPicHTML(L(cur.ask).pic) + '</div></div>';
+      } else if (mode === 'names') {
+        const n = nameOf(cur.name);
+        const spans = Array.from(n.text).map((c, i) => i === cur.at ? '<span class="lt-gap"></span>' : '<span>' + c + '</span>').join('');
+        els.top.innerHTML = '<div class="lt-show"><div class="lt-pic">' + wordPicHTML(n.pic) + '</div>' +
+          '<div class="lt-name" dir="rtl" data-name="' + n.id + '">' + spans + '</div></div>';
+      } else if (!els.top.querySelector('.lt-ask')) {
+        els.top.innerHTML = LISTEN;
+        els.top.querySelector('.lt-spino').innerHTML = dinoById('spino').draw();
+      }
+    }
+
+    /* ---------- a round ---------- */
+    /* the round a test asked for: this letter (in names, a name that has it, missing there) */
+    function forcedRound(id) {
+      if (mode !== 'names') return { ask: id, options: fourWith(al, mode, id, st, Math.random) };
+      const byName = nameOf(id);
+      if (byName) return nameRound(al, st, byName, Math.random) || makeNameRound(al, st, prevName, Math.random);
+      const ch = (L(id) || {}).ch, has = al.names.filter((n) => Array.from(n.text).indexOf(ch) >= 0);
+      const r = has.length ? nameRound(al, st, pickOne(has, Math.random), Math.random, id) : null;
+      return r || makeNameRound(al, st, prevName, Math.random);
+    }
+    /* the first round after a group opened asks one of its letters - they are all new */
+    function freshRound() {
+      const fresh = al.groups[openOf(al, st) - 1].filter((id) => inMode(al, mode, id) && !abcSecure(st, id) && id !== prevAsk);
+      if (!fresh.length) return makeRound(al, mode, st, prevAsk, Math.random);
+      const ask = pickOne(fresh, Math.random);
+      return { ask: ask, options: fourWith(al, mode, ask, st, Math.random) };
+    }
+    /* New round: state and the screen, no voice. */
+    function nextRound() {
+      round++; clearTimers(false); cancel(nudgeT);
+      st = mergeUp(al, st, abcReadSave(al));
+      let r;
+      if (forced) { r = forcedRound(forced); forced = null; }
+      else if (mode === 'names') r = makeNameRound(al, st, prevName, Math.random);
+      else if (opening) r = freshRound();
+      else r = makeRound(al, mode, st, prevAsk, Math.random);
+      r.opening = opening; opening = false;
+      cur = r; prevAsk = r.ask; if (r.name) prevName = r.name;
+      missed = false; missedHeard = false; phase = 'ask';
+      if (els) { paintHoops(); paintTop(); els.stage.classList.remove('lt-won'); }
+    }
+    /* The question of this round. In hoops the letter's name is said when "where is the letter" has ENDED - chained,
+       not queued - so the moment it starts is a moment this game knows, and a find can wait for it (Ruling 13). It
+       sounds the same as the queue: nothing is ahead of the name when it is said. If anything else is said first (a
+       wrong press says the name itself), say()'s latch drops the chained one, so the name is never said twice. */
+    function question(fresh) {
+      const l = L(cur.ask);
+      askedAt = performance.now(); nameAt = 0;
+      if (mode === 'hoops') {
+        const name = () => { nameAt = performance.now(); say(l.nk, true); };
+        if (fresh) say('lt_new', false, () => say('lt_where', true, name)); else say('lt_where', false, name);
+      } else if (mode === 'first') { say(l.wk, false); say('lf_ask', true); }
+      else { say(nameOf(cur.name).key, false); say('ln_ask', true); }
+    }
+    /* after a wrong press: the one thing that tells her what to find, said again and never queued */
+    function again() {
+      const l = L(cur.ask);
+      if (mode === 'hoops') say(l.nk, false);
+      else if (mode === 'first') say(l.wk, false);
+      else say(nameOf(cur.name).key, false);
+    }
+    function newRound() { nextRound(); tone(523, 0, 0.18, { f1: 784, g: 0.06 }); question(cur.opening); armNudge(); }
+    function rightHoop() { return els && els.hoops[cur.options.indexOf(cur.ask)]; }
+
+    /* NO CREDIT FOR A LUCKY GUESS (Ruling 13). A press before she has heard which letter is asked is right a quarter of
+       the time, and a child mashing the buttons would open groups by luck. So a find counts only once the asked
+       letter's name has STARTED playing - or, while that name has no recording, once 1200 ms have passed since the
+       question began. The press still answers in full either way; it just does not count. The 1200 ms floor holds
+       in every case: with the voice switched off every line "ends" at once, so a recorded name would otherwise
+       "start" at 0 ms and a mashed button would be credited again. */
+    const HEAR_MS = 1200;
+    function heard(t) {
+      if (!(askedAt > 0 && t - askedAt >= HEAR_MS)) return false;
+      if (VOICE_CLIPS[L(cur.ask).nk]) return nameAt > 0 && t >= nameAt;
+      return true;
+    }
+    /* a first-try find in hoops: one more for that letter, and the next group opens once the newest is all secure */
+    function credit(id) {
+      if (abcRecordFind(al, st, id)) opening = true;
+      abcWriteSave(al, st);
+      st = mergeUp(al, st, abcReadSave(al));
+    }
+    /* a round that ended after a wrong press made once the name had been heard (Ruling 15): one more miss for that letter.
+       Misses only rise, and a letter is secure only while its finds outnumber them. */
+    function miss(id) {
+      abcRecordMiss(st, id);
+      abcWriteSave(al, st);
+      st = mergeUp(al, st, abcReadSave(al));
+    }
+    function won(idx) {
+      const pressAt = performance.now();
+      phase = 'won';
+      cancel(nudgeT);
+      const h = els.hoops[idx], l = L(cur.ask);
+      els.hoops.forEach((x) => x.classList.remove('lt-hint'));
+      h.classList.add('lt-jump');
+      els.stage.classList.add('lt-won');
+      const big = '<div class="lt-big" data-c="' + COLORS[idx] + '">' + l.ch + '</div>';
+      if (mode === 'hoops') els.top.innerHTML = '<div class="lt-show lt-rise"><div class="lt-pic">' + wordPicHTML(l.pic) + '</div>' + big + '</div>';
+      else if (mode === 'first') { const sh = els.top.querySelector('.lt-show'); if (sh) sh.insertAdjacentHTML('beforeend', big); }
+      else { const g = els.top.querySelector('.lt-gap'); if (g) { g.textContent = l.ch; g.classList.add('lt-filled'); } }
+      try { sndYes(); } catch (e) { /* ignore */ }
+      /* The next round follows the END of the cheer, like numfind's: the next question is said unqueued, so a fixed
+         pause would cut the cheer mid-word. Both must be true before it comes - the cheer has ended (and 400 ms more),
+         and WON_PAUSE has passed - and a safety timer moves on if the voice never reports an end. The latch makes
+         sure only one of them starts the round. */
+      let voiceDone = false, floorDone = false, moved = false;
+      const go = (force) => {
+        if (moved || phase !== 'won' || !(force || (voiceDone && floorDone))) return;
+        moved = true;
+        newRound();
+      };
+      const cheer = () => say(cheerKey(), true, () => later(400, () => { voiceDone = true; go(); }));
+      if (mode === 'hoops') say(l.wk, false, cheer);
+      else if (mode === 'first') say(l.wk, false, () => say('lf_starts', true, () => say(l.nk, true, cheer)));
+      else say(nameOf(cur.name).key, false, cheer);
+      later(WON_PAUSE, () => { floorDone = true; go(); });
+      later(WON_SAFETY, () => go(true));
+      const r = h.getBoundingClientRect();
+      burst(r.left + r.width / 2, r.top, ['#ffd400', '#2a62ff', '#e8242b', '#1fb34a', '#ffffff'], reduce ? 10 : 28);
+      if (mode === 'hoops') {
+        if (!missed && heard(pressAt)) credit(cur.ask);
+        else if (missedHeard) miss(cur.ask);
+      }
+    }
+    function wrong(idx) {
+      if (heard(performance.now())) missedHeard = true;     /* a wrong press before the name is a guess in the dark, not a miss */
+      missed = true;
+      blip(els.hoops[idx], 'lt-wob', 600);
+      tone(262, 0, 0.18, { type: 'triangle', g: 0.07 });
+      const r = rightHoop();
+      if (r) r.classList.add('lt-hint');
+      again();
+      armNudge();
+    }
+    function press(idx) {
+      /* while the opening line plays there are no hoops yet, so what is above them answers the press instead */
+      if (els.hoops[idx]) blip(els.hoops[idx], 'lt-down', 190); else blip(els.top, 'lt-poke', 300);
+      /* intro, or the won pause: nothing to answer yet - but the press still gets a sound as well as a picture, within 100 ms like every press */
+      if (phase !== 'ask') { tone(NOTE[idx], 0, 0.12, { type: 'sine', g: 0.04 }); return; }
+      if (cur.options[idx] === cur.ask) won(idx);
+      else wrong(idx);
+    }
+    function armNudge() {
+      cancel(nudgeT);
+      nudgeT = later(IDLE, () => {
+        if (phase !== 'ask') return;
+        missed = true;                               /* she has been shown the answer: this round is not a first try any more */
+        const r = rightHoop();
+        if (r) r.classList.add('lt-hint');
+        question(false);
+        armNudge();
+      });
+    }
+
+    /* ---------- module API ---------- */
+    function start() {
+      const root = document.getElementById(cfg.root);
+      if (!root) return;
+      if (alive) stop();
+      root.hidden = false;
+      st = abcReadSave(al); prevAsk = null; prevName = null; opening = false; cur = null;
+      alive = true; paused = false; lastPress = 0; deferred = []; round++; log = []; phase = 'intro';
+      els = build(root);
+      say(cfg.intro, false, newRound);
+    }
+    function stop() {
+      const was = alive;
+      alive = false; paused = false; round++; forced = null;
+      clearTimers(true); deferred = []; nudgeT = null; speechSeq++;
+      if (was) { try { stopSpeech(); } catch (e) { /* ignore */ } try { stopMusic(); } catch (e) { /* ignore */ } try { clearFx(); } catch (e) { /* ignore */ } }
+      const root = document.getElementById(cfg.root);
+      if (root) root.innerHTML = '';
+      els = null;
+    }
+    function pause() {
+      if (!alive || paused) return false;
+      paused = true;
+      const now = performance.now();
+      timers.forEach((t) => { clearTimeout(t.h); t.left = Math.max(0, t.due - now); });
+      try { stopSpeech(); } catch (e) { /* ignore */ }
+      if (els) els.stage.classList.add('lt-paused');
+      return true;
+    }
+    function resume() {
+      if (!alive || !paused) return;
+      paused = false;
+      if (els) els.stage.classList.remove('lt-paused');
+      timers.forEach(arm);
+      const d = deferred; deferred = [];
+      d.forEach((p) => { if (alive && p[0] === round) p[1](); });
+    }
+    function keydown(e) {
+      if (!alive) return;
+      if (e.code === 'Escape') return;                 /* the hub owns Esc; never prevented here */
+      const idx = KEYMAP[e.code];
+      if (idx === undefined || e.ctrlKey || e.metaKey || e.altKey) return;
+      e.preventDefault();
+      if (e.repeat) return;
+      const now = performance.now();
+      if (now - lastPress < 150) return;               /* throttle */
+      ensureAudio();
+      if (paused || !els) return;
+      lastPress = now;
+      press(idx);
+    }
+    function keyup(e) { if (alive && KEYMAP[e.code] !== undefined) e.preventDefault(); }
+
+    return { start: start, stop: stop, pause: pause, resume: resume, keydown: keydown, keyup: keyup,
+      _: { cfg: Object.assign({}, cfg), phase: () => phase, ask: () => (cur ? cur.ask : null), options: () => (cur ? cur.options.slice() : []),
+           st: () => ({ open: st.open, firsts: Object.assign({}, st.firsts), misses: Object.assign({}, st.misses) }), said: () => log.map((x) => ({ k: x.k, q: x.q })),
+           makeRound: (s, prev, rnd) => makeRound(al, mode, s, prev, rnd),
+           makeNameRound: (s, prev, rnd) => makeNameRound(al, s, prev, rnd),
+           /* test-only: the next round asks this letter (in names, a letter or a name's id). Asked while a round is
+              waiting for her, that next round starts now. */
+           forceAsk: (id) => { forced = id; if (alive && phase === 'ask') newRound(); },
+           wordPicHTML: wordPicHTML } };
+  }
+
+  window.makeLetters = makeLetters;
+  window.ZoeyHoops = makeLetters({ alpha: 'he', mode: 'hoops', root: 'lh-root', scene: 'lh', intro: 'lt_start' });
+  window.ZoeyFirst = makeLetters({ alpha: 'he', mode: 'first', root: 'lf-root', scene: 'lf', intro: 'lf_start' });
+  window.ZoeyNames = makeLetters({ alpha: 'he', mode: 'names', root: 'ln-root', scene: 'ln', intro: 'ln_start' });
+})();
+</script>
+<!-- <<< letters:js -->
 <!-- >>> numfind:js - folded in by tools/fold-numfind.js; edit games/numfind/game.js and re-run the tool, never this block -->
 <script>
 /* ===== איפה המספר? - games/numfind/game.js, folded in verbatim ===== */
@@ -18541,6 +19409,37 @@ if (window.DinoAnim) DinoAnim.auto(document);
     return '<span class="pk-duo">' + prop(NFPIC) + dinoPic('spino') + '</span>';
   }
 /* <<< numfind:card */
+/* >>> letters:card - tools/fold-letters.js */
+  /* four hoops in the keypad's colours wearing four letters - find the one she was asked for */
+  const LHPIC = '<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">' +
+    '<g fill="none" stroke-width="7">' +
+    '<circle cx="27" cy="30" r="19" stroke="var(--blue)"/><circle cx="73" cy="30" r="19" stroke="var(--yellow)"/>' +
+    '<circle cx="27" cy="72" r="19" stroke="var(--red)"/><circle cx="73" cy="72" r="19" stroke="var(--green)"/></g>' +
+    '<g font-size="24" font-weight="700" fill="#22303a" text-anchor="middle" dominant-baseline="central">' +
+    '<text x="27" y="31">ז</text><text x="73" y="31">ו</text><text x="27" y="73">א</text><text x="73" y="73">י</text></g></svg>';
+  function artHoops() { /* four letters in four hoops, one of them is the one */
+    return '<span class="pk-duo">' + prop(LHPIC) + dinoPic('spino') + '</span>';
+  }
+  /* a round card with a letter on it, and the hoop it flies to - what does it start with */
+  const LFPIC = '<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">' +
+    '<circle cx="30" cy="34" r="22" fill="#fff6e0" stroke="#c9a46a" stroke-width="5"/>' +
+    '<path d="M22 36 Q30 18 40 30 Q34 34 30 46 Q26 40 22 36 Z" fill="var(--green)" stroke="var(--green-dark)" stroke-width="3" stroke-linejoin="round"/>' +
+    '<path d="M48 58 Q60 66 68 60" fill="none" stroke="var(--yellow-dark)" stroke-width="4" stroke-linecap="round" stroke-dasharray="1 8"/>' +
+    '<circle cx="72" cy="70" r="19" fill="none" stroke="var(--red)" stroke-width="7"/>' +
+    '<text x="72" y="71" font-size="24" font-weight="700" fill="#22303a" text-anchor="middle" dominant-baseline="central">א</text></svg>';
+  function artFirst() { /* a picture, and the letter it begins with */
+    return '<span class="pk-duo">' + prop(LFPIC) + dinoPic('spino') + '</span>';
+  }
+  /* her name with one letter missing: a gap in a row of rounded tiles */
+  const LNPIC = '<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">' +
+    '<g stroke="#c9a46a" stroke-width="4"><rect x="4" y="32" width="20" height="36" rx="7" fill="#fff6e0"/><rect x="28" y="32" width="20" height="36" rx="7" fill="#fff6e0"/>' +
+    '<rect x="52" y="32" width="20" height="36" rx="7" fill="none" stroke-dasharray="5 5"/><rect x="76" y="32" width="20" height="36" rx="7" fill="#fff6e0"/></g>' +
+    '<g font-size="24" font-weight="700" fill="#22303a" text-anchor="middle" dominant-baseline="central">' +
+    '<text x="86" y="51">ז</text><text x="62" y="51" fill="#c9a46a">?</text><text x="38" y="51">א</text><text x="14" y="51">י</text></g></svg>';
+  function artNames() { /* a name with a gap in it */
+    return '<span class="pk-duo">' + prop(LNPIC) + dinoPic('spino') + '</span>';
+  }
+/* <<< letters:card */
 
   /* ---------- the fifteen games ----------
      id      the name launch()/gameOf() use and the localStorage "recently played" key
@@ -18584,6 +19483,10 @@ if (window.DinoAnim) DinoAnim.auto(document);
     { id: 'numpath', global: 'ZoeyNumPath', root: 'np-root', titleHe: 'שביל המספרים', card: artNumPath }/* <<< numpath:row */
     /* >>> numfind:row - tools/fold-numfind.js */,
     { id: 'numfind', global: 'ZoeyNumFind', root: 'nf-root', titleHe: 'איפה המספר?', card: artNumFind }/* <<< numfind:row */
+    /* >>> letters:row - tools/fold-letters.js */,
+    { id: 'hoops', global: 'ZoeyHoops', root: 'lh-root', titleHe: 'אותיות בחישוקים', card: artHoops },
+    { id: 'first', global: 'ZoeyFirst', root: 'lf-root', titleHe: 'במה זה מתחיל?', card: artFirst },
+    { id: 'names', global: 'ZoeyNames', root: 'ln-root', titleHe: 'השם של זואי', card: artNames }/* <<< letters:row */
   ];
   const entryOf = (id) => { for (let i = 0; i < GAMES.length; i++) { if (GAMES[i].id === id) return GAMES[i]; } return null; };
   const gameOf = (which) => { const e = entryOf(which); return e ? (window[e.global] || null) : null; };
